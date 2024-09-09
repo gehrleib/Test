@@ -1,1 +1,29 @@
+import xml.etree.ElementTree as ET
 
+# Load and parse the XML files
+tree1 = ET.parse('file1.xml')
+tree2 = ET.parse('file2.xml')
+
+# Get the root elements
+root1 = tree1.getroot()
+root2 = tree2.getroot()
+
+# Create a mapping of issuanceSourceId to cubeApplicableJurisdiction from file1
+jurisdiction_map = {}
+for issuance in root1.findall('issuance'):
+    issuance_source_id = issuance.find('issuanceSourceId').text
+    jurisdictions = [j.text for j in issuance.findall('cubeApplicableJurisdiction')]
+    jurisdiction_map[issuance_source_id] = jurisdictions
+
+# For each issuance in file2, match by issuanceSourceId and append the jurisdictions
+for issuance in root2.findall('issuance'):
+    issuance_source_id = issuance.find('issuanceSourceId').text
+    if issuance_source_id in jurisdiction_map:
+        # Append jurisdictions from file1 to file2
+        for jurisdiction in jurisdiction_map[issuance_source_id]:
+            jurisdiction_elem = ET.Element('cubeApplicableJurisdiction')
+            jurisdiction_elem.text = jurisdiction
+            issuance.append(jurisdiction_elem)
+
+# Save the updated file2
+tree2.write('updated_file2.xml', encoding='utf-8', xml_declaration=True)
