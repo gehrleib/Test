@@ -9,42 +9,71 @@
     <ArcherRecords>
       <!-- Process each record -->
       <xsl:for-each select="/Records/Record">
-        <ArcherRecord>
-          <!-- Get the IDs from both fields -->
-          <xsl:variable name="acdbRefIds" select="Field[@guid='acdb6f3f-8ca2-46f1-993b-0796474670cd']/Reference/@id"/>
-          <xsl:variable name="regThemeIds" select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference/@id"/>
         
-          <!-- Convert node sets to space-separated strings for comparison -->
-          <xsl:variable name="acdbRefIdsString">
-            <xsl:for-each select="$acdbRefIds">
-              <xsl:value-of select="concat(., ' ')"/>
-            </xsl:for-each>
-          </xsl:variable>
-          <xsl:variable name="regThemeIdsString">
-            <xsl:for-each select="$regThemeIds">
-              <xsl:value-of select="concat(., ' ')"/>
-            </xsl:for-each>
-          </xsl:variable>
-
-          <!-- Check if the lists are different -->
-          <xsl:if test="not($acdbRefIdsString = $regThemeIdsString)">
-            <!-- Include the field with ID 5a67cd15-0c58-4b82-aa23-d8aa148a38c4 -->
-            <xsl:copy-of select="Field[@guid='5a67cd15-0c58-4b82-aa23-d8aa148a38c4']"/>
+          <!-- Get the IDs from both fields -->
+          <xsl:variable name="currentRegThemeIds" select="Field[@guid='acdb6f3f-8ca2-46f1-993b-0796474670cd']/Reference/@id"/>
           
-            <!-- Output the list of Reference IDs -->
-            <Regulatory_Theme>
-              <xsl:for-each select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference">
-                <ReferenceId>
-                  <xsl:value-of select="@id"/>
-                </ReferenceId>
-              </xsl:for-each>
-            </Regulatory_Theme>
-            
-            
+          <!-- For each record, find the corresponding updatedRegThemeIds across all records -->
+          <xsl:variable name="updatedRegThemeIds" select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference/@id"/>
+
+          <!-- Convert node sets to space-separated strings for comparison -->
+          <xsl:variable name="currentRegThemeIdsString">
+            <xsl:for-each select="$currentRegThemeIds">
+              <xsl:value-of select="concat(., ' ')"/>
+            </xsl:for-each>
+          </xsl:variable>
+          <xsl:variable name="updatedRegThemeIdsString">
+            <xsl:for-each select="$updatedRegThemeIds">
+              <xsl:value-of select="concat(., ' ')"/>
+            </xsl:for-each>
+          </xsl:variable>
+          
+          <!-- Normalize the strings -->
+          <xsl:variable name="normalizedCurrentRegThemeIdsString" select="normalize-space($currentRegThemeIdsString)"/>
+          <xsl:variable name="normalizedUpdatedRegThemeIdsString" select="normalize-space($updatedRegThemeIdsString)"/>
+          
+          <!-- Check if the lists are different -->
+          <xsl:if test="not($normalizedCurrentRegThemeIdsString = $normalizedUpdatedRegThemeIdsString)">
+          
+            <ArcherRecord>
+          
+                <!-- Include the field with ID 5a67cd15-0c58-4b82-aa23-d8aa148a38c4 -->
+                <xsl:copy-of select="Field[@guid='5a67cd15-0c58-4b82-aa23-d8aa148a38c4']"/>
+                
+                <!-- Output the Previous_Regulatory_Theme -->
+                <Previous_Regulatory_Theme>
+                  <xsl:for-each select="Field[@guid='acdb6f3f-8ca2-46f1-993b-0796474670cd']/Reference">
+                    <xsl:sort select="." order="ascending"/>
+                    <p>
+                        <xsl:value-of select="."/>
+                    </p>
+                  </xsl:for-each>
+                </Previous_Regulatory_Theme>
+                
+                <!-- Output the Updated_Regulatory_Theme -->
+                <Updated_Regulatory_Theme>
+                  <xsl:for-each select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference">
+                    <xsl:sort select="." order="ascending"/>
+                    <p>
+                        <xsl:value-of select="."/>
+                    </p>
+                  </xsl:for-each>
+                </Updated_Regulatory_Theme>
+                
+                <!-- Output the Regulatory_Theme with Reference IDs -->
+                <Regulatory_Theme>
+                  <xsl:for-each select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference">
+                    <ReferenceId>
+                      <xsl:value-of select="@id"/>
+                    </ReferenceId>
+                  </xsl:for-each>
+                </Regulatory_Theme>
+                
+            </ArcherRecord>
           </xsl:if>
-        </ArcherRecord>
+        
       </xsl:for-each>
     </ArcherRecords>
   </xsl:template>
-  
+
 </xsl:stylesheet>
