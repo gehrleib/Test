@@ -48,9 +48,10 @@
             <Previous_Value>
               <xsl:for-each select="Field[@guid='acdb6f3f-8ca2-46f1-993b-0796474670cd']/Reference">
                 <xsl:sort select="." order="ascending" />
-                <xsl:text>&lt;p&gt;</xsl:text>
                 <xsl:value-of select="." />
-                <xsl:text>&lt;/p&gt;</xsl:text>
+                <xsl:if test="position() != last()">
+                  <xsl:text>&lt;br /&gt;&lt;br /&gt;</xsl:text>
+                </xsl:if>
               </xsl:for-each>
             </Previous_Value>
             
