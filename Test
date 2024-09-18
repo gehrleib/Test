@@ -1,33 +1,119 @@
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  
+  <!-- Output settings -->
+  <xsl:output method="xml" indent="yes" />
+  
+  <!-- Define templates for matching elements -->
+  <xsl:template match="/">
+    <ArcherRecords>
+      <!-- Process each record -->
+      <xsl:for-each select="/Records/Record">
+        
+        <!-- Get the IDs from both fields -->
+        <xsl:variable name="currentRegThemeIds" 
+                      select="Field[@guid='acdb6f3f-8ca2-46f1-993b-0796474670cd']/Reference/@id" />
+        <xsl:variable name="updatedRegThemeIds" 
+                      select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference/@id" />
 
-   <!-- Output an XML document -->
-   <xsl:output method="xml" indent="yes"/>
-   
-   <xsl:template match="/">
-      <ArcherRecords>
-         <!-- Loop through each Record in the input XML -->
-         <xsl:for-each select="Records/Record">
-            <!-- Store the value of currentValue -->
-            <xsl:variable name="currentValue" select="Field[@guid='a05e33a4-c08f-4494-a3f1-5c807815bb17']/ListValues/ListValue" />
-            <!-- Store the value of updatedValue (Field with guid='34417574-208c-4c59-b9c8-27ab93ed6274') -->
-            <xsl:variable name="updatedValue" select="Record/Field[@guid='34417574-208c-4c59-b9c8-27ab93ed6274']/ListValues/ListValue" />
+        <!-- Convert node sets to space-separated strings for comparison -->
+        <xsl:variable name="currentRegThemeIdsString">
+          <xsl:for-each select="$currentRegThemeIds">
+            <xsl:value-of select="concat(., ' ')" />
+          </xsl:for-each>
+        </xsl:variable>
+        
+        <xsl:variable name="updatedRegThemeIdsString">
+          <xsl:for-each select="$updatedRegThemeIds">
+            <xsl:value-of select="concat(., ' ')" />
+          </xsl:for-each>
+        </xsl:variable>
+        
+        <!-- Normalize the strings -->
+        <xsl:variable name="normalizedCurrentRegThemeIdsString" 
+                      select="normalize-space($currentRegThemeIdsString)" />
+        <xsl:variable name="normalizedUpdatedRegThemeIdsString" 
+                      select="normalize-space($updatedRegThemeIdsString)" />
+        
+        <!-- Check if the lists are different -->
+        <xsl:if test="not($normalizedCurrentRegThemeIdsString = $normalizedUpdatedRegThemeIdsString)">
+          <ArcherRecord>
             
-            <!-- Check both conditions: currentValue is "No" or missing, AND updatedValue is "Yes" -->
-            <xsl:if test="(not($currentValue) or $currentValue = 'No') and $updatedValue = 'Yes'">
-               <ArcherRecord>
-                  <!-- Copy the Field with ID 23580 -->
-                  <xsl:copy-of select="Field[@guid='5a67cd15-0c58-4b82-aa23-d8aa148a38c4']" />
-                  
-                  <!-- Output Previous_Value (currentValue) and Updated_Value (updatedValue) -->
-                  <Previous_Value>
-                     <xsl:value-of select="$currentValue" />
-                  </Previous_Value>
-                  <Updated_Value>
-                     <xsl:value-of select="$updatedValue" />
-                  </Updated_Value>
-               </ArcherRecord>
-            </xsl:if>
-         </xsl:for-each>
-      </ArcherRecords>
-   </xsl:template>
+            <!-- Create the new Tracking_ID element with the current record's contentId -->
+            <Tracking_ID>
+              <xsl:value-of select="@contentId" />
+            </Tracking_ID>
+            
+            <!-- Output Previous_Value -->
+            <Previous_Value>
+              <xsl:for-each select="Field[@guid='acdb6f3f-8ca2-46f1-993b-0796474670cd']/Reference">
+                <xsl:sort select="." order="ascending" />
+                <xsl:text>&lt;p&gt;</xsl:text>
+                <xsl:value-of select="." />
+                <xsl:text>&lt;/p&gt;</xsl:text>
+              </xsl:for-each>
+            </Previous_Value>
+            
+            <!-- Output Updated_Value -->
+            <Updated_Value>
+              <xsl:for-each select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference">
+                <xsl:sort select="." order="ascending" />
+                <xsl:text>&lt;p&gt;</xsl:text>
+                <xsl:value-of select="." />
+                <xsl:text>&lt;/p&gt;</xsl:text>
+              </xsl:for-each>
+            </Updated_Value>
+            
+            <!-- Output Regulatory_Theme -->
+            <Regulatory_Theme>
+              <xsl:for-each select="Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference">
+                <ReferenceId>
+                  <xsl:value-of select="@id" />
+                </ReferenceId>
+              </xsl:for-each>
+            </Regulatory_Theme>
+
+            <!-- Output Primary_Jurisdiction -->
+            <Primary_Jurisdiction>
+              <xsl:for-each select="Field[@guid='1c0bbb5b-b2da-4ad7-9498-bc7243fa3e81']/Reference">
+                <xsl:variable name="refId" select="@id" />
+                <xsl:variable name="themeId">
+                  <xsl:value-of select="../../Record[@contentId=$refId]/Field[@guid='678713cc-bf0a-468e-92c3-8d19db98f36b']/Reference/@id" />
+                </xsl:variable>
+                <xsl:if test="../../Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference[@id=$themeId]">
+                  <Reference>
+                    <xsl:attribute name="id">
+                      <xsl:value-of select="$refId" />
+                    </xsl:attribute>
+                    <xsl:value-of select="." />
+                  </Reference>
+                </xsl:if>
+              </xsl:for-each>
+            </Primary_Jurisdiction>
+            
+            <!-- Output Cross_Border -->
+            <Cross_Border>
+              <xsl:for-each select="Field[@guid='2e4c1012-9670-410d-a6a1-0746b458e0d4']/Reference">
+                <xsl:variable name="refId" select="@id" />
+                <xsl:variable name="themeId">
+                  <xsl:value-of select="../../Record[@contentId=$refId]/Field[@guid='678713cc-bf0a-468e-92c3-8d19db98f36b']/Reference/@id" />
+                </xsl:variable>
+                <xsl:if test="../../Record/Field[@guid='2f6271ce-487a-4f8f-8704-335594f34bd7']/Reference[@id=$themeId]">
+                  <Reference>
+                    <xsl:attribute name="id">
+                      <xsl:value-of select="$refId" />
+                    </xsl:attribute>
+                    <xsl:value-of select="." />
+                  </Reference>
+                </xsl:if>
+              </xsl:for-each>
+            </Cross_Border>
+            
+          </ArcherRecord>
+        </xsl:if>
+        
+      </xsl:for-each>
+    </ArcherRecords>
+  </xsl:template>
+  
 </xsl:stylesheet>
