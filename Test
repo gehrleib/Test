@@ -1,1 +1,37 @@
-Whenever a material change occurs, the "Confirm Mapping" field, including "Mapping Confirmed At" and "Mapping Confirmed By," is reset. This may be followed by the removal of assessable units, causing the section to reappear on the mapping dashboard. For instance, if segments were previously designated as "Wealth Management" and "Capital Markets," and "Capital Markets" are removed, only assessable units belonging to "Wealth Management" will be retained. Wealth Management will be asked to reconfirm the affected sections.
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="2.0"
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+xmlns:xs="http://www.w3.org/2001/XMLSchema"
+exclude-result-prefixes="xs">
+
+  <!-- Output formatting -->
+  <xsl:output method="xml" indent="yes" />
+
+  <xsl:template match="/">
+    <ArcherRecords>
+      <xsl:for-each select="Records/Record">
+        <ArcherRecord>
+
+          <Tracking_ID>
+            <xsl:value-of select="@contentId" />
+          </Tracking_ID>
+          
+          <!-- Compare the dates and extract the necessary ListValues -->
+          <xsl:variable name="date1" select="Field[@guid='34e15bb7-0851-4897-af40-106517096264']/@xmlConvertedValue" />
+          
+          <xsl:for-each select="Record/Field[@guid='2244a286-7022-406d-9c88-a87186f5477e']">
+            <xsl:variable name="date2" select="@xmlConvertedValue" />
+            <xsl:if test="xs:dateTime($date2) &gt; xs:dateTime($date1)">
+              <!-- If date comparison is successful, extract ListValue -->
+              <xsl:for-each select="following-sibling::Field[@guid='04be04de-697b-4d6c-b264-de5da562ea21']/ListValues/ListValue">
+                <Material_Change>
+                  <xsl:value-of select="@displayName" />
+                </Material_Change>
+              </xsl:for-each>
+            </xsl:if>
+          </xsl:for-each>
+        </ArcherRecord>
+      </xsl:for-each>
+    </ArcherRecords>
+  </xsl:template>
+</xsl:stylesheet>
