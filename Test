@@ -1,9 +1,1 @@
-We are introducing a new module called "RegGroup Modifications," where users can request to combine or separate RegGroups. When combining, users can select two or more groups from the inventory and must confirm that all selected groups will have the same applicability, imposing of requeirements on RBC, and regulatory theme. When separating, users only need to select one group to split.
-
-For either modification type, users can provide additional details in a free-form text field. For example, when combining multiple RegGroups, they may specify which group the others should merge into, especially if a group has already been validated or has mappings. When separating, they can outline how many groups to split into.
-
-All requests are tracked in the "Regulatory Content Overview" dashboard, visible to users across all roles. However, only the Enterprise Compliance team can process requests, with the options to "Complete," "Partially Complete," or "Decline" a request. A comment is required if they select "Partially Complete" or "Decline."
-
-If a section is pending both validation and modification, it will no longer appear as pending validation until the modification is completed or declined.
-
-Questions for Alice, do we need notifications?
+I don't think it's necessary to ask for specific details about the group, such as whether they will impose requirements or what the theme will be. Instead, a checkbox should be provided for the user to acknowledge that all values will remain the same when they validate it at a later date. Otherwise, users may wonder why they are being asked to fill it in a second time.
