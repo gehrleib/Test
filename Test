@@ -1,37 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="2.0"
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-xmlns:xs="http://www.w3.org/2001/XMLSchema"
-exclude-result-prefixes="xs">
+Problem Statement:
+In the new validation dashboard, users want the ability to add an extra question to determine whether it needs validation by the Compliance or Reliance Model team.
 
-  <!-- Output formatting -->
-  <xsl:output method="xml" indent="yes" />
+Technical Solution / Acceptance Criteria:
+We are implementing a new process for handling validations. All validations will initially be sent to the Compliance team. We are adding a new question that asks, "Which team do you belong to?" with the options "Compliance" and "Reliance Model". This will be followed by another question, "What is the Regulatory Theme type?" with the options "Conduct" and "Reliance Model".
 
-  <xsl:template match="/">
-    <ArcherRecords>
-      <xsl:for-each select="Records/Record">
-        <ArcherRecord>
+If the answers to the questions are "Compliance" and "Reliance Model" respectively, the validation process will end, and no further review will be necessary. The Reliance Model team will be prompted to conduct a new validation, which will be visible on their dashboard (Regulatory Content Overview). The Reliance Model team will be asked the same questions and can send the validation back to the Compliance team by choosing "Reliance Model" and "Compliance" if they disagree.
 
-          <Tracking_ID>
-            <xsl:value-of select="@contentId" />
-          </Tracking_ID>
-          
-          <!-- Compare the dates and extract the necessary ListValues -->
-          <xsl:variable name="date1" select="Field[@guid='34e15bb7-0851-4897-af40-106517096264']/@xmlConvertedValue" />
-          
-          <xsl:for-each select="Record/Field[@guid='2244a286-7022-406d-9c88-a87186f5477e']">
-            <xsl:variable name="date2" select="@xmlConvertedValue" />
-            <xsl:if test="xs:dateTime($date2) &gt; xs:dateTime($date1)">
-              <!-- If date comparison is successful, extract ListValue -->
-              <xsl:for-each select="following-sibling::Field[@guid='04be04de-697b-4d6c-b264-de5da562ea21']/ListValues/ListValue">
-                <Material_Change>
-                  <xsl:value-of select="@displayName" />
-                </Material_Change>
-              </xsl:for-each>
-            </xsl:if>
-          </xsl:for-each>
-        </ArcherRecord>
-      </xsl:for-each>
-    </ArcherRecords>
-  </xsl:template>
-</xsl:stylesheet>
+To differentiate the Reliance Model from Compliance, a new role called "Regulatory Content Lead (Reliance Model)" will be available in the Regional Segment.
