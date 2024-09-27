@@ -10,8 +10,9 @@
     <ArcherRecords>
       <xsl:for-each select="Records/Record">
         <xsl:variable name="currentChange">
-          <xsl:value-of select="string-join(Field[@guid='0582f91a-551d-42b5-9d43-ab39738d3278']/ListValues/ListValue/@displayName, ';')" />
+          <xsl:value-of select="string-join(Field[@guid='0582f91a-551d-42b5-9d43-ab39738d3278']/ListValues/ListValue/@displayName, '')" />
         </xsl:variable>
+        
         <xsl:variable name="date1">
           <xsl:value-of select="Field[@guid='34e15bb7-0851-4897-af40-106517096264']/@xmlConvertedValue" />
         </xsl:variable>
@@ -27,16 +28,23 @@
           </xsl:for-each>
         </xsl:variable>
 
-        <xsl:if test="not($currentChange = string-join($updatedChange, ';'))">
+        <xsl:if test="not($currentChange = $updatedChange)">
           <ArcherRecord>
             <Tracking_ID>
               <xsl:value-of select="@contentId" />
             </Tracking_ID>
-            <xsl:for-each select="$updatedChange">
-              <Material_Change>
-                <xsl:value-of select="." />
-              </Material_Change>
+            
+            <!-- Tokenize and loop through each change -->
+            <xsl:variable name="tokens" select="tokenize($updatedChange, '0')" /> <!-- Look for the first digit -->
+            
+            <xsl:for-each select="$tokens">
+              <xsl:if test=". != ''"> <!-- Ignore any empty tokens -->
+                <Material_Change>
+                  <xsl:value-of select="concat(0, normalize-space(.))" />
+                </Material_Change>
+              </xsl:if>
             </xsl:for-each>
+            
           </ArcherRecord>
         </xsl:if>
       </xsl:for-each>
