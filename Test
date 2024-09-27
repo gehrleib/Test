@@ -1,48 +1,93 @@
-<xsl:stylesheet xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-                xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
-                version="2.0" 
-                exclude-result-prefixes="xs">
+<?xml version="1.0" encoding="UTF-8"?>
 
-    <!-- Output formatting -->
-    <xsl:output method="xml" indent="yes"/>
-    
-    <xsl:template match="/">
-        <ArcherRecords>
-            <xsl:for-each select="Records/Record">
+<xsl:stylesheet version="2.0"
 
-                <!-- CurrentChange needs to be joined by semi-colon so we can compare with the updatedChange -->
-                <xsl:variable name="currentChange" 
-                              select="string-join(Field[@guid='0582f91a-551d-42b5-9d43-ab39738d3278']/ListValues/ListValue/@displayName, ';')"/>
-                
-                <xsl:variable name="date1" 
-                              select="Field[@guid='34e15bb7-0851-4897-af40-106517096264']/@xmlConvertedValue"/>
-                
-                <xsl:variable name="updatedChange" as="xs:string*">
-                    <xsl:for-each select="Field[@guid='2244a286-7022-406d-9c88-a87186f5477e']">
-                        <xsl:variable name="date2" select="@xmlConvertedValue"/>
-                        <xsl:if test="xs:dateTime($date2) &gt; xs:dateTime($date1)">
-                            <xsl:sequence select="../Field[@guid='04be04de-697b-4d6c-b264-de5da562ea21']/ListValues/ListValue/@displayName"/>
-                        </xsl:if>
-                    </xsl:for-each>
-                </xsl:variable>
-                
-                <!-- Check if there is any difference -->
-                <xsl:if test="not($currentChange = string-join($updatedChange, ';'))">
-                    <ArcherRecord>
-                        <Tracking_ID>
-                            <xsl:value-of select="@contentId"/>
-                        </Tracking_ID>
-                        
-                        <!-- for each updatedChange -->
-                        <xsl:for-each select="$updatedChange">
-                            <Material_Change>
-                                <xsl:value-of select="."/>
-                            </Material_Change>
-                        </xsl:for-each>
-                    </ArcherRecord>
-                </xsl:if>
-                
-            </xsl:for-each>
-        </ArcherRecords>
-    </xsl:template>
+xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+
+xmlns:xs="http://www.w3.org/2001/XMLSchema"
+
+exclude-result-prefixes="xs">
+
+
+
+ <!-- Output formatting -->
+
+ <xsl:output method="xml" indent="yes" />
+
+
+
+ <xsl:template match="/">
+
+  <ArcherRecords>
+
+   <xsl:for-each select="Records/Record">
+
+
+
+    <!-- CurrentChange needs to be joined by semi-colon so we can compare with the updatedChange -->
+
+    <xsl:variable name="currentChange"
+
+           select="string-join(Field[@guid='0582f91a-551d-42b5-9d43-ab39738d3278']/ListValues/ListValue/@displayName, ';')" />
+
+    <xsl:variable name="date1"
+
+           select="Field[@guid='34e15bb7-0851-4897-af40-106517096264']/@xmlConvertedValue" />
+
+   
+
+    <xsl:variable name="updatedChange" as="xs:string*">
+
+     <xsl:for-each select="Record/Field[@guid='2244a286-7022-406d-9c88-a87186f5477e']">
+
+      <xsl:variable name="date2" select="@xmlConvertedValue" />
+
+      <xsl:if test="xs:dateTime($date2) &gt; xs:dateTime($date1)">
+
+        <xsl:sequence select="../Field[@guid='04be04de-697b-4d6c-b264-de5da562ea21']/ListValues/ListValue/@displayName" />
+
+      </xsl:if>
+
+     </xsl:for-each>
+
+    </xsl:variable>
+
+   
+
+    <!-- Check if there is any difference -->
+
+    <xsl:if test="not($currentChange = string-join($updatedChange, ';'))">
+
+     <ArcherRecord>
+
+      <Tracking_ID>
+
+       <xsl:value-of select="@contentId" />
+
+      </Tracking_ID>
+
+      <!-- for each updatedChange -->
+
+      <xsl:for-each select="$updatedChange">
+
+       <Material_Change>
+
+        <xsl:value-of select="." />
+
+       </Material_Change>
+
+      </xsl:for-each>
+
+     </ArcherRecord>
+
+    </xsl:if>
+
+
+
+   </xsl:for-each>
+
+  </ArcherRecords>
+
+ </xsl:template>
+
 </xsl:stylesheet>
