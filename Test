@@ -1,93 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  
+  <!-- Output settings -->
+  <xsl:output method="xml" indent="yes" />
+  
+  <!-- Define templates for matching elements -->
+  <xsl:template match="/Records">
+    <ArcherRecords>
+      <!-- Process each record -->
+      <xsl:for-each select="Record/Record[@levelGuid='52008dc4-e437-4dc7-a73f-d3e04e4c740a']">
+        
+        <!-- Get the IDs from both fields -->
+        <xsl:variable name="currentSegmentIds" 
+                      select="Field[@guid='f5ca444b-fad0-4742-abbb-1873c5a04ff8']/Reference/@id" />
+        <xsl:variable name="updatedSegmentIds" 
+                      select="../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference/@id" />
 
-<xsl:stylesheet version="2.0"
+        <!-- Convert node sets to space-separated strings for comparison -->
+        <xsl:variable name="currentSegmentIdsString" select="string-join($currentSegmentIds, ' ')" />
+        <xsl:variable name="updatedSegmentIdsString" select="string-join($updatedSegmentIds, ' ')" />
+        
+        <!-- Normalize the strings -->
+        <xsl:variable name="normalizedcurrentSegmentIdsString" 
+                      select="normalize-space($currentSegmentIdsString)" />
+        <xsl:variable name="normalizedupdatedSegmentIdsString" 
+                      select="normalize-space($updatedSegmentIdsString)" />
+        
+        <!-- Check if the lists are different -->
+        <xsl:if test="$normalizedcurrentSegmentIdsString ne $normalizedupdatedSegmentIdsString">
+          <ArcherRecord>
+            
+            <Tracking_ID>
+              <xsl:value-of select="@contentId" />
+            </Tracking_ID>
+            
+            <Previous_Value>
+              <xsl:for-each select="Field[@guid='f5ca444b-fad0-4742-abbb-1873c5a04ff8']/Reference">
+                <xsl:sort select="." order="ascending" />
+                <xsl:value-of select="." />
+                <xsl:if test="position() != last()">
+                  <xsl:text>&lt;br /&gt;&lt;br /&gt;</xsl:text>
+                </xsl:if> 
+              </xsl:for-each>
+            </Previous_Value>
+            
+            <Updated_Value>
+              <xsl:for-each select="../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference">
+                <xsl:sort select="." order="ascending" />
+                <xsl:value-of select="." />
+                <xsl:if test="position() != last()">
+                  <xsl:text>&lt;br /&gt;&lt;br /&gt;</xsl:text>
+                </xsl:if>
+              </xsl:for-each>
+            </Updated_Value>
+            
+            <Segments>
+              <xsl:for-each select="../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference">
+                <ReferenceId>
+                  <xsl:value-of select="@id" />
+                </ReferenceId>
+              </xsl:for-each>
+            </Segments>
 
-xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-
-xmlns:xs="http://www.w3.org/2001/XMLSchema"
-
-exclude-result-prefixes="xs">
-
-
-
- <!-- Output formatting -->
-
- <xsl:output method="xml" indent="yes" />
-
-
-
- <xsl:template match="/">
-
-  <ArcherRecords>
-
-   <xsl:for-each select="Records/Record">
-
-
-
-    <!-- CurrentChange needs to be joined by semi-colon so we can compare with the updatedChange -->
-
-    <xsl:variable name="currentChange"
-
-           select="string-join(Field[@guid='0582f91a-551d-42b5-9d43-ab39738d3278']/ListValues/ListValue/@displayName, ';')" />
-
-    <xsl:variable name="date1"
-
-           select="Field[@guid='34e15bb7-0851-4897-af40-106517096264']/@xmlConvertedValue" />
-
-   
-
-    <xsl:variable name="updatedChange" as="xs:string*">
-
-     <xsl:for-each select="Record/Field[@guid='2244a286-7022-406d-9c88-a87186f5477e']">
-
-      <xsl:variable name="date2" select="@xmlConvertedValue" />
-
-      <xsl:if test="xs:dateTime($date2) &gt; xs:dateTime($date1)">
-
-        <xsl:sequence select="../Field[@guid='04be04de-697b-4d6c-b264-de5da562ea21']/ListValues/ListValue/@displayName" />
-
-      </xsl:if>
-
-     </xsl:for-each>
-
-    </xsl:variable>
-
-   
-
-    <!-- Check if there is any difference -->
-
-    <xsl:if test="not($currentChange = string-join($updatedChange, ';'))">
-
-     <ArcherRecord>
-
-      <Tracking_ID>
-
-       <xsl:value-of select="@contentId" />
-
-      </Tracking_ID>
-
-      <!-- for each updatedChange -->
-
-      <xsl:for-each select="$updatedChange">
-
-       <Material_Change>
-
-        <xsl:value-of select="." />
-
-       </Material_Change>
-
+            <Primary_Jurisdiction>
+              <xsl:for-each select="Field[@guid='1c0bbb5b-b2da-4ad7-9498-bc7243fa3e81']/Reference">
+                <xsl:variable name="refId" select="@id" />
+                <xsl:variable name="segmentName" select="../../Record[@contentId=$refId]/Field[@guid='569842b8-ad66-479f-8f50-a78cac8f20a2']/ListValues/ListValue" />
+                <xsl:if test="../../../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference[text()=$segmentName]">
+                  <ReferenceId>
+                    <xsl:value-of select="." />
+                  </ReferenceId>
+                </xsl:if>
+              </xsl:for-each>
+            </Primary_Jurisdiction>
+            
+            <Cross_Border>
+              <xsl:for-each select="Field[@guid='2e4c1012-9670-410d-a6a1-0746b458e0d4']/Reference">
+                <xsl:variable name="refId" select="@id" />
+                <xsl:variable name="segmentName" select="../../Record[@contentId=$refId]/Field[@guid='569842b8-ad66-479f-8f50-a78cac8f20a2']/ListValues/ListValue" />
+                <xsl:if test="../../../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference[text()=$segmentName]">
+                  <ReferenceId>
+                    <xsl:value-of select="." />
+                  </ReferenceId>
+                </xsl:if>
+              </xsl:for-each>
+            </Cross_Border>
+            
+          </ArcherRecord>
+        </xsl:if>
+        
       </xsl:for-each>
-
-     </ArcherRecord>
-
-    </xsl:if>
-
-
-
-   </xsl:for-each>
-
-  </ArcherRecords>
-
- </xsl:template>
-
+    </ArcherRecords>
+  </xsl:template>
+  
 </xsl:stylesheet>
