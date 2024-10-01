@@ -11,23 +11,23 @@
       <xsl:for-each select="Record/Record[@levelGuid='52008dc4-e437-4dc7-a73f-d3e04e4c740a']">
         
         <!-- Get the IDs from both fields -->
-        <xsl:variable name="currentSegmentIds" 
-                      select="Field[@guid='f5ca444b-fad0-4742-abbb-1873c5a04ff8']/Reference/@id" />
-        <xsl:variable name="updatedSegmentIds" 
-                      select="../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference/@id" />
+        <xsl:variable name="currentCountryIds" 
+                      select="Field[@guid='5f56982d-455e-4f41-b890-55ba1eae1318']/Reference/@id" />
+        <xsl:variable name="updatedCountryIds" 
+                      select="../Field[@guid='9e6f3f74-8bb3-4dd8-a981-659d76a30472']/Reference/@id" />
 
         <!-- Convert node sets to space-separated strings for comparison -->
-        <xsl:variable name="currentSegmentIdsString" select="string-join($currentSegmentIds, ' ')" />
-        <xsl:variable name="updatedSegmentIdsString" select="string-join($updatedSegmentIds, ' ')" />
+        <xsl:variable name="currentCountryIdsString" select="string-join($currentCountryIds, ' ')" />
+        <xsl:variable name="updatedCountryIdsString" select="string-join($updatedCountryIds, ' ')" />
         
         <!-- Normalize the strings -->
-        <xsl:variable name="normalizedcurrentSegmentIdsString" 
-                      select="normalize-space($currentSegmentIdsString)" />
-        <xsl:variable name="normalizedupdatedSegmentIdsString" 
-                      select="normalize-space($updatedSegmentIdsString)" />
+        <xsl:variable name="normalizedcurrentCountryIdsString" 
+                      select="normalize-space($currentCountryIdsString)" />
+        <xsl:variable name="normalizedupdatedCountryIdsString" 
+                      select="normalize-space($updatedCountryIdsString)" />
         
         <!-- Check if the lists are different -->
-        <xsl:if test="$normalizedcurrentSegmentIdsString ne $normalizedupdatedSegmentIdsString">
+        <xsl:if test="$normalizedcurrentCountryIdsString ne $normalizedupdatedCountryIdsString">
           <ArcherRecord>
             
             <Tracking_ID>
@@ -35,7 +35,7 @@
             </Tracking_ID>
             
             <Previous_Value>
-              <xsl:for-each select="Field[@guid='f5ca444b-fad0-4742-abbb-1873c5a04ff8']/Reference">
+              <xsl:for-each select="Field[@guid='5f56982d-455e-4f41-b890-55ba1eae1318']/Reference">
                 <xsl:sort select="." order="ascending" />
                 <xsl:value-of select="." />
                 <xsl:if test="position() != last()">
@@ -45,7 +45,7 @@
             </Previous_Value>
             
             <Updated_Value>
-              <xsl:for-each select="../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference">
+              <xsl:for-each select="../Field[@guid='9e6f3f74-8bb3-4dd8-a981-659d76a30472']/Reference">
                 <xsl:sort select="." order="ascending" />
                 <xsl:value-of select="." />
                 <xsl:if test="position() != last()">
@@ -54,19 +54,19 @@
               </xsl:for-each>
             </Updated_Value>
             
-            <Segments>
-              <xsl:for-each select="../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference">
+            <Countrys>
+              <xsl:for-each select="../Field[@guid='9e6f3f74-8bb3-4dd8-a981-659d76a30472']/Reference">
                 <ReferenceId>
                   <xsl:value-of select="@id" />
                 </ReferenceId>
               </xsl:for-each>
-            </Segments>
+            </Countrys>
 
             <Primary_Jurisdiction>
               <xsl:for-each select="Field[@guid='1c0bbb5b-b2da-4ad7-9498-bc7243fa3e81']/Reference">
                 <xsl:variable name="refId" select="@id" />
-                <xsl:variable name="segmentName" select="../../Record[@contentId=$refId]/Field[@guid='569842b8-ad66-479f-8f50-a78cac8f20a2']/ListValues/ListValue" />
-                <xsl:if test="../../../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference[text()=$segmentName]">
+                <xsl:variable name="countryName" select="../../Record[@contentId=$refId]/Field[@guid='c28b9e2a-4899-477b-ae5b-54617eaa616b']/ListValues/ListValue" />
+                <xsl:if test="../../../Field[@guid='9e6f3f74-8bb3-4dd8-a981-659d76a30472']/Reference[text()=$countryName]">
                   <ReferenceId>
                     <xsl:value-of select="." />
                   </ReferenceId>
@@ -77,8 +77,8 @@
             <Cross_Border>
               <xsl:for-each select="Field[@guid='2e4c1012-9670-410d-a6a1-0746b458e0d4']/Reference">
                 <xsl:variable name="refId" select="@id" />
-                <xsl:variable name="segmentName" select="../../Record[@contentId=$refId]/Field[@guid='569842b8-ad66-479f-8f50-a78cac8f20a2']/ListValues/ListValue" />
-                <xsl:if test="../../../Field[@guid='01dca4ff-306d-4bb9-91df-83764933ef5a']/Reference[text()=$segmentName]">
+                <xsl:variable name="countryName" select="../../Record[@contentId=$refId]/Field[@guid='c28b9e2a-4899-477b-ae5b-54617eaa616b']/ListValues/ListValue" />
+                <xsl:if test="../../../Field[@guid='9e6f3f74-8bb3-4dd8-a981-659d76a30472']/Reference[text()=$countryName]">
                   <ReferenceId>
                     <xsl:value-of select="." />
                   </ReferenceId>
