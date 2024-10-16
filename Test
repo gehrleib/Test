@@ -1,1 +1,457 @@
 2024-10-15T00:00:00.000Z
+
+"""
+Author: Brandon Gehrlein
+Date Created: 2024-09-05
+Description:
+
+"""
+
+# Import necessary modules
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+from urllib.parse import urlparse, parse_qs
+import asyncio
+import aiohttp
+import os
+import random
+import shutil
+import time
+import xmltodict
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Load and validate environment variables
+def load_and_validate_env_vars():
+    load_dotenv()
+    required_vars = [
+        'API_ID_URL', 'API_CONNECT_URL',
+        'USER', 'PASSWORD', 'SCOPE', 'CLIENT_ID', 'CLIENT_SECRET'
+    ]
+    
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    
+    # Check for proxy-related environment variables if USE_PROXY is True
+    if os.getenv('USE_PROXY', 'False').lower() == 'true':
+        proxy_vars = ['PROXY_USERNAME', 'PROXY_PASSWORD', 'PROXY_URL']
+        missing_vars.extend([var for var in proxy_vars if not os.getenv(var)])
+    
+    if missing_vars:
+        raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
+
+load_and_validate_env_vars()
+
+# Configuration settings
+USE_PROXY = os.getenv('USE_PROXY', 'False').lower() == 'true'
+PROXY_USERNAME = os.getenv('PROXY_USERNAME')
+PROXY_PASSWORD = os.getenv('PROXY_PASSWORD')
+PROXY_URL = os.getenv('PROXY_URL')
+API_ID_URL = os.getenv('API_ID_URL')
+API_CONNECT_URL = os.getenv('API_CONNECT_URL')
+X_CUSTOM_ENTITY = os.getenv('X_CUSTOM_ENTITY', None)
+TOKEN_REFRESH_THRESHOLD = 300  # seconds
+
+# Retrieve the last time the program successfully ran
+LAST_RUN = os.getenv('LAST_RUN')
+
+# Constants
+CANADIAN_PROVINCES = [
+    "Alberta", "British Columbia", "Manitoba", "New Brunswick", 
+    "Newfoundland and Labrador", "North West Territories", "Nova Scotia", 
+    "Nunavut", "Ontario", "Prince Edward Island", 
+    "Quebec", "Saskatchewan", "Yukon"
+]
+
+US_STATES = [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", 
+    "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", 
+    "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", 
+    "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", 
+    "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
+    "New Hampshire", "New Jersey", "New Mexico", "New York", 
+    "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", 
+    "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", 
+    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", 
+    "West Virginia", "Wisconsin", "Wyoming"
+]
+
+GLOBAL = [
+    "Antigua and Barbuda", "Aruba", "Australia", "Bahamas", "Barbados", 
+    "Belgium", "Bonaire, St. Eustatius, and Saba", "Canada", "Cayman Islands",
+    "China", "Curaçao", "Dominica", "France", "Germany", "Grenada", 
+    "Guernsey", "Hong Kong", "India", "Ireland", "Italy", "Japan", 
+    "Jersey", "Luxembourg", "Malaysia", "Montserrat", "Netherlands", 
+    "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines",
+    "Singapore","Sint Maarten", "Spain", "Sweden", "Switzerland", 
+    "Trinidad and Tobago", "Turks and Caicos Islands", "United Arab Emirates",
+    "United Kingdom", "United States"
+]
+
+def update_last_run():
+    last_run = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    with open('.env', 'r') as file:
+        lines = file.readlines()
+    
+    with open('.env', 'w') as file:
+        updated = False
+        for line in lines:
+            if line.startswith("LAST_RUN"):
+                file.write(f"LAST_RUN = {last_run}\n")
+                updated = True
+            else:
+                file.write(line)
+        if not updated:
+            file.write(f"LAST_RUN = {last_run}\n")
+
+class APIClient:
+    def __init__(self):
+        self.token = None
+        self.token_expiration = None
+        self.session = None
+        self.proxy = self.get_proxy()
+
+    def get_proxy(self):
+        if USE_PROXY:
+            return f"http://{PROXY_USERNAME}:{PROXY_PASSWORD}@{PROXY_URL}"
+        return None
+
+    async def fetch_with_exponential_backoff(self, func, max_retries=5, base_delay=1):
+        """Retries a function with exponential backoff."""
+        for retry in range(max_retries):
+            try:
+                return await func()  # Note: await for async functions
+            except aiohttp.ClientError as e:
+                if retry == max_retries - 1:
+                    logging.error("Max retries reached. Giving up.")
+                    raise  # Re-raise the exception after max retries
+                else:
+                    delay = base_delay * (2 ** retry) + random.uniform(0, 1)
+                    logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f} seconds due to: {e}")
+                    await asyncio.sleep(delay)
+
+    async def get_token(self):
+        """Gets an authentication token asynchronously."""
+        if self.token and self.token_expiration and time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
+            return self.token
+
+        url = f"{API_ID_URL}/connect/token"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        data = {
+            'grant_type': 'password',
+            'username': os.getenv('USER'),
+            'password': os.getenv('PASSWORD'),
+            'scope': os.getenv('SCOPE'),
+            'client_id': os.getenv('CLIENT_ID'),
+            'client_secret': os.getenv('CLIENT_SECRET')
+        }
+
+        async with self.session.post(url, data=data, headers=headers, proxy=self.proxy) as response:
+            response.raise_for_status()
+            token_data = await response.json()
+            self.token = token_data['access_token']
+            self.token_expiration = time.time() + token_data['expires_in']
+            return self.token
+
+    async def make_request(self, method, url, data=None):
+        """Performs a request asynchronously, handling token refresh and retries."""
+        headers = {
+            'Connection': 'keep-alive',
+            'Authorization': f'Bearer {await self.get_token()}',
+            'x-page-current': '1',
+            'x-page-length': '100',
+            'x-custom-entity': X_CUSTOM_ENTITY,
+            'Content-Type': 'application/json-patch+json',
+            'api-version': "3.0"
+        }
+
+        async def _make_request():
+            try:
+                async with self.session.request(method, url, headers=headers, json=data, proxy=self.proxy) as response:
+                    # Handle 500 Internal Server Error by refreshing token and retrying
+                    if response.status == 500:
+                        headers['Authorization'] = f'Bearer {await self.get_token()}'
+                        async with self.session.request(method, url, headers=headers, json=data, proxy=self.proxy) as retry_response:
+                            retry_response.raise_for_status()
+                            return await retry_response.json()
+
+                    response.raise_for_status()
+
+                    # Handle pagination if applicable
+                    all_responses = await response.json()
+
+                    total_pages = int(response.headers.get('x-page-count', 1))
+                    if total_pages > 1:
+                        tasks = [
+                            self.fetch_page(headers, page, url, data, method)
+                            for page in range(2, total_pages + 1)
+                        ]
+                        page_results = await asyncio.gather(*tasks)
+                        all_responses.extend(item for sublist in page_results for item in sublist)
+
+                    return all_responses
+
+            except aiohttp.ClientError as e:
+                logging.error(f"Request failed: {e}")
+                raise
+            except:
+                raise
+
+        return await self.fetch_with_exponential_backoff(_make_request)
+
+    async def fetch_page(self, headers, page, url, data, method):
+        """Fetches a single page of results."""
+        headers['x-page-current'] = str(page)
+        async with self.session.request(method, url, headers=headers, json=data, proxy=self.proxy) as page_response:
+            page_response.raise_for_status()
+            return await page_response.json()
+
+    async def process_group(self, group: dict) -> None:
+        """Processes a single group, fetching additional details and filtering sections."""
+        # Check for "Archived" attribute early
+        if any(attr.get("name") == "Archived" for attr in group.get("attributes", [])):
+            group.clear()
+            return  # Early return
+
+        # Get unique bookSourceIds in the group
+        book_source_ids = {section.get("bookSourceId") for section in group.get("section", [])}
+
+        # Skip groups with multiple bookSourceIds or if there are no sections
+        if len(book_source_ids) != 1 or not group.get("section"):
+            group.clear()
+            return
+
+        book_id = book_source_ids.pop()
+        book_version = None
+        book_url = None
+
+        # # Create a list of tasks to fetch section details concurrently
+        # section_tasks = []
+        # for section in group.get("section", []):
+        #     section_source_id = section.get("sectionSourceId")
+        #     section_version = section.get("sectionVersionOrdinal")
+
+        #     if section_source_id:
+        #         section_tasks.append(self.make_request(
+        #             'GET',
+        #             API_CONNECT_URL + f'/api/RegSection/{section_source_id}/{section_version}'
+        #         ))
+
+        try:
+            # Gather the results of all section tasks concurrently
+            # section_results = await asyncio.gather(*section_tasks)
+
+            # Filter and update sections with required fields
+            filtered_sections = []
+            # for section, section_details in zip(group.get("section", []), section_results):
+            #     # Extract only 'title', 'content', 'sectionLink' from section_details['section']
+            #     section.update({
+            #         k: section_details['section'][k]
+            #         for k in ["title", "content", "sectionLink"]
+            #         if k in section_details['section']
+            #     })
+
+            #     if section.get("content"):
+            #         filtered_sections.append(section)
+
+            #     # Extract book version and URL from the sectionLink
+            #     if not book_version and section.get("sectionLink"):
+            #         section_url = section.get("sectionLink")
+            #         parsed_url = urlparse(section_url)
+            #         query_params = parse_qs(parsed_url.query)
+            #         book_version = query_params.get('bookVersion', [None])[0]
+            #         book_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?bookSourceId={book_id}&bookVersion={book_version}"
+
+            #     # Remove specified keys from the section
+            #     for key in ["bookSourceId", "sectionVersionOrdinal"]:
+            #         section.pop(key, None)
+
+            group["section"] = filtered_sections
+
+            # Fetch book details only if book_version is available
+            if book_version:
+                try:
+                    # Fetch book details using book_id and book_version
+                    book_details = await self.make_request(
+                        'GET',
+                        API_CONNECT_URL + f'/api/RegBook/{book_id}/'
+                    )
+
+                    # Check if cubeApplicableJurisdiction is a province or state
+                    jurisdiction = book_details['book'].get('cubeApplicableJurisdiction')
+                    if isinstance(jurisdiction, str):
+                        jurisdictions = [item.strip() for item in jurisdiction.split(",")]
+                        processed_jurisdictions = []
+                        for item in jurisdictions:
+                            if item == "Global":
+                                processed_jurisdictions = GLOBAL
+                            elif item in CANADIAN_PROVINCES:
+                                processed_jurisdictions.append("Canada")
+                            elif item in US_STATES or item == "United States of America":
+                                processed_jurisdictions.append("United States")
+                            else:
+                                processed_jurisdictions.append(item)
+                        book_details['book']['cubeApplicableJurisdiction'] = processed_jurisdictions
+
+                    # Update the group with relevant book information
+                    group["book"] = {
+                        k: book_details['book'][k]
+                        for k in [
+                            "issuingBodyName", "issuingBodySourceId", "title", "sourceId", 
+                            "issuanceDate", "issuanceTypeName", "linkURL", 
+                            "cubeApplicableJurisdiction"
+                        ] if k in book_details['book']
+                    }
+                    group["book"]["issuanceURL"] = book_url
+
+                except aiohttp.ClientError as e:
+                    logging.error(f"Error fetching book details: {e}")
+
+        except aiohttp.ClientError as e:
+            logging.error(f"Error fetching section details: {e}")
+
+        # Remove specified keys from the group
+        for key in ["createdDate", "updatedDate", "isLatest", "path", "regGroupStatus", "regGroupVersion", "regNarrative"]:
+            group.pop(key, None)  # Remove key if present, otherwise do nothing
+
+    def process_and_write_group_chunks(self, groups, output_directory="output", chunk_size=100, indent=4):
+        issuing_bodies = {}
+        issuances = {}
+
+        # Process groups and extract data for the three files
+        for group in groups:
+            book_data = group.pop("book", None)
+            if book_data:
+                issuing_body_source_id = book_data.get("issuingBodySourceId")
+                if issuing_body_source_id:
+                    issuing_bodies[issuing_body_source_id] = {
+                        "issuingBodySourceId": issuing_body_source_id,
+                        "issuingBodyName": book_data["issuingBodyName"]
+                    }
+
+                issuance_source_id = book_data.get("sourceId")
+                if issuance_source_id:
+                    issuance_data = {
+                        "issuanceSourceId": issuance_source_id,
+                        **{
+                            key: value
+                            for key, value in book_data.items()
+                            if key not in ["issuingBodyName", "sourceId"]
+                        }
+                    }
+                    issuances[issuance_source_id] = issuance_data
+
+            # Ensure issuanceId is included in the group data
+            if "issuanceId" not in group and book_data:
+                group["issuanceId"] = issuance_source_id
+
+        # Convert dictionaries to lists
+        issuing_bodies = list(issuing_bodies.values())
+        issuances = list(issuances.values())
+
+        # Create the output directory if it doesn't exist
+        os.makedirs(output_directory, exist_ok=True)
+
+        # Generate a timestamp for filenames
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+        # Write each data list to its own XML file within the output directory
+        for data, filename_prefix in [
+            (issuing_bodies, "issuingBody"),
+            (issuances, "issuance"),
+            (groups, "group"),
+        ]:
+            output_file = os.path.join(output_directory, f"{filename_prefix}_{timestamp}.xml")
+            temp_file = output_file + ".tmp"
+            root_element = filename_prefix  # Use the prefix as root element name
+
+            try:
+                with open(temp_file, 'w', encoding='utf-8') as outfile:
+                    outfile.write('<?xml version="1.0" encoding="utf-8"?>\n')
+                    outfile.write(f'<{root_element}s count="{len(data)}">\n')  # Use pluralized root element
+
+                    # Process and write data in chunks
+                    for i in range(0, len(data), chunk_size):
+                        chunk = data[i:i + chunk_size]
+
+                        for item in chunk:
+                            item_xml = xmltodict.unparse({root_element: item}, pretty=True)
+                            item_xml = item_xml.replace('<?xml version="1.0" encoding="utf-8"?>', '').strip()
+
+                            # Ensure proper indentation
+                            item_xml = item_xml.strip()
+                            lines = item_xml.split('\n')
+                            indented_lines = [lines[0]]
+                            for line in lines[1:]:
+                                indented_lines.append(' ' * indent + line)
+                            indented_item_xml = '\n'.join(indented_lines)
+
+                            outfile.write(f'{" " * indent}{indented_item_xml}\n') 
+
+                    outfile.write(f'</{root_element}s>')
+
+                shutil.move(temp_file, output_file)
+                logging.info(f"Data successfully written to {output_file}")
+
+            except IOError as e:
+                logging.error(f"Error writing to file: {e}")
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+
+            except Exception as e:
+                logging.error(f"An unexpected error occurred: {e}")
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+
+    async def run(self):
+        
+        start_time = time.perf_counter()
+
+        logging.info(f"Total runtime for processing groups: {datetime.now()}")
+
+        async with aiohttp.ClientSession() as self.session:
+            
+            # Perform the initial API request to get the groups;;
+            groups = await self.make_request(
+                'POST',
+                API_CONNECT_URL + '/api/RegGroup/search',
+                data={
+                    "status": "publish",
+                    "regGroups": [
+                        {"sourceId": "2af8f5c4-b8c8-4716-94eb-a20ad52a5c9d"},
+                    ]
+                }
+            )
+
+            chunk_size = 50
+
+            i = 0  # Track the starting index for the next chunk
+            while i < len(groups):
+                try:
+                    chunk = groups[i:i + chunk_size]
+                    await asyncio.gather(*(self.process_group(group) for group in chunk))
+                    i += chunk_size  # Move to the next chunk if the current chunk is successful
+
+                except asyncio.CancelledError:
+                    print(f"CancelledError occurred, restarting from chunk starting at index {i}")
+                    await asyncio.sleep(2)  # Wait before retrying (optional)
+                    # The loop will retry from the current index 'i' due to the while loop structure
+
+            # Remove any groups that are "Archived" or have been cleared in process_group
+            filtered_groups = [group for group in groups if group]
+
+            self.process_and_write_group_chunks(filtered_groups)
+
+            end_time = time.perf_counter()  # Record the end time
+            total_runtime = end_time - start_time
+
+            minutes = int(total_runtime // 60)  # Calculate minutes
+            seconds = int(total_runtime % 60)  # Calculate remaining seconds
+
+            logging.info(f"Total runtime for processing groups: {minutes} minutes and {seconds} seconds")
+
+if __name__ == "__main__":
+    client = APIClient()
+    asyncio.run(client.run())
+    update_last_run()
