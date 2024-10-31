@@ -1,0 +1,3 @@
+The "Next Control Test Year (System)" on the Control Result of Assessable Unit (CRAU) is usually determined by the "Last Approved Residual Risk Rating." However, the Business Segment Compliance CCO has the option to use the "Last Approved Inherent Risk Rating" instead.
+
+To do this, the CCO (or data admin) can simply change the "Professional Judgement Override" setting on the Assessable Unit from the default "Residual Risk Rating" to "Inherent Risk Rating."
