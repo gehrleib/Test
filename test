@@ -1,3 +1,3 @@
-The "Next Control Test Year (System)" on the Control Result of Assessable Unit (CRAU) is usually determined by the "Last Approved Residual Risk Rating." However, the Business Segment Compliance CCO has the option to use the "Last Approved Inherent Risk Rating" instead.
+What you have provided is a list of material and immaterial change codes. It is important to note that only material change codes affect whether a new mapping attestation is required, which is why we focused specifically on those, provided the necessary data was available. All data changes, whether material or immaterial, are recorded in the History Log.
 
-To do this, the CCO (or data admin) can simply change the "Professional Judgement Override" setting on the Assessable Unit from the default "Residual Risk Rating" to "Inherent Risk Rating."
+Another improvement we have made is displaying all material change codes since the last attestation, rather than just the most recent change.
