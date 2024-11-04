@@ -1,1 +1,5 @@
-By allowing 'bulk requests,' it is essential to ensure that sections from issuance is selected. This is important because a validator can only initiate validation from sections to which they have validator access. However, with bulk requests, they might select sections from the entire inventory. The system allows users to 'lookup' any records for which they have at least read access. Since all users have at least read access to the entire inventory, this needs to be carefully managed.
+You're referring to instances when there is a material change to the content of a section, such as a shift from T+2 to T+3? If we create a second RegGroup without archiving the original, it can lead to duplicity. Both groups would continue to receive updates until one is archived. If the original group is archived, the history or changes to the section would be scattered across multiple records, making it difficult to track.
+
+I suggest allowing the KL to flag a manual material change. This approach will ensure that the current validation and mappings remain intact. As per our current process, whenever a material change occurs, a mapping attestation is required.
+
+While we can enforce a new validation to be performed if you wish, it may not be necessary.
