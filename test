@@ -1,3 +1,11 @@
-We can process the issuance applicability and rationale; however, we only create issuances when there is an existing reggroup. This means that if the KL team does not create reggroups for an issuance that does not apply to RBC, we will not have that value in RegComp.
+If I understand correctly, we need to complete two tasks:
 
-How will we accurately maintain the field in relation to the validations performed on the reggroups? For example, if an issuance is changed to "not applicable," but there are still reggroups that exist and are applicable?
+1. Shift the segment off the Regulator and onto the Issuance level.
+2. For new issuances, we need to ingest the initial segment value from CUBE.
+
+We can accommodate the first task for December. However, we still need to determine how to ingest the initial segment value.
+
+Regarding the first task and the existing data, would you prefer to:
+
+Apply the same segment value from the Regulator to each child issuance, or
+Derive the issuance segment value based on the current mappings of the sections? For example, if an issuance has two sections—one linked to Capital Markets and the other to Wealth Management—then the new issuance segments would be Capital Markets and Wealth Management.
