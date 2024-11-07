@@ -1,5 +1,1 @@
-You're referring to instances when there is a material change to the content of a section, such as a shift from T+2 to T+3? If we create a second RegGroup without archiving the original, it can lead to duplicity. Both groups would continue to receive updates until one is archived. If the original group is archived, the history or changes to the section would be scattered across multiple records, making it difficult to track.
-
-I suggest allowing the KL to flag a manual material change. This approach will ensure that the current validation and mappings remain intact. As per our current process, whenever a material change occurs, a mapping attestation is required.
-
-While we can enforce a new validation to be performed if you wish, it may not be necessary.
+This feature is not currently supported, and implementing it is unlikely due to the complexity of the mapping attestation process. However, I am exploring the possibility of allowing one attestation to cover multiple segments within a single citation. This change would simplify the process for jurisdictions that use a centralized model. However, it may also allow individuals to submit attestations for segments they do not belong to. Is this something your stakeholders would be willing to accept?
