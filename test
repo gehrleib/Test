@@ -1,3 +1,17 @@
-This Assessable Unit requires an annual decision. Please select all applicable trigger events for the Assessable Unit.
+We are introducing a new status called "Awaiting Review." This status will allow RCM Leads and delegates ("2LOD") to challenge the decision made by the LOB Head ("1LOD") when no changes are specified. 
 
-Choosing one or more trigger events will initiate a refresh. If no trigger events are selected, the status will revert to "Approved."
+Additionally, we will include the following fields: 
+- Reviewer Decision 
+- Review Comments 
+- Reviewer 
+- Review Date 
+
+The reviewer ("2LOD") can make one of the following decisions:
+- No: Confirm no change
+- Yes: Regulatory Changes
+- Yes: External Events 
+- Yes: Internal Changes / Changes to Quality of Control
+
+RCM Leads and delegates can find items awaiting their decision on the dashboard titled "XYZ." From there, they can navigate to the relevant record to make their decision or input it in bulk.
+
+To provide more time for entering decisions, annual decisions will now be generated 30 days prior to the due date instead of 23 days.
