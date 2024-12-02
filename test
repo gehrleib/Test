@@ -1,1 +1,53 @@
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
+  <xsl:output method="xml" indent="yes"/>
 
+  <xsl:template match="/">
+    <Sections>
+      <xsl:apply-templates select="Records/Record[@levelGuid='52008dc4-e437-4dc7-a73f-d3e04e4c740a']"/>
+    </Sections>
+  </xsl:template>
+
+  <xsl:template match="Record[@levelGuid='52008dc4-e437-4dc7-a73f-d3e04e4c740a']">
+    <xsl:variable name="sectionId" select="Field[@guid='5a67cd15-0c58-4b82-aa23-d8aa148a38c4']/text()"/>
+    <xsl:variable name="sectionDate" select="Field[@guid='4bd7a93b-ab13-40a0-a830-973c41734c3e']/@xmlConvertedValue"/>
+
+    <xsl:variable name="regionalSegments">
+      <xsl:for-each select="Field[@guid='f5b6db97-fc9d-449a-bb59-95402b5119d7']/Reference">
+        <xsl:variable name="regionalSegmentId" select="@id"/>
+
+        <!-- Find the latest attestation date for the regional segment -->
+        <xsl:variable name="latestAttestationDate">
+          <xsl:for-each select="../../Record[@levelGuid='ccef98d3-7ac4-45ab-bc5f-4a7d4513fd88']
+                                   [Field[@guid='efe722d8-3500-4f2e-a2d3-057df541c588']/Reference[@id = $regionalSegmentId]]">
+            <xsl:sort select="Field[@guid='00b953d1-a752-4343-97b8-058b9fb0079d']/@xmlConvertedValue" 
+                      data-type="text" order="descending"/>
+            <xsl:if test="position() = 1">
+              <xsl:value-of select="Field[@guid='00b953d1-a752-4343-97b8-058b9fb0079d']/@xmlConvertedValue"/>
+            </xsl:if>
+          </xsl:for-each>
+        </xsl:variable>
+
+        <!-- Find if there is a pending record for the regional segment -->
+        <xsl:variable name="hasPending" select="
+          boolean(
+            ../../Record[@levelGuid='ccef98d3-7ac4-45ab-bc5f-4a7d4513fd88']
+            [Field[@guid='efe722d8-3500-4f2e-a2d3-057df541c588']/Reference[@id = $regionalSegmentId]]
+            [Field[@guid='61419735-5ff0-4924-99b9-90bcea6ecee5']/ListValues/ListValue = 'Pending']
+          )"/>
+
+        <!-- Include if no pending record and the latest attestation date is less than the section date -->
+        <xsl:if test="not($hasPending) and $latestAttestationDate and $latestAttestationDate &lt; $sectionDate">
+          <RegionalSegment><xsl:value-of select="$regionalSegmentId"/></RegionalSegment>
+        </xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+
+    <!-- Only include the section if there are valid RegionalSegments -->
+    <xsl:if test="count($regionalSegments/*) &gt; 0">
+      <Section>
+        <SectionId><xsl:value-of select="$sectionId"/></SectionId>
+        <xsl:copy-of select="$regionalSegments/*"/>
+      </Section>
+    </xsl:if>
+  </xsl:template>
+</xsl:stylesheet>
