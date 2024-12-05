@@ -1,3 +1,11 @@
-You may want to direct Matthew to Alice Zeng. The Kuala Lumpur (KL) team identifies the groups of citations that need to be ingested into RegComp. However, it will be the BSC or SME (still under consideration) who determines whether the citation is applicable and imposes requirements on RBC. They will also decide which regulatory theme (classification) the citation falls under.
+Hi Eric,
 
-CUBE was expected to provide us with a suggested RBC regulatory theme based on their ontology. However, we encountered an issue related to the granularity of their ontology, and I am currently unsure of its status.
+I apologize for the short notice regarding the sign-off. We encountered an unexpected issue during development that required us to change our approach.
+
+Specifically, we discovered a conflict between enforcing certain actions on the dashboard and maintaining existing user workflows and functionality. To avoid causing significant disruption for users, we prioritized the most critical aspect of the requirement: enabling attestation at the regional-segment level.
+
+This solution allows us to meet the immediate need while considering the constraints of the tight timeline due to the upcoming change freeze and holidays. As you know, our team is already over capacity for this release, which further limited our ability to fully address this issue and gather stakeholder feedback in advance.
+
+Moving forward, users can begin testing the complete suite of features in the UAT environment. We plan to revisit the solution in the new year, incorporating user feedback and exploring additional enhancements, with a tentative target for a release in late February or early March.
+
+Thank you for your understanding.
