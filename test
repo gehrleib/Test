@@ -1,11 +1,9 @@
-Hi Eric,
+Hi Riaz,
 
-I apologize for the short notice regarding the sign-off. We encountered an unexpected issue during development that required us to change our approach.
+I was not aware of a business requirements document, if one exists. Our primary objective was to replicate the Norton Rose process as closely as possible since this was intended to be a lift-and-shift operation. However, as we have identified additional gaps, we have made further enhancements, including the validation process.
 
-Specifically, we discovered a conflict between enforcing certain actions on the dashboard and maintaining existing user workflows and functionality. To avoid causing significant disruption for users, we prioritized the most critical aspect of the requirement: enabling attestation at the regional-segment level.
+Alice, could you please share any relevant documents you’ve created for your stakeholders, such as flowcharts, presentations, etc.?
 
-This solution allows us to meet the immediate need while considering the constraints of the tight timeline due to the upcoming change freeze and holidays. As you know, our team is already over capacity for this release, which further limited our ability to fully address this issue and gather stakeholder feedback in advance.
+Frank, is there a field definition or relationship diagram available? 
 
-Moving forward, users can begin testing the complete suite of features in the UAT environment. We plan to revisit the solution in the new year, incorporating user feedback and exploring additional enhancements, with a tentative target for a release in late February or early March.
-
-Thank you for your understanding.
+Thank you!
