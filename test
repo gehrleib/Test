@@ -1,9 +1,5 @@
-Hi Riaz,
+Hi Grace,
 
-I was not aware of a business requirements document, if one exists. Our primary objective was to replicate the Norton Rose process as closely as possible since this was intended to be a lift-and-shift operation. However, as we have identified additional gaps, we have made further enhancements, including the validation process.
+I wanted to let you know that I have completed the reconciliation of 22,709 records as of December 11. These records were identified where the status provided by CALMA differed from our current information. Each record now includes the following status: 
 
-Alice, could you please share any relevant documents you’ve created for your stakeholders, such as flowcharts, presentations, etc.?
-
-Frank, is there a field definition or relationship diagram available? 
-
-Thank you!
+"RegComp Technology Team: On December 11, 2024, a data ingestion of historical control M&T results has updated this record to reflect M&T activities that were completed after December 31 of the specified year."
