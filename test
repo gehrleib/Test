@@ -1,12 +1,1 @@
-const currentYear = new Date().getFullYear();
-
-const after2024Div = document.getElementById('after2024');
-const before2024Div = document.getElementById('before2024');
-
-if (currentYear > 2024) {
-  after2024Div.style.display = 'block'; // or 'inline' or 'flex' depending on your needs
-  before2024Div.style.display = 'none';
-} else {
-  before2024Div.style.display = 'block'; // or 'inline' or 'flex' depending on your needs
-  after2024Div.style.display = 'none';
-}
+At the Issuance level of Authoritative Sources, implement a new checkbox labeled "Override Issuance Country." This option will only be available for selection by members of the Enterprise Compliance team or administrators. When the checkbox is marked "Yes," the country can be changed to any other value. Any future updates to the Issuance by CUBE will not alter the overridden country setting.
