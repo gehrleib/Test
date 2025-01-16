@@ -1,9 +1,12 @@
-Thank you for your email. I am currently out of the office for the Christmas holidays, from Monday, December 16th to Monday, January 13th, returning on Tuesday, January 14th.
+const currentYear = new Date().getFullYear();
 
-I have limited access to email during this time. If your matter is urgent, please contact [colleague's name] at [colleague's email address] or [colleague's phone number].
+const after2024Div = document.getElementById('after2024');
+const before2024Div = document.getElementById('before2024');
 
-Otherwise, I will respond to your email as soon as possible upon my return.
-
-Happy Holidays!
-
-Best regards,
+if (currentYear > 2024) {
+  after2024Div.style.display = 'block'; // or 'inline' or 'flex' depending on your needs
+  before2024Div.style.display = 'none';
+} else {
+  before2024Div.style.display = 'block'; // or 'inline' or 'flex' depending on your needs
+  after2024Div.style.display = 'none';
+}
