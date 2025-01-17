@@ -1,1 +1,5 @@
-Please note that all items in a bulk request are reviewed as a group. If any single item in your request has a conflict or issue, the entire bulk request will be rejected. If your bulk request is rejected, you will need to correct the issue and submit a new request.
+On the Validation form, users will have the option to "lookup" additional sections or citations that contain the same responses, such as applicability and theme.
+
+Additionally, we will include the following help text: "Please note that all items in a bulk request are reviewed collectively."
+
+It is important to emphasize that due to a system limitation users can select sections for which they may not be the designated validator.
