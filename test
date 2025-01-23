@@ -1,1 +1,7 @@
-These are supplemental plans submitted outside of the regular master plan cycle. They allow for sending controls to CALMA that weren't included in the original master plan. This might happen if a control was added later or if it's optional but desired, like an override.
+Hi Alice,
+
+I wanted to discuss the challenges I'm facing with the current API when trying to identify sections without a RegGroup. While developing a report for this is technically possible, the process is highly inefficient and has a significant runtime.
+
+The API currently allows me to filter for sections associated with a specific group, but it doesn’t support filtering for sections without a group. As a result, my only option is to retrieve a list of RegBooks, and then for each book, I have to fetch its sections by iterating through pages of 50 to 250. After that, I must manually check each section to see if it is missing a group. This approach leads to thousands of API calls. It would not be manageable as the inventory grows.
+
+I believe it would be beneficial for us to contact the CUBE team to explore better solutions, such as a built-in report or enhancements to the API functionality.
