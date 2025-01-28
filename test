@@ -1,7 +1,36 @@
-Hi Alice,
+@echo off
 
-I wanted to discuss the challenges I'm facing with the current API when trying to identify sections without a RegGroup. While developing a report for this is technically possible, the process is highly inefficient and has a significant runtime.
+REM Set the executable path
+set "executable_path=C:\path\to\your\executable.exe"
 
-The API currently allows me to filter for sections associated with a specific group, but it doesn’t support filtering for sections without a group. As a result, my only option is to retrieve a list of RegBooks, and then for each book, I have to fetch its sections by iterating through pages of 50 to 250. After that, I must manually check each section to see if it is missing a group. This approach leads to thousands of API calls. It would not be manageable as the inventory grows.
+REM Set the log directory (optional, defaults to current directory)
+set "log_directory=C:\path\to\your\log\directory"
 
-I believe it would be beneficial for us to contact the CUBE team to explore better solutions, such as a built-in report or enhancements to the API functionality.
+REM Create the timestamped filename
+for /f "tokens=2-4 delims=/ " %%a in ('date /t') do (
+  set mydate=%%c-%%a-%%b
+)
+for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (
+  set mytime=%%a-%%b
+)
+
+REM Clean up time string to be filename-safe
+set mytime=%mytime: =0%
+set mytime=%mytime:.=_%
+
+set "log_file=%log_directory%\output_%mydate%_%mytime%.log"
+
+
+REM Run the executable and redirect both stdout and stderr to the log file
+echo Running executable: "%executable_path%" >> "%log_file%"
+echo Log file: "%log_file%" >> "%log_file%"
+
+"%executable_path%" >"%log_file%" 2>&1
+
+echo Executable finished. >> "%log_file%"
+
+echo.
+echo Log file created: "%log_file%"
+echo.
+
+pause
