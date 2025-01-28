@@ -1,36 +1,30 @@
 @echo off
 
-REM Set the executable path
-set "executable_path=C:\path\to\your\executable.exe"
+rem Get current date and time for log file name
+for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
+set "logfilename=log_%dt:~0,4%%dt:~4,2%%dt:~6,2%_%dt:~8,2%%dt:~10,2%%dt:~12,2%.txt"
 
-REM Set the log directory (optional, defaults to current directory)
-set "log_directory=C:\path\to\your\log\directory"
+rem Display start time in the console and log file
+echo Started at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2% >> "%logfilename%"
+echo Started at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2%
 
-REM Create the timestamped filename
-for /f "tokens=2-4 delims=/ " %%a in ('date /t') do (
-  set mydate=%%c-%%a-%%b
+rem Run the executable and redirect output and errors to the log file
+echo Running your_executable.exe... >> "%logfilename%"
+"path\to\your_executable.exe" >> "%logfilename%" 2>&1
+
+rem Check for errors
+if %errorlevel% neq 0 (
+    echo Error occurred! Check the log file for details. >> "%logfilename%"
+    echo Error occurred! Check the log file for details.
+) else (
+    echo Execution completed successfully. >> "%logfilename%"
+    echo Execution completed successfully.
 )
-for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (
-  set mytime=%%a-%%b
-)
 
-REM Clean up time string to be filename-safe
-set mytime=%mytime: =0%
-set mytime=%mytime:.=_%
+rem Display end time in the console and log file
+for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
+echo Finished at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2% >> "%logfilename%"
+echo Finished at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2%
 
-set "log_file=%log_directory%\output_%mydate%_%mytime%.log"
-
-
-REM Run the executable and redirect both stdout and stderr to the log file
-echo Running executable: "%executable_path%" >> "%log_file%"
-echo Log file: "%log_file%" >> "%log_file%"
-
-"%executable_path%" >"%log_file%" 2>&1
-
-echo Executable finished. >> "%log_file%"
-
-echo.
-echo Log file created: "%log_file%"
-echo.
-
+echo Log file: "%logfilename%"
 pause
