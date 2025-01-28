@@ -1,8 +1,22 @@
 @echo off
 
+rem Set the full path to the logs directory
+set "logdir=F:\Your\Full\Path\to\logs"
+
+rem Check if the logs directory exists, and create it if it doesn't
+if not exist "%logdir%" (
+    echo Creating directory: "%logdir%"
+    mkdir "%logdir%"
+    if errorlevel 1 (
+        echo Failed to create directory "%logdir%". Exiting.
+        pause
+        exit /b 1
+    )
+)
+
 rem Get current date and time for log file name
 for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
-set "logfilename=log_%dt:~0,4%%dt:~4,2%%dt:~6,2%_%dt:~8,2%%dt:~10,2%%dt:~12,2%.txt"
+set "logfilename=%logdir%\log_%dt:~0,4%%dt:~4,2%%dt:~6,2%_%dt:~8,2%%dt:~10,2%%dt:~12,2%.txt"
 
 rem Display start time in the console and log file
 echo Started at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2% >> "%logfilename%"
