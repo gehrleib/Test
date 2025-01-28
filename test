@@ -1,44 +1,25 @@
-@echo off
+The primary reason for not implementing a separate completeness check is that the file retrieval and transformation processes occur simultaneously. This integrated approach means we cannot directly compare the total record count in the source file against the number of records processed because the source file's structure isn't fully known until it is successfully retrieved and parsed.
 
-rem Set the full path to the logs directory
-set "logdir=F:\Your\Full\Path\to\logs"
-
-rem Check if the logs directory exists, and create it if it doesn't
-if not exist "%logdir%" (
-    echo Creating directory: "%logdir%"
-    mkdir "%logdir%"
-    if errorlevel 1 (
-        echo Failed to create directory "%logdir%". Exiting.
-        pause
-        exit /b 1
-    )
-)
-
-rem Get current date and time for log file name
-for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
-set "logfilename=%logdir%\log_%dt:~0,4%%dt:~4,2%%dt:~6,2%_%dt:~8,2%%dt:~10,2%%dt:~12,2%.txt"
-
-rem Display start time in the console and log file
-echo Started at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2% >> "%logfilename%"
-echo Started at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2%
-
-rem Run the executable and redirect output and errors to the log file
-echo Running your_executable.exe... >> "%logfilename%"
-"path\to\your_executable.exe" >> "%logfilename%" 2>&1
-
-rem Check for errors
-if %errorlevel% neq 0 (
-    echo Error occurred! Check the log file for details. >> "%logfilename%"
-    echo Error occurred! Check the log file for details.
-) else (
-    echo Execution completed successfully. >> "%logfilename%"
-    echo Execution completed successfully.
-)
-
-rem Display end time in the console and log file
-for /f "tokens=2 delims==" %%a in ('wmic OS Get localdatetime /value') do set "dt=%%a"
-echo Finished at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2% >> "%logfilename%"
-echo Finished at %dt:~0,4%-%dt:~4,2%-%dt:~6,2% %dt:~8,2%:%dt:~10,2%:%dt:~12,2%
-
-echo Log file: "%logfilename%"
-pause
+Existing Controls and Safeguards:
+Despite the absence of a separate completeness check, several robust controls ensure data integrity:
+File Retrieval and Validation:
+Archer is configured to log the run as a failure in the following scenarios:
+Connectivity/Retrieval Issues: If Archer cannot establish a connection or retrieve the file due to network issues, timeouts, or the absence of the file at the designated location, the process is immediately halted, and the run is marked as failed. This ensures that no processing occurs when the source file is unavailable.
+File Format Validation: We expect files in XML format. Upon retrieval, the system immediately validates the file structure against the expected format. If the file is not a valid XML (e.g., corrupted, incomplete, or in a different format), the process is aborted, and the run is logged as failed. This prevents processing of improperly structured files that might indicate incompleteness.
+Notification and Investigation: In both of the above failure scenarios, the Production Support team receives an email notification to investigate the root cause of the failure.
+Handling of Expected Outages:
+An incident may not be created if the outage was anticipated, as it is seen as a scheduled event.
+Handling of Interrupted Transfers:
+We have never observed a scenario where a partially transferred file was successfully processed. Based on the file transfer protocol used, if a transfer is interrupted, we anticipate one of two outcomes:
+Incomplete Transfer Rollback: The partially transferred data is likely removed from the destination, similar to canceling a file copy operation. This prevents the system from even attempting to process a fragment of the file.
+Validation Failure: If any part of the file does reach the destination, it would almost certainly be incomplete. For example, an XML file would be missing crucial elements like closing tags, leading to a definitive failure during the XML validation step. In either scenario, Archer logs a failure, preventing further processing and triggering the notification process.
+Daily Full Inventory Refresh Mitigates Risk of Incompleteness:
+Crucially, the control data feed operates on a daily basis and provides a complete inventory refresh each time. This means that each successful run completely replaces the previous day's data.
+Therefore, even in the highly unlikely event of a temporarily incomplete file being processed, the next day's successful run with a complete file would automatically correct any data discrepancies, ensuring data integrity is maintained. The full refresh effectively acts as a daily reconciliation.
+Impact Analysis and Remediation for Missing Records within a Valid File:
+While rare, it is theoretically possible that a file passes format validation but is still missing some records. For example, the file generator on the source side had an issue and a valid but incomplete XML file was generated and successfully transfered.
+In this unlikely scenario, if records are missing, and a control record in our system is associated with these missing records, the control record will be marked as 'retired' and removed from the assessable unit. However, it is important to note that the next day's run will have this missing record if it was truly missing and not just a valid removal.
+Materiality Assessment: The impact of this removal is assessed. If the removal has a material impact on the control's rating (e.g., changing it from "Adequate" to "Inadequate"), a new assessment is triggered.
+Production Incident: If a system error caused the missing records, resulting in a material impact, a Production Incident is created to investigate and rectify the underlying issue. This process ensures that systemic problems leading to data loss are identified and addressed.
+History Log for Data Changes:
+All changes to data within our system are captured in a detailed "History Log". This log provides a complete audit trail of modifications, ensuring transparency and allowing for investigation of any data discrepancies that may arise.
