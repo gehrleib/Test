@@ -1,1 +1,4 @@
-The 'Quality of Control Removed/Retired' section will display any controls that were removed or retired while their corresponding assessments were in 'Draft' or '2LOD Review' status. This ensures a thorough review of these changes
+Before removing commentary fields, append the override commentary to the general commentary for any assessable unit that meets the following criteria:
+
+Status is "2LOD Review" or "Approved"
+An override is present.
