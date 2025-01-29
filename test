@@ -1,4 +1,7 @@
-Before removing commentary fields, append the override commentary to the general commentary for any assessable unit that meets the following criteria:
+Hi Lance,
 
-Status is "2LOD Review" or "Approved"
-An override is present.
+Your proposed solution underscores my original concern. We cannot determine if a book contains a section without a group without first iterating through the entire book and each section. This process would require thousands of calls and lead to significant time delays. As the number of issuing bodies and books increases, the inefficiency compounds exponentially.
+
+Additionally, we need to know if the section contains content, as those with content need to be primarily grouped.
+
+For this reason, I am considering a custom report. However, I would like to consult your team to see if that would indeed be a more efficient approach.
