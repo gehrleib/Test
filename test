@@ -1,1 +1,7 @@
-All change requests are linked to a citation. Therefore, the easiest way to limit who can create a change request is to control where these requests can be initiated. The "Add New" option will be removed from all menus except for the citation itself, which can only be accessed by a validator from one of the affected regional segments.
+Hi Alice,
+
+I wanted to update you that we have successfully ingested all the Production data from CUBE. However, I noticed an anomaly involving four RegGroups that show a citation, but I am unable to access the corresponding RegBook. Additionally, I cannot view it from CUBE's UI.
+
+Could you please confirm whether this RegBook applies to RBC or if it was a mistake? If it is legitimate, the book will need to be added to the "RBC - Enterprise Compliance" entity. If it is not legitimate, we should proceed with removing or archiving the groups.
+
+Thank you!
