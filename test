@@ -1,8 +1,1 @@
-If a citation requires mapping, the Enterprise Compliance team will have access to a new form called "Manual Attestation Request." This form will be read-only for all other users. Once the request is submitted, a new attestation will be triggered for each affected regional segment within one hour. It cannot be cancelled or updated.
-
-The "Manual Attestation Request" form shall include the following fields:
-Date of Request: (Read-only) Automatically populated with the current date and time upon form creation.  This field cannot be modified by the user.
-Requested By: (Read-only) Automatically populated with the name of the user submitting the request. This field cannot be modified by the user.
-On Behalf Of: (Optional) A free-text field allowing the requester to specify the individual or team they are submitting the request on behalf of.
-Brief Description/Justification: (Required) A free-text field where the requester provides a concise explanation for the manual attestation request.  This field is mandatory and must be populated before form submission.
-Supporting Documents: (Optional) A file upload field allowing the requester to attach relevant supporting documentation.  Multiple files may be permitted.
+All change requests are linked to a citation. Therefore, the easiest way to limit who can create a change request is to control where these requests can be initiated. The "Add New" option will be removed from all menus except for the citation itself, which can only be accessed by a validator from one of the affected regional segments.
