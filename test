@@ -1,7 +1,1 @@
-Hi Alice,
-
-I wanted to update you that we have successfully ingested all the Production data from CUBE. However, I noticed an anomaly involving four RegGroups that show a citation, but I am unable to access the corresponding RegBook. Additionally, I cannot view it from CUBE's UI.
-
-Could you please confirm whether this RegBook applies to RBC or if it was a mistake? If it is legitimate, the book will need to be added to the "RBC - Enterprise Compliance" entity. If it is not legitimate, we should proceed with removing or archiving the groups.
-
-Thank you!
+The attached DBA confirms the backsync activities performed on July 24, 2024, mirroring the Production environment in OAT.  Also attached is a list of package installations applied to OAT to maintain parity with Production.
