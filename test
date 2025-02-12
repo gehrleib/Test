@@ -1,9 +1,14 @@
-Our current deployment process, which uses a packaging and export/import method, presents a challenge in providing granular modification dates
+1. Is there a way for us to identify the reliance model related RegGroups (e.g., tagging) and not pull those groups into RegComp?
 
-Archer uses a packaging and export/import method for moving configurations between environments.  When we package and deploy these changes, the import process updates the 'last modified' timestamps on all components within that package, regardless of whether individual components were actually changed.  This means the timestamps reflect the deployment date, not the date of the specific configuration change.  Therefore, the 'last modified' date within [Tool Name] is not a reliable indicator of when a specific setting was modified.
+Yes, all entities under RBC Enterprise Compliance are within scope for RegComp. We can use tagging to exclude Reliance Model RegGroups.  To implement this, you'll need to provide the specific tag value used to identify these groups. This will require a code modification to filter based on that tag.  Please provide the tag value so we can proceed with the necessary changes.
 
-We recognize the importance of tracking configuration changes for audit purposes. While the current packaging process doesn't support granular modification dates, we can offer the following alternative evidence and are exploring long-term solutions:
+2. Some reliance groups have 12 RegBooks together. Can we ingest them?
 
-Jira Records: Our primary record of configuration changes is maintained within Jira. Each change request includes a description of the change, the requester, the approval date, and the implementation date. We can provide you with the Jira tickets associated with specific configuration changes, which document when the changes were requested, approved, and implemented. This provides a clear audit trail of the change process.
-UAT Evidence: User Acceptance Testing (UAT) provides evidence that the configuration changes were tested and validated before being deployed to production. We can provide you with the UAT test cases and results, which demonstrate that the changes were working as intended and were signed off by the relevant stakeholders. This helps confirm the changes were implemented and verified.
-Deployment Records: While the 'last modified' dates within [Tool Name] aren't granular, we do have records of when deployments occurred. These records, combined with the Jira tickets, help establish the timeframe within which specific configuration changes were deployed to each environment.
+No, RegGroups with multiple RegBooks (like the ones with 12) will be excluded.  RegComp is designed to handle RegGroups with only one RegBook to maintain data integrity.  Including groups with multiple RegBooks risks inaccurate representation across segments and jurisdictions. For example, if Book A is associated with Canada and Book B with the United States, linking them within a single RegGroup would incorrectly indicate that the group applies to both countries.
+
+3. Reliance model teams are not required to use RegComp. What will happen to those groups?
+
+There are two scenarios:
+
+Scenario 1 (Tagging): If a RegGroup is initially created without the Reliance Model tag, but the tag is added later, that group will be archived during the next synchronization process.
+Scenario 2 (Manual Classification): If we opt not to use tags, a user can perform a validation and manually classify a RegGroup as a Reliance Model. These manually identified groups will then be excluded from the RegComp dashboard.
