@@ -1,11 +1,9 @@
-GitHub Actions allows you to automate your software development workflows directly within your GitHub repositories. This can range from simple tasks like running tests and linting code to complex deployments and infrastructure management. It's a powerful tool for CI/CD (Continuous Integration/Continuous Delivery). Since you're already using Git, integrating with GitHub Actions is a natural extension. It also becomes increasingly important as DevOps practices become more common.
+Our current deployment process, which uses a packaging and export/import method, presents a challenge in providing granular modification dates
 
-ira and Confluence are core tools for Agile and software development teams. Jira helps with project management, issue tracking, and bug fixing. Confluence facilitates collaboration and knowledge sharing through documentation and wikis. Since you're already using Scrum, mastering these tools will make you more effective within your team.   
+Archer uses a packaging and export/import method for moving configurations between environments.  When we package and deploy these changes, the import process updates the 'last modified' timestamps on all components within that package, regardless of whether individual components were actually changed.  This means the timestamps reflect the deployment date, not the date of the specific configuration change.  Therefore, the 'last modified' date within [Tool Name] is not a reliable indicator of when a specific setting was modified.
 
+We recognize the importance of tracking configuration changes for audit purposes. While the current packaging process doesn't support granular modification dates, we can offer the following alternative evidence and are exploring long-term solutions:
 
-
-Git is the industry-standard version control system. It allows you to track changes to your code, collaborate with others, and revert to previous versions if needed. It is fundamental for any software development project.   
-
-VS Code (Visual Studio Code) is a highly popular and versatile code editor.
-
- It supports a wide range of programming languages and offers features like debugging, IntelliSense (code completion), Git integration, and extensions that can enhance your productivity. Choosing a powerful and extensible code editor is essential for efficient development.
+Jira Records: Our primary record of configuration changes is maintained within Jira. Each change request includes a description of the change, the requester, the approval date, and the implementation date. We can provide you with the Jira tickets associated with specific configuration changes, which document when the changes were requested, approved, and implemented. This provides a clear audit trail of the change process.
+UAT Evidence: User Acceptance Testing (UAT) provides evidence that the configuration changes were tested and validated before being deployed to production. We can provide you with the UAT test cases and results, which demonstrate that the changes were working as intended and were signed off by the relevant stakeholders. This helps confirm the changes were implemented and verified.
+Deployment Records: While the 'last modified' dates within [Tool Name] aren't granular, we do have records of when deployments occurred. These records, combined with the Jira tickets, help establish the timeframe within which specific configuration changes were deployed to each environment.
