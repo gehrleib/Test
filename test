@@ -1,14 +1,1 @@
-1. Is there a way for us to identify the reliance model related RegGroups (e.g., tagging) and not pull those groups into RegComp?
-
-Yes, all entities under RBC Enterprise Compliance are within scope for RegComp. We can use tagging to exclude Reliance Model RegGroups.  To implement this, you'll need to provide the specific tag value used to identify these groups. This will require a code modification to filter based on that tag.  Please provide the tag value so we can proceed with the necessary changes.
-
-2. Some reliance groups have 12 RegBooks together. Can we ingest them?
-
-No, RegGroups with multiple RegBooks (like the ones with 12) will be excluded.  RegComp is designed to handle RegGroups with only one RegBook to maintain data integrity.  Including groups with multiple RegBooks risks inaccurate representation across segments and jurisdictions. For example, if Book A is associated with Canada and Book B with the United States, linking them within a single RegGroup would incorrectly indicate that the group applies to both countries.
-
-3. Reliance model teams are not required to use RegComp. What will happen to those groups?
-
-There are two scenarios:
-
-Scenario 1 (Tagging): If a RegGroup is initially created without the Reliance Model tag, but the tag is added later, that group will be archived during the next synchronization process.
-Scenario 2 (Manual Classification): If we opt not to use tags, a user can perform a validation and manually classify a RegGroup as a Reliance Model. These manually identified groups will then be excluded from the RegComp dashboard.
+Grace has provided the UAT evidence and release notes, which include the Jira ID and production implementation date.  The UAT evidence was approved prior to the production release, as required by the change request.
