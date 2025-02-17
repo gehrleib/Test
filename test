@@ -1,38 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="3.0">
-    <xsl:output method="xml" indent="yes"/>
-    <xsl:mode on-no-match="shallow-skip"/>
+Mapping attestations will be cancelled for the following reasons:
 
-    <xsl:template match="/Records">
-        <Attestations>
-            <xsl:for-each select="Record">
-                <xsl:variable name="parentStatus" select="Field[@guid='03c36c96-111c-4b18-b4c0-9bb38fac3b55']/ListValues/ListValue"/>
-                <xsl:variable name="parentRequiresMapping" select="Field[@guid='a80ab528-c344-4bd6-accb-4798aa6a85eb']/ListValues/ListValue"/>
-                
-                <xsl:choose>
-                    <xsl:when test="$parentStatus = 'Archived' or $parentRequiresMapping = 'No'">
-                        <xsl:for-each select="Record[@levelGuid='ccef98d3-7ac4-45ab-bc5f-4a7d4513fd88']">
-                            <Attestation>
-                                <TrackingID><xsl:value-of select="./@contentId"/></TrackingID>
-                                <Cancelled>Yes</Cancelled>
-                            </Attestation>
-                        </xsl:for-each>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:for-each select="Record[@levelGuid='ccef98d3-7ac4-45ab-bc5f-4a7d4513fd88']">
-                            <xsl:variable name="childRegionalSegmentID" select="Field[@guid='efe722d8-3500-4f2e-a2d3-057df541c588']/Reference/@id"/>
-                            <xsl:variable name="parentRegionalSegmentIDs" select="../Field[@guid='f5b6db97-fc9d-449a-bb59-95402b5119d7']/Reference/@id"/>
-                            
-                            <xsl:if test="not(exists($parentRegionalSegmentIDs)) or not($childRegionalSegmentID = $parentRegionalSegmentIDs)">
-                                <Attestation>
-                                    <TrackingID><xsl:value-of select="./@contentId"/></TrackingID>
-                                    <Cancelled>Yes</Cancelled>
-                                </Attestation>
-                            </xsl:if>
-                        </xsl:for-each>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:for-each>
-        </Attestations>
-    </xsl:template>
-</xsl:stylesheet>
+Section is Archived: If a section is marked as "Archived," any pending mapping attestations for that section will be cancelled. This is an existing rule.
+Mapping is No Longer Required: If mapping is no longer needed for a section, any pending attestations for that section will be cancelled. This is also an existing rule.
+Regional Scope Change: If the geographic area (regional segment) for a mapping attestation is no longer relevant due to updates. This is a new rule that only affects attestations made for the outdated region.
+For example, imagine the valid regions for "Capital Markets" were initially "Canada" and "United States." If we update this to only "United States," then any mapping attestations specifically for "Canada" within "Capital Markets" will be cancelled.
