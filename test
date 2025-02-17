@@ -1,6 +1,3 @@
-Mapping attestations will be cancelled for the following reasons:
+Conditions 1 & 2 are existing and cancel all pending attestations for a section. Condition 3 is new and targets attestations with outdated regional segments.
 
-Section is Archived: If a section is marked as "Archived," any pending mapping attestations for that section will be cancelled. This is an existing rule.
-Mapping is No Longer Required: If mapping is no longer needed for a section, any pending attestations for that section will be cancelled. This is also an existing rule.
-Regional Scope Change: If the geographic area (regional segment) for a mapping attestation is no longer relevant due to updates. This is a new rule that only affects attestations made for the outdated region.
-For example, imagine the valid regions for "Capital Markets" were initially "Canada" and "United States." If we update this to only "United States," then any mapping attestations specifically for "Canada" within "Capital Markets" will be cancelled.
+Example: Valid regional segments change from "Capital Markets - Canada" and "Capital Markets - United States" to just "Capital Markets - United States". The mapping attestation for "Capital Markets - Canada" will be cancelled.
