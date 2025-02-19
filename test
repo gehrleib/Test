@@ -1,1 +1,23 @@
-Our next release is scheduled for April/May.  We could consider postponing it by a couple of weeks, as we don't have any urgent needs and are not onboarding Cube users until later in the year, as previously discussed.
+Here's a problem statement and technical solution for your story:
+
+Problem Statement:
+
+The current assessment submission process allows 1LOD reviewers to submit assessments without explicitly selecting a risk rating when the calculated rating is deemed acceptable.  While an override option exists, it's not consistently used as intended.  Reviewers sometimes select the same rating as the calculated rating, even though this should only occur when the calculated rating is being overridden. This creates ambiguity: it's unclear whether the 1LOD truly agrees with the calculated rating or if they intended to override it but simply chose the same value.  This lack of clarity hinders the 2LOD review process and makes it difficult to track and understand the 1LOD's assessment rationale.  Conversely, 2LOD reviewers are required to select an "approved" rating, regardless of whether it matches the calculated rating, creating an inconsistency in the process.
+
+Technical Solution:
+
+To address this issue, we propose the following changes to the assessment submission workflow:
+
+Rename and Require 1LOD Rating Selection: Rename the "1LOD Override Inherent Risk Rating" and "1LOD Override Control Rating" fields to "1LOD Submitted Inherent Risk Rating" and "1LOD Submitted Control Rating," respectively.  Make these fields required upon 1LOD submission. This forces the 1LOD to explicitly select a rating for both inherent and control risk, confirming their evaluation.
+
+Comparison and Rationale: Upon submission, the system will compare the "1LOD Submitted" ratings with the calculated ratings.
+
+Matching Ratings: If the submitted rating matches the calculated rating, the system will record this explicitly (e.g., in a new field called "1LOD Rating Matches Calculated").  This provides clear documentation that the 1LOD agrees with the calculated rating.
+
+Differing Ratings: If the submitted rating differs from the calculated rating, the system will flag this discrepancy and require the 1LOD to provide supporting rationale in a dedicated "1LOD Rationale for Rating Change" field.  This ensures that any deviation from the calculated rating is justified and documented.
+
+Consistent 2LOD Process: Maintain the current requirement for 2LOD reviewers to select an "approved" rating.  This ensures consistency in the final approval step.  The 2LOD will have access to the "1LOD Submitted" rating, the calculated rating, the "1LOD Rating Matches Calculated" indicator, and the "1LOD Rationale for Rating Change" (if applicable) to inform their review.
+
+User Interface Updates:  Update the user interface to reflect the field name changes and the new requirement for rationale when ratings differ.  Provide clear instructions to users about the new process.
+
+This solution will ensure that the 1LOD's assessment is clearly documented, whether it aligns with the calculated rating or not.  It will also provide valuable information to the 2LOD, enabling more informed and efficient reviews.  By requiring explicit selection and rationale (when necessary), the process becomes more transparent, auditable, and consistent.
