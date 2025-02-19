@@ -1,3 +1,1 @@
-Conditions 1 & 2 are existing and cancel all pending attestations for a section. Condition 3 is new and targets attestations with outdated regional segments.
-
-Example: Valid regional segments change from "Capital Markets - Canada" and "Capital Markets - United States" to just "Capital Markets - United States". The mapping attestation for "Capital Markets - Canada" will be cancelled.
+Our next release is scheduled for April/May.  We could consider postponing it by a couple of weeks, as we don't have any urgent needs and are not onboarding Cube users until later in the year, as previously discussed.
