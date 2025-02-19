@@ -1,23 +1,24 @@
-Here's a problem statement and technical solution for your story:
-
 Problem Statement:
 
-The current assessment submission process allows 1LOD reviewers to submit assessments without explicitly selecting a risk rating when the calculated rating is deemed acceptable.  While an override option exists, it's not consistently used as intended.  Reviewers sometimes select the same rating as the calculated rating, even though this should only occur when the calculated rating is being overridden. This creates ambiguity: it's unclear whether the 1LOD truly agrees with the calculated rating or if they intended to override it but simply chose the same value.  This lack of clarity hinders the 2LOD review process and makes it difficult to track and understand the 1LOD's assessment rationale.  Conversely, 2LOD reviewers are required to select an "approved" rating, regardless of whether it matches the calculated rating, creating an inconsistency in the process.
+The current control assessment generation process identifies and displays retired/removed controls by comparing the current control list with the previously approved list.  However, this comparison and display of retired controls only occur at the initial generation of the assessment.  If controls are removed or retired during the draft phase of the assessment, these changes are not reflected in the retired controls section until a new assessment is generated. This creates a potential disconnect between the controls listed in the assessment and the actual current state of controls, leading to inaccurate assessments and potential compliance issues.  Reviewers may be unaware of controls retired during the drafting process, making it difficult to ensure the assessment is based on the most up-to-date information.
 
 Technical Solution:
 
-To address this issue, we propose the following changes to the assessment submission workflow:
+To address this, we propose implementing a dynamic update mechanism for the retired controls list within the control assessment:
 
-Rename and Require 1LOD Rating Selection: Rename the "1LOD Override Inherent Risk Rating" and "1LOD Override Control Rating" fields to "1LOD Submitted Inherent Risk Rating" and "1LOD Submitted Control Rating," respectively.  Make these fields required upon 1LOD submission. This forces the 1LOD to explicitly select a rating for both inherent and control risk, confirming their evaluation.
+Real-time Control Status Tracking: Implement a system to track the status of all controls (active, retired, removed). This could involve a database flag or a dedicated control status service.
 
-Comparison and Rationale: Upon submission, the system will compare the "1LOD Submitted" ratings with the calculated ratings.
+Dynamic Retired Controls List: Instead of generating the retired controls list only at initial assessment creation, the list should be dynamically updated whenever a control's status changes to "retired" or "removed" during the draft phase of an assessment.
 
-Matching Ratings: If the submitted rating matches the calculated rating, the system will record this explicitly (e.g., in a new field called "1LOD Rating Matches Calculated").  This provides clear documentation that the 1LOD agrees with the calculated rating.
+Automated Refresh:  The retired controls section of the assessment should automatically refresh whenever a control's status changes. This could be achieved through:
 
-Differing Ratings: If the submitted rating differs from the calculated rating, the system will flag this discrepancy and require the 1LOD to provide supporting rationale in a dedicated "1LOD Rationale for Rating Change" field.  This ensures that any deviation from the calculated rating is justified and documented.
+WebSockets/Server-Sent Events: Use a real-time communication technology like WebSockets or Server-Sent Events to push updates from the control status tracking system to the assessment interface. This would allow for near-instantaneous updates.
+Polling (Less Efficient): If real-time communication is not feasible, implement a periodic polling mechanism where the assessment interface periodically checks for updates to the control status and refreshes the retired controls list accordingly. This is less efficient but can be a simpler alternative.
+User Interface Updates: Modify the assessment interface to:
 
-Consistent 2LOD Process: Maintain the current requirement for 2LOD reviewers to select an "approved" rating.  This ensures consistency in the final approval step.  The 2LOD will have access to the "1LOD Submitted" rating, the calculated rating, the "1LOD Rating Matches Calculated" indicator, and the "1LOD Rationale for Rating Change" (if applicable) to inform their review.
+Clearly indicate that the retired controls list is dynamically updated.
+Provide a visual cue (e.g., a loading indicator) during the refresh process.
+Ensure the user interface can handle additions and removals from the retired controls list without requiring a full page reload.
+Version Control/Audit Trail: Maintain a version history or audit trail of control status changes.  This will be crucial for tracking changes made during the assessment process and ensuring accountability.
 
-User Interface Updates:  Update the user interface to reflect the field name changes and the new requirement for rationale when ratings differ.  Provide clear instructions to users about the new process.
-
-This solution will ensure that the 1LOD's assessment is clearly documented, whether it aligns with the calculated rating or not.  It will also provide valuable information to the 2LOD, enabling more informed and efficient reviews.  By requiring explicit selection and rationale (when necessary), the process becomes more transparent, auditable, and consistent.
+This solution will ensure that the retired controls list within a control assessment is always up-to-date, reflecting the current status of all controls.  This will lead to more accurate and reliable assessments, reduce the risk of compliance issues, and improve the efficiency of the review process.
