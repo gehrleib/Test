@@ -1,24 +1,24 @@
-Problem Statement:
+Background
+In ORMS, each control is linked to a regulation that specifies the relevant business area.
 
-The current control assessment generation process identifies and displays retired/removed controls by comparing the current control list with the previously approved list.  However, this comparison and display of retired controls only occur at the initial generation of the assessment.  If controls are removed or retired during the draft phase of the assessment, these changes are not reflected in the retired controls section until a new assessment is generated. This creates a potential disconnect between the controls listed in the assessment and the actual current state of controls, leading to inaccurate assessments and potential compliance issues.  Reviewers may be unaware of controls retired during the drafting process, making it difficult to ensure the assessment is based on the most up-to-date information.
+Transformation Rules
+Control Instances:
 
-Technical Solution:
+For each control, create an instance for every unique combination of segment, line of business, country, and theme found in the associated ERIC regulation.
+Since a single ERIC regulation can include multiple lines of business, multiple instances may be generated from a single regulation.
+Avoiding Duplicates:
 
-To address this, we propose implementing a dynamic update mechanism for the retired controls list within the control assessment:
+If the same line of business appears in different ERIC regulations for the same control, do not create duplicate instances.
+Example:
+Regulation 1: "Capital Markets" (Segment), "Conflicts of Interest" (Theme), "Canada" (Country), "Global Research" (Line of Business).
+Regulation 2: Same segment, theme, and country, but with two lines of business: "Global Research" and "Corporate Finance."
+Result: Only two instances are created, one for each unique line of business.
+If duplicate instances are avoided, the ERIC Regulation IDs will be combined in a single instance, separated by a comma (,).
+Other Data Transformations:
 
-Real-time Control Status Tracking: Implement a system to track the status of all controls (active, retired, removed). This could involve a database flag or a dedicated control status service.
-
-Dynamic Retired Controls List: Instead of generating the retired controls list only at initial assessment creation, the list should be dynamically updated whenever a control's status changes to "retired" or "removed" during the draft phase of an assessment.
-
-Automated Refresh:  The retired controls section of the assessment should automatically refresh whenever a control's status changes. This could be achieved through:
-
-WebSockets/Server-Sent Events: Use a real-time communication technology like WebSockets or Server-Sent Events to push updates from the control status tracking system to the assessment interface. This would allow for near-instantaneous updates.
-Polling (Less Efficient): If real-time communication is not feasible, implement a periodic polling mechanism where the assessment interface periodically checks for updates to the control status and refreshes the retired controls list accordingly. This is less efficient but can be a simpler alternative.
-User Interface Updates: Modify the assessment interface to:
-
-Clearly indicate that the retired controls list is dynamically updated.
-Provide a visual cue (e.g., a loading indicator) during the refresh process.
-Ensure the user interface can handle additions and removals from the retired controls list without requiring a full page reload.
-Version Control/Audit Trail: Maintain a version history or audit trail of control status changes.  This will be crucial for tracking changes made during the assessment process and ensuring accountability.
-
-This solution will ensure that the retired controls list within a control assessment is always up-to-date, reflecting the current status of all controls.  This will lead to more accurate and reliable assessments, reduce the risk of compliance issues, and improve the efficiency of the review process.
+Lines of Defence: Both "2LOD" and "2LOD - CoG" in ORMS will be treated as "2LOD."
+OE Assessment Type Mapping:
+"Control monitoring based on direct information" → Direct Monitoring
+"Control monitoring based on indirect information" → Indirect Monitoring
+"Control Test" → Testing
+Let me know if you need any refinements! 🚀
