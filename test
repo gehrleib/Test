@@ -1,2 +1,10 @@
-Implement a system event trigger that fires when a new regional segment is created.
-When the trigger fires, the system will automatically generate a master monitoring and testing plan for the new regional segment, using the same template and logic as the annual generation.
+Problem Statement:
+
+Unsubmitted monitoring and testing plans from previous years can remain in the system, potentially causing confusion and conflicts when new plans are generated for the following year. These outdated, unsubmitted plans should be automatically cancelled to maintain data integrity and prevent errors.
+
+Technical Solution:
+
+Scheduled Cancellation Job:
+Implement a scheduled job (e.g., using a cron job or a scheduled task within the application) that triggers at the start of each new year (e.g., January 1st, after the new year's master plan generation).
+The job will query the system for all monitoring and testing plans (master and addendums) that have a "created" or "draft" status (or whatever status indicates they are not yet submitted).
+The job will then change the status of these plans to "cancelled."
