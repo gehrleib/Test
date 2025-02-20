@@ -1,25 +1,14 @@
 Problem Statement:
 
-The current process for automatically creating regional segments is inefficient and prone to delays. It relies on calculated fields as a trigger and initial step for staging data. This approach introduces latency and potential inconsistencies, impacting the timeliness and accuracy of regional segment updates.
+Currently, master monitoring and testing plans are created manually at the beginning of each year using a checkbox trigger. This manual process is time-consuming, prone to delays if forgotten, and introduces unnecessary manual effort. We need to automate this process to ensure consistent and timely plan generation.
 
 Technical Solution:
 
-To address the inefficiency, we will implement the following solution:
-
-Generate Active Line of Business Report:
-
-Create a scheduled report that retrieves all active Line of Business data.
-This report will include the Line of Business name, associated country, and segment information.
-The report will be generated in XML format for structured data processing.
-XSLT Transformation:
-
-Develop an XSLT transformation to process the generated XML report.
-The XSLT will extract the unique combinations of region and segment from the Line of Business data.
-This step will consolidate the data and eliminate redundancies.
-Regional Segment Creation Logic:
-
-Implement a system process that consumes the transformed data from the XSLT.
-The system will compare the extracted region/segment combinations with existing regional segments.
-For any missing regional segments, the system will create new entries using a "create-only" rule.
-This ensures that existing regional segments are not unintentionally updated or overwritten.
-This will prevent issues that could arise from a create/update action, such as data loss.
+Automated Scheduled Generation:
+Replace the manual checkbox trigger with a scheduled job (e.g., using a cron job or a scheduled task within the application) that triggers at the start of each year (e.g., January 1st).
+Ensure the automated process leverages the existing template and logic used for the checkbox-triggered generation.
+Restrict Manual Master Plan Creation:
+Remove the checkbox trigger from the user interface.
+Implement system logic to prevent the creation of new master plans through any other manual means after the automated process has run for the year.
+Maintain the existing functionality for creating addendums to regional segments.
+Ensure the existing addendum creation process is still reliant on a master plan existing for that year.
