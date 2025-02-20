@@ -1,24 +1,18 @@
-Background
-In ORMS, each control is linked to a regulation that specifies the relevant business area.
+Problem Statement:
 
-Transformation Rules
-Control Instances:
+Currently, there is no visibility into the operational status of regional segments. This lack of information makes it difficult to understand which segments are actively being used and which are obsolete. This can lead to inefficiencies in resource allocation, data management, and reporting.
 
-For each control, create an instance for every unique combination of segment, line of business, country, and theme found in the associated ERIC regulation.
-Since a single ERIC regulation can include multiple lines of business, multiple instances may be generated from a single regulation.
-Avoiding Duplicates:
+Technical Solution:
 
-If the same line of business appears in different ERIC regulations for the same control, do not create duplicate instances.
-Example:
-Regulation 1: "Capital Markets" (Segment), "Conflicts of Interest" (Theme), "Canada" (Country), "Global Research" (Line of Business).
-Regulation 2: Same segment, theme, and country, but with two lines of business: "Global Research" and "Corporate Finance."
-Result: Only two instances are created, one for each unique line of business.
-If duplicate instances are avoided, the ERIC Regulation IDs will be combined in a single instance, separated by a comma (,).
-Other Data Transformations:
-
-Lines of Defence: Both "2LOD" and "2LOD - CoG" in ORMS will be treated as "2LOD."
-OE Assessment Type Mapping:
-"Control monitoring based on direct information" → Direct Monitoring
-"Control monitoring based on indirect information" → Indirect Monitoring
-"Control Test" → Testing
-Let me know if you need any refinements! 🚀
+Introduce a "Regional Segment Status" field:
+Add a new field to the regional segment entity with the following possible values: "Active" and "Retired."
+Automated Status Derivation:
+Implement a logic that automatically determines the segment status based on the status of its associated lines of business.
+If at least one associated line of business is "Active," the regional segment status should be set to "Active."
+If all associated lines of business are "Retired" or do not exist, the regional segment status should be set to "Retired."
+Data Persistence:
+Ensure the "Regional Segment Status" is persisted in the database.
+User Interface (UI) Display:
+Display the "Regional Segment Status" in the regional segment details view within the user interface.
+Data Synchronization:
+Ensure that when the line of business status is updated, that the regional segment status is also updated.
