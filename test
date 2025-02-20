@@ -1,18 +1,25 @@
 Problem Statement:
 
-Currently, there is no visibility into the operational status of regional segments. This lack of information makes it difficult to understand which segments are actively being used and which are obsolete. This can lead to inefficiencies in resource allocation, data management, and reporting.
+The current process for automatically creating regional segments is inefficient and prone to delays. It relies on calculated fields as a trigger and initial step for staging data. This approach introduces latency and potential inconsistencies, impacting the timeliness and accuracy of regional segment updates.
 
 Technical Solution:
 
-Introduce a "Regional Segment Status" field:
-Add a new field to the regional segment entity with the following possible values: "Active" and "Retired."
-Automated Status Derivation:
-Implement a logic that automatically determines the segment status based on the status of its associated lines of business.
-If at least one associated line of business is "Active," the regional segment status should be set to "Active."
-If all associated lines of business are "Retired" or do not exist, the regional segment status should be set to "Retired."
-Data Persistence:
-Ensure the "Regional Segment Status" is persisted in the database.
-User Interface (UI) Display:
-Display the "Regional Segment Status" in the regional segment details view within the user interface.
-Data Synchronization:
-Ensure that when the line of business status is updated, that the regional segment status is also updated.
+To address the inefficiency, we will implement the following solution:
+
+Generate Active Line of Business Report:
+
+Create a scheduled report that retrieves all active Line of Business data.
+This report will include the Line of Business name, associated country, and segment information.
+The report will be generated in XML format for structured data processing.
+XSLT Transformation:
+
+Develop an XSLT transformation to process the generated XML report.
+The XSLT will extract the unique combinations of region and segment from the Line of Business data.
+This step will consolidate the data and eliminate redundancies.
+Regional Segment Creation Logic:
+
+Implement a system process that consumes the transformed data from the XSLT.
+The system will compare the extracted region/segment combinations with existing regional segments.
+For any missing regional segments, the system will create new entries using a "create-only" rule.
+This ensures that existing regional segments are not unintentionally updated or overwritten.
+This will prevent issues that could arise from a create/update action, such as data loss.
