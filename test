@@ -1,14 +1,2 @@
-Problem Statement:
-
-Currently, master monitoring and testing plans are created manually at the beginning of each year using a checkbox trigger. This manual process is time-consuming, prone to delays if forgotten, and introduces unnecessary manual effort. We need to automate this process to ensure consistent and timely plan generation.
-
-Technical Solution:
-
-Automated Scheduled Generation:
-Replace the manual checkbox trigger with a scheduled job (e.g., using a cron job or a scheduled task within the application) that triggers at the start of each year (e.g., January 1st).
-Ensure the automated process leverages the existing template and logic used for the checkbox-triggered generation.
-Restrict Manual Master Plan Creation:
-Remove the checkbox trigger from the user interface.
-Implement system logic to prevent the creation of new master plans through any other manual means after the automated process has run for the year.
-Maintain the existing functionality for creating addendums to regional segments.
-Ensure the existing addendum creation process is still reliant on a master plan existing for that year.
+Implement a system event trigger that fires when a new regional segment is created.
+When the trigger fires, the system will automatically generate a master monitoring and testing plan for the new regional segment, using the same template and logic as the annual generation.
