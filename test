@@ -1,10 +1,20 @@
 Problem Statement:
 
-Unsubmitted monitoring and testing plans from previous years can remain in the system, potentially causing confusion and conflicts when new plans are generated for the following year. These outdated, unsubmitted plans should be automatically cancelled to maintain data integrity and prevent errors.
+Currently, RCM Leads and LOB Heads have separate dashboards that require users to manually filter data through drop-downs to identify their specific tasks. This process is inefficient and makes it difficult to quickly understand the overall status of their assessable units. The "Regulatory Content Overview" dashboard provides a better model for task visibility, and a similar approach should be implemented for RCM Leads and LOB Heads.
 
 Technical Solution:
 
-Scheduled Cancellation Job:
-Implement a scheduled job (e.g., using a cron job or a scheduled task within the application) that triggers at the start of each new year (e.g., January 1st, after the new year's master plan generation).
-The job will query the system for all monitoring and testing plans (master and addendums) that have a "created" or "draft" status (or whatever status indicates they are not yet submitted).
-The job will then change the status of these plans to "cancelled."
+Dashboard Consolidation:
+Combine the existing RCM Lead and LOB Head dashboards into a single, unified dashboard.
+Implement logic to dynamically display relevant information based on the user's role (RCM Lead or LOB Head).
+Enhanced Task Visibility:
+Implement a visual indicator (e.g., a prominent section or widget) that displays the number of tasks requiring immediate attention, such as "Pending Submission" (for LOB Heads) or other relevant actions.
+Use clear and concise labels, similar to "Requires Mapping" on the "Regulatory Content Overview" dashboard, to indicate the type of task.
+Ensure task indicators are dynamically updated based on the user's role and the status of their assessable units.
+Assessable Unit Status Graph:
+Implement a graph or chart that displays the current status of all assessable units for which the user is either an RCM Lead or LOB Head.
+The graph should provide a clear visual representation of the distribution of assessable units across different statuses (e.g., "Draft," "Pending Submission," "Approved").
+Allow users to click on graph segments to drill down and view details about the assessable units in that status.
+Role-Based Content Filtering (Implicit):
+While eliminating the need for manual filtering, ensure the dashboard displays only relevant information based on the user's role and assigned assessable units.
+For instance, LOB Heads should see "Pending Submission" tasks, while RCM Leads should see tasks related to their responsibilities.
