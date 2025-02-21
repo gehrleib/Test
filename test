@@ -1,12 +1,14 @@
 Problem Statement:
 
-Currently, RCM Leads and LOB Heads have separate dashboards that require users to manually filter data through drop-downs to identify their specific tasks. This process is inefficient and makes it difficult to quickly understand the overall status of their assessable units. The "Regulatory Content Overview" dashboard provides a better model for task visibility, and a similar approach should be implemented for RCM Leads and LOB Heads.
+Currently, RCM Leads and LOB Heads have separate dashboards with different views, requiring users to manually filter data through drop-downs to identify their specific tasks. This process is inefficient and makes it difficult to quickly understand the overall status of their assessable units. The "Regulatory Content Overview" dashboard provides a better model for task visibility, and a similar standardized approach should be implemented for RCM Leads and LOB Heads.
 
 Technical Solution:
 
 Dashboard Consolidation:
 Combine the existing RCM Lead and LOB Head dashboards into a single, unified dashboard.
-Implement logic to dynamically display relevant information based on the user's role (RCM Lead or LOB Head).
+Standardized Views:
+Ensure that the consolidated dashboard presents a consistent view, regardless of whether the user is an RCM Lead or LOB Head.
+Eliminate the discrepancies in layout, widgets, and information displayed between the previous separate dashboards.
 Enhanced Task Visibility:
 Implement a visual indicator (e.g., a prominent section or widget) that displays the number of tasks requiring immediate attention, such as "Pending Submission" (for LOB Heads) or other relevant actions.
 Use clear and concise labels, similar to "Requires Mapping" on the "Regulatory Content Overview" dashboard, to indicate the type of task.
