@@ -1,5 +1,6 @@
-Currently, the files received from CALMA to RCM include the CRAU ID (formerly known as CRCP ID). However, for EIM, they require the ORMS Control ID. RCM sends both the ORMS Control ID and the CRAU ID to CALMA, meaning that a new file must be created for EIM with the ORMS Control ID.
+Hi Cathy,
 
-We have confirmed that RCM receives two files: one containing the control ID and another with the assessable unit ID (previously known as Compliance Program ID). Moving forward for EIM, there should be a single file. Each issue must include at least the assessable unit. In cases where only a control ID was previously sent, the associated assessable unit and the ORMS Control ID should be provided. The reason for this is that the ORMS Control ID alone does not specify the appropriate assessable unit. 
+I'm writing to clarify the annual decision processing.
 
-For RCM, we did not need the assessable unit because we could look it up using the CRAU ID.
+Units with a Next Assessment Date in January 2025 (specifically, January 8-25) were not scheduled for annual decisions until December 16th (23 days later). The December 10, 2024, implementation caused these units to be flagged as overdue and trigger assessments immediately, which is the expected outcome.
+We've identified a bug that caused 13 assessable units to undergo a second annual decision between December 10-12. This was unintended. I've created an incident ticket to address this. The root cause was a date discrepancy in the 2LOD review condition; it was using December 12th instead of December 10th.
