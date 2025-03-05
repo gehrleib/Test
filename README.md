@@ -1,6 +1,5 @@
-Hi Cathy,
+Hey Cathy,
 
-I'm writing to clarify the annual decision processing.
+The 13 records where the annual decision was triggered a second time have been resolved. These assessable units have been reverted back to an "Approved" state, and the duplicate annual decision has been deleted.
 
-Units with a Next Assessment Date in January 2025 (specifically, January 8-25) were not scheduled for annual decisions until December 16th (23 days later). The December 10, 2024, implementation caused these units to be flagged as overdue and trigger assessments immediately, which is the expected outcome.
-We've identified a bug that caused 13 assessable units to undergo a second annual decision between December 10-12. This was unintended. I've created an incident ticket to address this. The root cause was a date discrepancy in the 2LOD review condition; it was using December 12th instead of December 10th.
+The root cause of the issue was in our configuration. We had a date condition set for December 12 for the old process, which did not require 2LOD review to ensure the annual decision remained complete. The problem occurred due to a mismatch in how the system compared a datetime value with a date value, which only affected records that were closed between December 10 and December 12.
