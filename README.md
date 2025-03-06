@@ -1,9 +1,7 @@
-Each day, we ingest controls from ORMS that meet specific conditions. If a control no longer meets these conditions, it is retired and removed from the associated assessable unit.
+There’s an update on the root cause. I initially thought the issue was due to the implementation date, as my plan indicated December 10, but the actual implementation was on December 12—matching the configuration—so the date was not the problem. Instead, the issue arose from how the software compares a datetime (Submission Date) with a date (Condition) value.
 
-One key condition is that the control must be linked to a risk where the Primary Risk Classification Level 1 is "Regulatory Compliance Risk." Another requirement is the presence of an ERIC Regulation.
+As a result, some annual decisions completed on December 11-12 were marked as both complete and incomplete, triggering a new annual decision. The fix was to update the condition from <= DATETIMEVALUE("12/12/2024") to < DATETIME("12/13/2024"). While the change appears minor, it corrected the behavior.
 
-If this is the only risk associated with the control and it has an ERIC Regulation, you can expect downstream impact.
+All changes were tested by both Quality Assurance and the business, but this would have been difficult to catch in testing since we may not have had data replicating this exact scenario.
 
-From your spreadsheet, I don’t see the Primary Risk Classification Level 1.
-
-You're safe to remove risks that are not tied to any control or are tied only to retired controls.
+There was no significant material impact, as the annual decision was simply re-generated, and users were asked to complete it again.
