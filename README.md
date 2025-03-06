@@ -1,5 +1,9 @@
-Hey Cathy,
+Each day, we ingest controls from ORMS that meet specific conditions. If a control no longer meets these conditions, it is retired and removed from the associated assessable unit.
 
-The 13 records where the annual decision was triggered a second time have been resolved. These assessable units have been reverted back to an "Approved" state, and the duplicate annual decision has been deleted.
+One key condition is that the control must be linked to a risk where the Primary Risk Classification Level 1 is "Regulatory Compliance Risk." Another requirement is the presence of an ERIC Regulation.
 
-The root cause of the issue was in our configuration. We had a date condition set for December 12 for the old process, which did not require 2LOD review to ensure the annual decision remained complete. The problem occurred due to a mismatch in how the system compared a datetime value with a date value, which only affected records that were closed between December 10 and December 12.
+If this is the only risk associated with the control and it has an ERIC Regulation, you can expect downstream impact.
+
+From your spreadsheet, I don’t see the Primary Risk Classification Level 1.
+
+You're safe to remove risks that are not tied to any control or are tied only to retired controls.
