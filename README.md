@@ -1,21 +1,30 @@
+Got it, let's craft a Jira story that addresses the automatic delinking of assessable units and controls when segment scopes change.
+
+Story Title: Automatically Delink Assessable Units and Controls on Segment Scope Change (Draft Plans)
+
+Story Type: Feature/Improvement
+
+Priority: High (Adjust based on the potential risk of incorrect scope)
+
+Assignee: (Assign to the appropriate developer or team)
+
+Labels: automation, data-integrity, assessable-units, monitoring-testing, segment-change, draft-plans, addendum
+
+Description:
+
 Problem Statement:
 
-The field labeled "Business Segment Compliance CCO" is currently used across several modules (Regional Segment, Monitoring & Testing, Assessable Unit, Line of Business) and notifications. The current name is no longer accurate or aligned with updated business terminology. This inconsistency leads to confusion and potential errors for users interacting with the system. It is important to note that the "Business Segment Compliance CCO" field is intentionally off-layout in the Assessable Unit and Line of Business modules and will remain off-layout after the rename.
+Currently, the system automatically links assessable units to "master" monitoring & testing plans based on segment scope. However, when a segment's scope changes (e.g., "Personal & Commercial Banking" to "Personal Banking"), the system fails to automatically remove assessable units and controls that are no longer within the updated scope. This leads to inaccurate plan data, potential compliance issues, and increased manual effort to correct the discrepancies. This problem impacts both standard "master" plans and "addendum" type plans, but the addendum plans need to have the controls delinked, not the assessable units. This problem only occurs when the plans are in a "Draft" status.
 
 Technical Solution:
 
-Field Rename:
-Rename the field "Business Segment Compliance CCO" to "" (insert the new desired name here) in the following modules:
-Regional Segment
-Monitoring & Testing
-Assessable Unit (field will remain off-layout)
-Line of Business (field will remain off-layout)
-Ensure the data associated with the field is preserved during the rename process.
-Off-Layout Field Handling:
-Confirm that the "Business Segment Compliance CCO" field remains off-layout in the Assessable Unit and Line of Business modules after the rename.
-Verify that although hidden, the data within the renamed field continues to be correctly updated and accessible through any backend processes, reports, or APIs that rely on it.
-Notification Updates:
-Modify the following notifications to reflect the renamed field:
-Notification #1
-Notification #2
-Ensure all instances of "Business Segment Compliance CCO" are replaced with the new field name.
+Segment Scope Change Detection:
+Implement a mechanism to detect changes in segment scope. This could involve triggering a process when a segment's definition is updated.
+Assessable Unit/Control Scope Validation (Draft Plans):
+When a segment scope change is detected, and affected monitoring & testing plans are in "Draft" status:
+For "Master" Plans:
+Identify assessable units linked to the plan that are no longer within the updated segment scope.
+Automatically delink these assessable units from the "master" plan.
+For "Addendum" Plans:
+Identify controls linked to the plan that are no longer within the updated segment scope.
+Automatically delink these controls from the "addendum" plan.
