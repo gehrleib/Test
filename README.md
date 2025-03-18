@@ -1,13 +1,14 @@
 Technical Observation:
-The blank value does not meet the conditions to be sent to CALMA, which is expected since overridden controls are intended to be out of scope.
-This is a cosmetic issue that did not affect the system's functionality or the accuracy of M&T activities.
+There is a technical limitation that prevents mandatory fields from being enforced when values are edited directly on a report (inline edit).
+This was a design decision to avoid increased complexity and system load times, as requiring users to navigate to individual records would slow down processes.
+The total number of controls in scope for M&T is approximately 40,000.
 3. Solution:
-Convert the "Next Control Test Year (Final)" field from a value list to a numeric field to allow any numeric value beyond 2030.
-Update all layouts, reports, and notifications to reflect the new numeric field.
-Inform users who rely on this field in their API integrations to update their configurations accordingly.
-Conduct system testing to ensure the new field functions as expected and does not disrupt existing processes.
+Disable the inline edit functionality to ensure commentary is provided when an override is applied.
+Require users to navigate to the individual record to input an override and its corresponding commentary.
+Maintain the same user permissions—users who could previously perform inline edits will retain the ability to update the record directly.
+Commentary can still be added at any time but will be enforced when an override is present.
 4. Impact and Mitigation:
-System Impact: Minor impact on system functionality and reporting due to field conversion.
-User Impact: Potential impact on users with API integrations using the old field.
-Mitigation: Provide clear communication and documentation to affected users.
-Operational Impact: No direct impact on M&T activities since these controls are already treated as out of scope.
+User Impact: Increased time required to update records due to the removal of inline editing.
+Mitigation: Communicate the change and provide guidance on efficient record updates.
+Operational Impact: Ensures all overrides have appropriate documentation, improving auditability and compliance.
+System Impact: No major system changes other than disabling inline editing.
