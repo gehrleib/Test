@@ -3,7 +3,7 @@ Here’s a screenshot that better illustrates the data structure. We have three 
 The regulator (or issuing body)
 The issuance (or the Book)
 The section (or Group)
-Currently, the segment is tied to the regulator, the country is linked to the book, and the theme is associated with the section. These three fields determine which assessable units can be selected when a section is applied to impact RBC.
+Currently, the segment is tied to the regulator, the country is linked to the book, and the theme is associated with the section. These three fields determine which assessable units can be selected when a section is applied to impact RBC. However, the first two fields—regulator and issuance—form the regional segments that are responsible for mapping and attesting the assessable units.
 
 This means that changes to segments can affect all issuances and their groups. For example, adding a new segment would trigger a new mapping attestation for every group across all issuances.
 
