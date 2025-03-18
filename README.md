@@ -1,10 +1,20 @@
-Here’s a screenshot that better illustrates the data structure. We have three levels:
+<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:output method="xml" indent="yes"/>
 
-The regulator (or issuing body)
-The issuance (or the Book)
-The section (or Group)
-Currently, the segment is tied to the regulator, the country is linked to the book, and the theme is associated with the section. These three fields determine which assessable units can be selected when a section is applied to impact RBC. However, the first two fields—regulator and issuance—form the regional segments that are responsible for mapping and attesting the assessable units.
-
-This means that changes to segments can affect all issuances and their groups. For example, adding a new segment would trigger a new mapping attestation for every group across all issuances.
-
-To align more closely with RegInsight and RegFlow, I’ve proposed moving the segment from the regulator to the issuance. This would allow for more granular control over impacted sections but may require updating more books. Currently, there are approximately 202 regulators and 2,748 issuances.
+  <xsl:template match="/Records">
+    <RegionalSegments>
+      <xsl:for-each-group select="Record" group-by="Field[@id='21279']/ListValues/ListValue">
+        <xsl:for-each-group select="current-group()" group-by="Field[@id='21256']/Reference/@id">
+          <RegionalSegment>
+            <Region>
+              <xsl:value-of select="Field[@id='21279']/ListValues/ListValue"/>
+            </Region>
+            <Segment_ID>
+              <xsl:value-of select="Field[@id='21256']/Reference/@id"/>
+            </Segment_ID>
+          </RegionalSegment>
+        </xsl:for-each-group>
+      </xsl:for-each-group>
+    </RegionalSegments>
+  </xsl:template>
+</xsl:stylesheet>
