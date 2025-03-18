@@ -12,6 +12,9 @@
             <Segment_ID>
               <xsl:value-of select="Field[@id='21256']/Reference/@id"/>
             </Segment_ID>
+            <Regional_Segment>
+              <xsl:value-of select="concat(Field[@id='21256']/Reference, ' - ', Field[@id='21279']/ListValues/ListValue)"/>
+            </Regional_Segment>
           </RegionalSegment>
         </xsl:for-each-group>
       </xsl:for-each-group>
