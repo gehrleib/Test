@@ -1,30 +1,27 @@
-Technical Observation:
-This was caused by a process change on December 12, 2024.
-Previously, annual decisions only required 1LOD approval.
-After December 12, 2024, 2LOD confirmation became required if the 1LOD decision was to not perform a new risk assessment.
-The issue occurred because the flag to generate a new annual decision was incorrectly set to "yes" despite the status being marked as "complete."
-This did not have a material impact since the annual decision is generated 46 days before it’s due, and the correct decision was completed on time.
-Only a small subset of records was affected.
-3. Resolution:
-The issue was already addressed through an incident ticket by:
-Removing the duplicated annual decision records.
-Correcting the calculation from <= DATETIMEVALUE("12/12/2024") to < DATETIMEVALUE("12/13/2024").
-4. Action Plan:
-Perform Post-Incident Validation (PIV):
+Acceptance Criteria:
 
-Confirm that the corrected calculation is working as intended.
-Ensure no further duplicate annual decisions are generated.
-Enhance System Logic:
+The dashboard should display the following key metrics:
+Drafts - Action Required: Number of risk assessments in draft status requiring action. (Currently 814)
+Rejected Drafts - Resubmission Needed: Number of rejected drafts requiring resubmission. (Currently 20)
+2LOD Review Pending - Approval Needed: Number of risk assessments pending approval from the Second Line of Defense. (Currently 207)
+Pending Annual Decision - Action Required: Number of risk assessments requiring an annual decision. (Currently 169)
+Pending Annual Decision - Review Required: Number of risk assessments requiring review for annual decision. (Currently 0)
+Missing 1LOD Controls: Number of missing First Line of Defense controls. (Currently 2.2k)
+The dashboard should visually represent the distribution of risk assessments across different stages:
+Assessable Unit by Risk Assessment Status: A bar chart showing the count of risk assessments in each stage (Draft, 2LOD Review, Approved, Pending Annual Decision).
+Assessable Units by Residual Risk: A bar chart showing the count of risk assessments categorized by residual risk level (High, Medium, Low).
+Inherent Risk Heatmap: A heatmap displaying the distribution of inherent risk across different categories (High, Medium, Low) and adequacy levels.
+The dashboard should provide insights into upcoming deadlines:
+Assessable Units by Mandatory Risk-Based Review Date: A pie chart showing the percentage of risk assessments due for review within different timeframes (e.g., < 6 months, 1 year-2 years, 2 years-3 years).
+Assessable Units by Annual Decision Due Status: A pie chart showing the percentage of risk assessments with annual decisions due within different timeframes.
+The dashboard should highlight open issues impacting risk assessments:
+Open Issues Impacting Assessable Units: A bar chart showing the count of open issues categorized by issue status (Draft, Awaiting Action, Action Plan(s), In Progress, Issue Closure Awaiting Review, Resolved Not Verified).
+Total Issue Rating: A bar chart showing the distribution of issues based on their rating (1-4, Non-issue Exception).
+All charts and metrics should be clearly labeled and easy to understand.
+The dashboard should be interactive, allowing users to drill down into specific data points for more detail (e.g., clicking on a bar in a chart to view the list of risk assessments in that category).
+Additional Considerations (Optional):
 
-Implement a validation check to prevent a second annual decision from being generated if the status is already marked as "complete."
-Add logging to capture when a second decision is attempted to be generated for tracking and troubleshooting.
-Strengthen Monitoring and Reporting:
-
-Create a system report to monitor for duplicate annual decisions.
-Set up automated alerts if a second decision is triggered under similar conditions.
-Communicate Process Change:
-
-Inform 1LOD and 2LOD stakeholders about the process change and the updated decision logic.
-5. Impact and Mitigation:
-System Impact: Minor system update to enhance validation and reporting.
-User Impact: No significant change in user process, as decisions are already handled within the updated workflow.
+Performance: The dashboard should load quickly and efficiently.
+Accessibility: The dashboard should be accessible to users with disabilities, adhering to accessibility guidelines.
+Filters: Consider adding filters to allow users to narrow down the data based on specific criteria (e.g., business unit, risk category).
+Export: Consider adding the ability to export the dashboard data in various formats (e.g., PDF, CSV).
