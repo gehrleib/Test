@@ -1,31 +1,75 @@
+Jira Story: Enforce Completion of Sub-Assessments Before Risk Assessment Submission
 Background
-The Global Value List "RCM - Theme Type" is used across the Regulatory Compliance Management (RCM) program to categorize Regulatory Themes. We need to rename the existing value "Reliance Model" to "FCOP" to reflect updated terminology.
+The Risk Assessment process requires the completion of several sub-assessments before submission. These include:
 
-This change ensures that all references to "Reliance Model" across the application are seamlessly updated to "FCOP", with no additional modifications required in downstream systems or workflows.
+Business Profile Questionnaire
+
+Local Regulatory Environment Questionnaire
+
+Control Assessment
+
+Regulatory Theme Checklist (Baseline Inherent Risk Rating)
+
+To enhance the user experience and ensure compliance, the system will enforce completion of these sub-assessments before allowing submission. If any are incomplete, a message and a dynamic list of incomplete assessments will be displayed.
+
+Requirements & Behavior
+Validation Message for Incomplete Sub-Assessments
+
+If one or more sub-assessments are incomplete, a message will appear:
+
+"Note: The risk assessment requires that all assessments are marked complete before you can submit."
+
+Below this message, a dynamic list will display the names of the incomplete sub-assessments.
+
+Message Disappearance Upon Completion
+
+Once all sub-assessments are marked as complete, the validation message and the list will disappear automatically.
+
+Automatic Recalculation & Save
+
+The system will attempt to automatically save the Risk Assessment upon completing a sub-assessment.
+
+This triggers a recalculation, checking if all required assessments are complete.
+
+If they are, the validation message will be removed without requiring a manual page refresh.
 
 Implementation Steps
-Update the Global Value List
+Modify the Risk Assessment Page Logic
 
-Locate the "RCM - Theme Type" Global Value List in Archer.
+Add logic to check the status of all sub-assessments when a user interacts with the Risk Assessment.
 
-Rename the value "Reliance Model" to "FCOP".
+Display the validation message and the list of incomplete sub-assessments if necessary.
 
-Save and apply the change.
+Enable Automatic Save & Recalculation
 
-Verify the Impact Across the System
+Implement an automatic save event when a sub-assessment status changes.
 
-Since this is a Global Value List update, the change will automatically reflect across all records, reports, and references where the value is used.
+Ensure the system recalculates completion status without requiring the user to refresh the page.
 
-No database updates or reprocessing of existing records are required.
+User Experience Enhancements
+
+Ensure the validation message is prominent but non-intrusive.
+
+Make the list of incomplete sub-assessments easy to read and dynamically updated.
 
 Testing Approach
-Navigate to a Regulatory Theme record.
+Scenario 1: Attempt to submit the Risk Assessment when all sub-assessments are incomplete.
 
-Locate the Theme Type field.
+Expectation: The validation message and full list of required assessments appear.
 
-Confirm that the value "Reliance Model" has been successfully renamed to "FCOP".
+Scenario 2: Complete one sub-assessment.
 
-Verify that historical records and reports now display "FCOP" instead of "Reliance Model".
+Expectation: The list updates dynamically to reflect remaining incomplete assessments.
+
+Scenario 3: Complete all sub-assessments.
+
+Expectation: The validation message and list disappear, and submission becomes possible.
+
+Scenario 4: Verify automatic save functionality when completing a sub-assessment.
 
 Assumptions & Considerations
-No integrations or downstream dependencies require updates since this is a simple value rename within the Archer platform.
+The sub-assessments have clearly defined completion statuses that the system can check.
+
+Automatic saving does not introduce performance issues or conflicts with user actions.
+
+The system has appropriate permissions to modify the Risk Assessment based on sub-assessment completion.
