@@ -14,33 +14,23 @@ function countYesInTable(config) {
 
     try {
         var tableBody = $(config.tableBodySelector);
-
         if (!tableBody.length) {
-            // Log error but return 0, as a missing table contributes 0 to the total sum
             console.error(`[${config.checkName}] Table body not found! Selector: ${config.tableBodySelector}. Returning count 0.`);
             return 0;
         }
-
         var tbodyRows = tableBody.find('tr').not('.rgNoRecords');
-        // Log how many rows are being checked, not the final count yet
         console.log(`[${config.checkName}] Found ${tbodyRows.length} data rows in ${config.tableBodySelector} to check.`);
-
         tbodyRows.each(function() {
-            // Find the div within the current row whose ID *ends with* the specified pattern.
             let cellDiv = $(this).find(`div[id$='${config.columnIdEnding}']`);
             if (cellDiv.length && cellDiv.text().trim() === "Yes") {
                 yesCount++;
             }
         });
-
         console.log(`[${config.checkName}] Counted ${yesCount} 'Yes' values for column ending '${config.columnIdEnding}'.`);
-
     } catch (e) {
-        // Log error but return 0, as errors prevent accurate counting for this table
         console.error(`[${config.checkName}] Error counting 'Yes' values:`, e);
         return 0;
     }
-
     return yesCount; // Return the count for this table
 }
 
@@ -51,7 +41,7 @@ $(document).ready(function() {
 
     // --- Configuration ---
     const singleAssessmentCountId = "20653"; // The unique ID part for the SINGLE assessment count span
-    const mainButtonSelector = "#master_btnApply"; // The SINGLE button to click if totals mismatch
+    // Button selectors are now handled in the final action block
 
     // --- 1. Get Single Assessment Count ---
     let assessmentCountNumber = 0; // Default to 0
@@ -59,72 +49,90 @@ $(document).ready(function() {
     try {
         const assessmentSpanSelector = `span[id*="_f${singleAssessmentCountId}c"]`;
         const assessmentCountSpan = $(assessmentSpanSelector);
-
         if (assessmentCountSpan.length) {
             assessmentCountText = assessmentCountSpan.text().trim();
             assessmentCountNumber = parseInt(assessmentCountText, 10);
-
-            // Validate parsing
             if (isNaN(assessmentCountNumber)) {
                  console.error(`Assessment count text "${assessmentCountText}" from ${assessmentSpanSelector} is not a valid number. Aborting checks.`);
-                 // Optionally disable the button or show a user message here
-                 return; // Stop script execution if count is invalid
+                 return;
             }
             console.log(`Successfully retrieved Assessment Count: ${assessmentCountNumber} (from span ${assessmentSpanSelector})`);
         } else {
             console.error(`Assessment count span not found! Selector: ${assessmentSpanSelector}. Aborting checks.`);
-            // Optionally disable the button or show a user message here
-            return; // Stop script execution if span is missing
+            return;
         }
     } catch (e) {
         console.error(`Critical error getting assessment count:`, e);
-        return; // Stop script execution on critical error
+        return;
     }
 
-
     // --- 2. Define Table/Column Configurations ---
-    // Note: No assessmentCountId needed here anymore
     const table1Config = {
-        checkName: "Table A - Column 1", // Descriptive name
-        tableBodySelector: "#table_A_id tbody", // Selector for the first table's body
-        columnIdEnding: "\\:11111c"    // Ending ID part for the relevant column (escape colon)
+        checkName: "Table A - Column 1",
+        tableBodySelector: "#table_A_id tbody",
+        columnIdEnding: "\\:11111c"
     };
-
     const table2Config = {
         checkName: "Table B - Assessments",
-        tableBodySelector: "#master_DefaultContent_rts_ts7046_s7048_f20653srvgrid_ctl00 tbody", // Example from original prompt
-        columnIdEnding: "\\:21738c"    // Example from original prompt (escape colon)
+        tableBodySelector: "#master_DefaultContent_rts_ts7046_s7048_f20653srvgrid_ctl00 tbody",
+        columnIdEnding: "\\:21738c"
     };
-
     const table3Config = {
         checkName: "Table C - Status",
-        tableBodySelector: "#another_table_grid_ctl00 tbody", // Selector for the third table's body
-        columnIdEnding: "\\:33333c"    // Ending ID part for the relevant column (escape colon)
+        tableBodySelector: "#another_table_grid_ctl00 tbody",
+        columnIdEnding: "\\:33333c"
     };
-
 
     // --- 3. Calculate Total 'Yes' Count Across Tables ---
     let totalYesCount = 0;
     console.log("Starting summation of 'Yes' counts across tables...");
-
     totalYesCount += countYesInTable(table1Config);
     totalYesCount += countYesInTable(table2Config);
     totalYesCount += countYesInTable(table3Config);
-
     console.log(`Summation complete. Total 'Yes' count across all checked tables: ${totalYesCount}`);
 
-
-    // --- 4. Final Comparison and Action ---
+    // --- 4. Final Comparison and Conditional Action ---
     console.log(`Final Comparison: Assessment Count (${assessmentCountNumber}) vs. Total 'Yes' Count (${totalYesCount})`);
+
     if (assessmentCountNumber !== totalYesCount) {
-        console.warn(`MISMATCH DETECTED! Assessment count (${assessmentCountNumber}) does not equal total 'Yes' count (${totalYesCount}). Clicking button: ${mainButtonSelector}`);
+        console.warn(`MISMATCH DETECTED! Assessment count (${assessmentCountNumber}) does not equal total 'Yes' count (${totalYesCount}). Checking for action buttons...`);
+
+        const applyButtonSelector = "#master_btnApply";
+        const recalcButtonSelector = "#master_btnRecalculate";
+        let buttonClicked = false;
+
         try {
-            // Uncomment the line below when ready to enable the click action
-            // $(mainButtonSelector).click();
-            console.log(`Attempted to click button: ${mainButtonSelector}`); // Log the attempt
+            // Check for Apply button first
+            const $applyButton = $(applyButtonSelector);
+            if ($applyButton.length > 0 && $applyButton.is(':visible')) {
+                console.log(`Found available button: ${applyButtonSelector}. Clicking it.`);
+                // Uncomment the line below when ready to enable the click action
+                // $applyButton.click();
+                buttonClicked = true;
+                console.log(`Attempted to click button: ${applyButtonSelector}`);
+            } else {
+                 console.log(`Button ${applyButtonSelector} not found or not visible. Checking for ${recalcButtonSelector}.`);
+                 // If Apply button wasn't available, check for Recalculate button
+                 const $recalcButton = $(recalcButtonSelector);
+                 if ($recalcButton.length > 0 && $recalcButton.is(':visible')) {
+                     console.log(`Found available button: ${recalcButtonSelector}. Clicking it.`);
+                     // Uncomment the line below when ready to enable the click action
+                     // $recalcButton.click();
+                     buttonClicked = true;
+                     console.log(`Attempted to click button: ${recalcButtonSelector}`);
+                 } else {
+                     console.log(`Button ${recalcButtonSelector} not found or not visible either.`);
+                 }
+            }
+
+            if (!buttonClicked) {
+                console.warn("Mismatch occurred, but neither Apply nor Recalculate button was found or visible. No action taken.");
+            }
+
         } catch(e) {
-            console.error(`Error clicking button ${mainButtonSelector}:`, e);
+            console.error(`Error during button check or click logic:`, e);
         }
+
     } else {
         console.log("Counts match. No button click needed.");
     }
