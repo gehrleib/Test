@@ -1,1 +1,7 @@
-Regarding the EIM team's requirements, they need access to a definitive list of regulator and issuing body names. The purpose of this list is to accurately identify the originating regulatory authority when logging related issues within the Enterprise Issue Management system. Importantly, this list should only contain the names of the bodies, not specific issuances or citation data. To ensure relevance, the scope should be limited to those regulators/issuing bodies already identified in RegComp as impacting RBC and assigned to an existing 'reggroup'. The EIM team intends to source this information directly from RegComp."
+Hello Team,
+
+Following a discussion with Sri, we've confirmed there is an issue affecting the 'Completed At' timestamp.
+
+Please disregard this timestamp and refer to the 'Actual End Date' for accurate completion information. All other aspects are functioning as expected.
+
+Apologies for any confusion or concern this may have caused.
