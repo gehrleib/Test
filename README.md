@@ -9,24 +9,16 @@
 
   <xsl:template match="/Records">
     <ArcherRecords>
-      <xsl:apply-templates select="Record[
-          (
-            Field[@guid=$guid1] &lt;= Field[@guid=$guid2]
-          )
-          or
-          (
-            not(string(Field[@guid=$guid2]))
-          )
-        ]"/>
+      <xsl:apply-templates select="Record[(Field[@guid=$guid1] &lt;= Field[@guid=$guid2]) or not(string(Field[@guid=$guid2]))]"/>
     </ArcherRecords>
   </xsl:template>
 
   <xsl:template match="Record">
     <ArcherRecord>
-      <CRAU_ID>
+      <CRAUID>
         <xsl:value-of select="@contentId"/>
-      </CRAU_ID>
+      </CRAUID>
     </ArcherRecord>
-  </template>
+  </xsl:template>
 
 </xsl:stylesheet>
