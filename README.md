@@ -1,24 +1,14 @@
-<xsl:stylesheet version="3.0"
-                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                exclude-result-prefixes="xs">
+Currently, the Next Control Test Year (Final) field on the 'Control Result for Assessable Unit' is a Value List. This needs to be converted to a Numeric field type to allow for better calculations and consistency, similar to how the Override field functions.
 
-  <xsl:output method="xml" indent="yes" encoding="UTF-8"/>
-  <xsl:strip-space elements="*"/> <xsl:variable name="guid1" select="'16abaf8f-01e5-49cc-b8d1-e2bd6d0d5c91'" static="yes"/>
-  <xsl:variable name="guid2" select="'c16c458c-c577-4c63-af63-b96f2b35ef20'" static="yes"/>
+This change involves:
 
-  <xsl:template match="/Records">
-    <ArcherRecords>
-      <xsl:apply-templates select="Record[(Field[@guid=$guid1] &lt;= Field[@guid=$guid2]) or not(string(Field[@guid=$guid2]))]"/>
-    </ArcherRecords>
-  </xsl:template>
+Archiving the existing Next Control Test Year (Final) (Value List) field.
+Creating a new Next Control Test Year (Final) field with a Numeric type.
+Implementing calculation logic for the new field: The value should always be the greater of the System calculated next test year and the Override next test year.
+New Next Control Test Year (Final) = MAX( [System Next Test Year], [Override Next Test Year] )
+Implementing overnight logic for the separate Override field: If an Override value is entered that is less than or equal to the System value, this Override value should be cleared/removed by an overnight process. (Real-time validation isn't feasible due to inline edit behaviour).
+Updating the M&T Plan (both Master and Addendums) to display the new numeric Next Control Test Year (Final) field in the relevant column, replacing the old field reference.
 
-  <xsl:template match="Record">
-    <ArcherRecord>
-      <CRAUID>
-        <xsl:value-of select="@contentId"/>
-      </CRAUID>
-    </ArcherRecord>
-  </xsl:template>
 
-</xsl:stylesheet>
+Reporting: Users with custom reports (e.g., saved searches, dashboards, exported reports) that utilize the Next Control Test Year (Final) field will need to manually update their reports to reference the new field ID.
+API Integration: Any APIs (internal or external) currently reading or writing to the old Next Control Test Year (Final) field will be impacted and require updates to use the new field ID and accommodate the numeric type.
