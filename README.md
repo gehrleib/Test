@@ -1,35 +1,33 @@
-Story: Refactor Risk Assessment Trigger Logic to Use EIM Issue Data
+tory: Create Limited Role-Based Dashboards for Non-Issue Exceptions
 
-Story Title: Adapt Automated Risk Assessment Triggers to Use EIM Issue Data Source
+Story Title: Implement Simplified NIE Dashboards with Role-Based Views (Status & Root Cause)
 
-As a: Risk Management System / Process Owner
+As a: NIE Issue Owner, NIE Issue Coordinator, or Administrator
 
-I want: The automated process that triggers new Risk Assessments for Assessable Units to use the ingested EIM issue data (status, severity, dates, linkage) instead of the legacy internal issue data.
+I want: To view simple, relevant dashboard widgets summarizing Non-Issue Exceptions (NIEs) by Status and by Root Cause, filtered according to my role.
 
-So that: Risk Assessments are initiated based on the authoritative EIM data for high-severity issue events (progression and closure), ensuring timely risk reviews aligned with enterprise issue management.
+So that: I can get a quick overview of the NIEs I am responsible for or manage, using standardized data, and the old dashboards can be replaced.
 
 Description:
-We have an existing automated process that forces the creation of a new Risk Assessment for an Assessable Unit based on two conditions related to linked issues:
+This story involves replacing the existing dashboards related to Non-Issue Exceptions (NIEs) with a new, simplified dashboard experience. The new dashboard(s) will provide limited views focused primarily on summarizing NIEs based on their current status and their assigned (EIM-aligned Level 2) Root Cause.
 
-Issue In Progress: When a linked issue (Severity "1" or "2") moves to an "In Progress" state, and its "In Progress Date" is later than the Assessable Unit's "Last Approved Date".
-All High-Severity Issues Closed: When the last remaining linked issue with Severity "1" or "2" for an Assessable Unit is moved to a "Closed" state.
-This story requires refactoring this automation to query the read-only ingested EIM issue data for all necessary issue information (status, severity mapping, relevant dates, linkage to Assessable Units) instead of using the current internal issue source. The core triggering logic/conditions remain the same, but the data source changes.
+Crucially, the data displayed will be restricted based on the logged-in user's role:
+
+Administrators: Will see data aggregated across all NIEs.
+Issue Owners: Will see data aggregated only for the NIEs where they are assigned as the owner.
+Issue Coordinators: Will see data aggregated only for the NIEs where they are assigned as the coordinator.
+(Assumption: If a user holds multiple roles, like Owner and Coordinator, they will see an aggregated view of all NIEs matching either criterion. This should be confirmed.)
 
 Acceptance Criteria:
 
-Trigger 1: Issue Progress (Based on EIM Data)
-
-Given an Assessable Unit X with a "Last Approved Date". When an EIM issue linked to Assessable Unit X is updated, reflecting a transition to an "In Progress" status (based on EIM status codes/logic) AND the EIM issue's severity maps to "1" or "2" AND the relevant date associated with the EIM issue becoming "In Progress" is later than the Assessable Unit X's "Last Approved Date". Then a new Risk Assessment is triggered for Assessable Unit X.
-Given the same scenario as above, but the EIM issue's "In Progress" date is not later than the Assessable Unit X's "Last Approved Date" OR the EIM issue severity does not map to "1" or "2". Then a new Risk Assessment is not triggered by this specific event.
-Trigger 2: All High-Severity Issues Closed (Based on EIM Data)
-3.  Given an Assessable Unit X.
-When an EIM issue linked to Assessable Unit X is updated, reflecting a transition to a "Closed" status (based on EIM status codes/logic) AND that EIM issue's severity mapped to "1" or "2" AND no other EIM issues linked to Assessable Unit X remain in an "Open" state (based on EIM status) with severity mapping to "1" or "2".
-Then a new Risk Assessment is triggered for Assessable Unit X.
-4.  Given the same scenario as above, but other EIM issues linked to Assessable Unit X still remain in an "Open" state with severity mapping to "1" or "2".
-Then a new Risk Assessment is not triggered by this specific closure event.
-
-General Criteria:
-5.  The automated process correctly queries the ingested EIM data source.
-6.  The process correctly interprets EIM fields/values corresponding to: Issue Status ("Open", "In Progress", "Closed"), Issue Severity ("1", "2"), relevant dates ("In Progress Date", "Closed Date" - or equivalents), and the linkage between EIM Issues and internal Assessable Units.
-7.  The process functions correctly using the read-only EIM data.
-8.  Appropriate logging is in place to track trigger events and data used.
+A new dashboard page/section dedicated to Non-Issue Exceptions is created and accessible.
+A dashboard widget (e.g., bar chart, pie chart, table) exists that displays the count of NIEs grouped by their current Status.
+A dashboard widget (e.g., bar chart, table) exists that displays the count of NIEs grouped by their assigned Level 2 EIM Root Cause (using the field implemented in the previous root cause story).
+When logged in as a user with Administrator privileges, both the Status and Root Cause widgets reflect data aggregated from all NIE records in the system.
+When logged in as a user assigned only as an Issue Owner on one or more NIEs, both widgets reflect data aggregated only from those specific NIEs where they are the owner.
+When logged in as a user assigned only as an Issue Coordinator on one or more NIEs, both widgets reflect data aggregated only from those specific NIEs where they are the coordinator.
+(Confirm Requirement) When logged in as a user who is assigned as an Issue Owner on some NIEs and an Issue Coordinator on others, both widgets reflect data aggregated from the combined set of those NIEs (all owned + all coordinated, without double-counting if owner=coordinator on the same NIE).
+The dashboard widgets correctly query and display data from the Non-Issue Exception module.
+The dashboard provides a clear and understandable visual summary of the data.
+The previous/existing dashboards specifically for Non-Issue Exceptions are removed or made inaccessible to these users.
+(Decision Point) No additional dashboard widgets beyond Status, Root Cause (and potentially a simple total count card) are included in this iteration, fulfilling the "very limited" requirement unless explicitly decided otherwise.
