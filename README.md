@@ -1,33 +1,30 @@
-tory: Create Limited Role-Based Dashboards for Non-Issue Exceptions
+I want the existing integration between CALMA and RegComp to be refactored,
+So that only records identified as "Non-Issue Exceptions" are ingested and logged into RegComp, ensuring accurate record-keeping and separation from regular issues now managed by Enterprise Issue Management (EIM).
 
-Story Title: Implement Simplified NIE Dashboards with Role-Based Views (Status & Root Cause)
-
-As a: NIE Issue Owner, NIE Issue Coordinator, or Administrator
-
-I want: To view simple, relevant dashboard widgets summarizing Non-Issue Exceptions (NIEs) by Status and by Root Cause, filtered according to my role.
-
-So that: I can get a quick overview of the NIEs I am responsible for or manage, using standardized data, and the old dashboards can be replaced.
-
-Description:
-This story involves replacing the existing dashboards related to Non-Issue Exceptions (NIEs) with a new, simplified dashboard experience. The new dashboard(s) will provide limited views focused primarily on summarizing NIEs based on their current status and their assigned (EIM-aligned Level 2) Root Cause.
-
-Crucially, the data displayed will be restricted based on the logged-in user's role:
-
-Administrators: Will see data aggregated across all NIEs.
-Issue Owners: Will see data aggregated only for the NIEs where they are assigned as the owner.
-Issue Coordinators: Will see data aggregated only for the NIEs where they are assigned as the coordinator.
-(Assumption: If a user holds multiple roles, like Owner and Coordinator, they will see an aggregated view of all NIEs matching either criterion. This should be confirmed.)
+Background:
+Currently, the integration ingests both Issues and Non-Issue Exceptions from CALMA files into RegComp. A separate initiative (covered in another story/epic: [Link to EIM Story/Epic if available]) is redirecting the handling of regular Issues to the Enterprise Issue Management (EIM) system. This story focuses only on modifying the existing integration path to RegComp to handle the remaining Non-Issue Exceptions, which serve a logging purpose within RegComp.
 
 Acceptance Criteria:
 
-A new dashboard page/section dedicated to Non-Issue Exceptions is created and accessible.
-A dashboard widget (e.g., bar chart, pie chart, table) exists that displays the count of NIEs grouped by their current Status.
-A dashboard widget (e.g., bar chart, table) exists that displays the count of NIEs grouped by their assigned Level 2 EIM Root Cause (using the field implemented in the previous root cause story).
-When logged in as a user with Administrator privileges, both the Status and Root Cause widgets reflect data aggregated from all NIE records in the system.
-When logged in as a user assigned only as an Issue Owner on one or more NIEs, both widgets reflect data aggregated only from those specific NIEs where they are the owner.
-When logged in as a user assigned only as an Issue Coordinator on one or more NIEs, both widgets reflect data aggregated only from those specific NIEs where they are the coordinator.
-(Confirm Requirement) When logged in as a user who is assigned as an Issue Owner on some NIEs and an Issue Coordinator on others, both widgets reflect data aggregated from the combined set of those NIEs (all owned + all coordinated, without double-counting if owner=coordinator on the same NIE).
-The dashboard widgets correctly query and display data from the Non-Issue Exception module.
-The dashboard provides a clear and understandable visual summary of the data.
-The previous/existing dashboards specifically for Non-Issue Exceptions are removed or made inaccessible to these users.
-(Decision Point) No additional dashboard widgets beyond Status, Root Cause (and potentially a simple total count card) are included in this iteration, fulfilling the "very limited" requirement unless explicitly decided otherwise.
+Given the integration process runs, When it processes files provided by CALMA, Then it must filter records based on the "Non Issue Identifier" field.
+Given a record in the CALMA file has "Non Issue Identifier" = "Yes", When the integration processes this record, Then the record must be ingested into the RegComp system.
+Given a record in the CALMA file does not have "Non Issue Identifier" = "Yes" (e.g., it's "No", blank, or null), When the integration encounters this record, Then it must be ignored/skipped by this process and not sent to RegComp.
+Given a Non-Issue Exception record is successfully ingested into RegComp, Then it must contain the following fields populated from the CALMA source:
+Subject
+Description
+Root Cause
+Source
+Relation Control
+Assessable Unit
+Given a Non-Issue Exception record is successfully ingested into RegComp, Then the corresponding record/item within RegComp must be automatically marked as "Closed" (or equivalent terminal status).
+Given the refactored integration is running, Then no records identified as regular Issues (i.e., not Non-Issue Exceptions) should be processed or sent to RegComp via this integration path.
+Given the integration process runs, Then appropriate logging must be in place to monitor the filtering, ingestion, and auto-closure steps, including handling any errors.
+Technical Notes/Considerations:
+
+The source data is from existing files provided by CALMA. Confirm file format and location remain unchanged.
+The key filtering field is "Non Issue Identifier". Confirm the exact value representing a non-issue exception is "Yes".
+The target system for these records is RegComp.
+The primary function in RegComp is logging; limited fields are required.
+Auto-closure mechanism within RegComp needs to be triggered post-ingestion.
+This refactoring should consider potential impacts on existing error handling and monitoring for the integration.
+Coordinate with the team working on the EIM integration to ensure no overlap or data loss during transition.
