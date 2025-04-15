@@ -1,29 +1,48 @@
-Title: Implement Daily Ingestion of Linked EIM Issues into RegComp EIM Module
+Option A: Tagging within Eclipse/MetricStream (E/M)
 
-Story Type: Story
+This approach requires the Assessable Unit information to be present within the E/M system before or during the tagging process. There are two proposed methods to get this AU data into E/M:
 
-Description:
+Method 1: API Integration
 
-As a RegComp User/Compliance Officer,
-I want a daily automated process established to ingest specific issue data from the source Enterprise Issue Management (EIM) system into RegComp's EIM module,
-So that I have synchronized visibility within RegComp of EIM issues that are actively linked to Assessable Units or Exams, based on the specifications in the interface agreement.
+Process: The E/M system (or an associated process) would use an Application Programming Interface (API) to actively pull AU data.
+Source: This data would come from a predefined report (presumably generated from EIM or another master source).
+Requirements:
+Technical expertise is needed to develop, configure, or leverage the necessary API connection.
+The source system must expose the required AU data via an API endpoint compatible with the predefined report structure.
+E/M must have the functionality to store the imported AU data.
+Key Question: What level of detail does E/M need to store?
+Just the Assessable Unit ID for basic linking?
+Or does it require richer information like Line of Business, Theme, Country, Status, etc., for context or reporting within E/M? This needs clarification as it impacts storage and potentially the API/report design.
+Method 2: XML File Drop via NAS
 
-Background:
-RegComp needs visibility into specific issues managed in the central Enterprise Issue Management (EIM) system. This story covers the creation of a daily ingestion process to synchronize these issues into the RegComp EIM module, but only for those issues relevant to RegComp activities (linked to Assessable Units or Exams). This data will be used for reporting and context within RegComp.
+Process: A designated service ID (associated with the system generating AU data, likely EIM) would be granted access to write files to a specific Network Attached Storage (NAS) location. E/M would then need to monitor this location and ingest the files.
+File Format: The data must be provided in a specific, system-generated XML format. This format is fixed and cannot be altered.
+Requirements:
+Granting the source system's service ID appropriate permissions to the NAS location.
+E/M must be configured to read from the NAS location and specifically parse the provided, unchangeable XML format.
+E/M must have the functionality to store the imported AU data.
+Constraint: Lack of flexibility in the data format (fixed XML).
+Key Question: Same as Method 1: What level of AU detail is contained in the XML, and what does E/M need to store (ID only vs. full details)?
+Overall Consideration for Option A: Both methods under this option require E/M to have the capability to store AU information. The critical decision point is determining the necessary granularity of this stored data (ID vs. full details).
 
-Acceptance Criteria:
+Option B: Tagging within EIM
 
-A new automated process is created that runs daily.
-The process connects to the source EIM system/data feed as required.
-The process ingests data for all fields specified in the attached Interface Agreement ([Link to or name of Interface Agreement document]).
-Data is correctly mapped from the source fields to the corresponding fields within the RegComp EIM module structure.
-Filtering: The process correctly identifies and ingests only those issues from the EIM source that are currently linked to at least one Assessable Unit OR at least one Exam.
-Issues from the EIM source that are not linked to an Assessable Unit or Exam are excluded and not ingested.
-Synchronization (New/Update):
-If an EIM issue meets the criteria and does not yet exist in the RegComp EIM module, it is created.
-If an EIM issue meets the criteria and already exists in the RegComp EIM module, its data (as per the interface agreement fields) is updated to match the latest information from the source.
-Synchronization (Removal from Scope):
-If an issue was previously ingested (it met the criteria on a prior run) but no longer meets the filtering criteria on the current run (e.g., links to all AUs/Exams were removed in the source EIM system), its status within the RegComp EIM module must be updated to "Cancelled" (or the agreed-upon equivalent status).
-This "Cancelled" status in RegComp applies even if the issue remains open/active in the source EIM system; it reflects that the issue is no longer relevant based on the RegComp filtering criteria.
-The daily process runs successfully without manual intervention.
-Adequate logging is implemented to track the execution of the daily process, including start/end times, number of records processed (ingested, updated, marked cancelled), and any errors encountered.
+This approach leverages EIM as the primary system for managing AU data and potentially the tagging process itself.
+
+Process: Once an audit issue is identified (and potentially logged or referenced in EIM), specific users (e.g., auditors) would be granted permissions within EIM to directly edit the relevant Assessable Unit record to create the link or tag.
+Assumptions:
+Assessable Units already reside and are managed within EIM.
+Audit Issues are either entered into EIM or can be easily referenced/linked from within EIM.
+All primary reporting involving AUs and potentially their associated audit issues originates from EIM.
+Requirements:
+Modifying user roles and permissions within EIM to allow the designated users to edit AU records for tagging purposes.
+Clear process definition for when and how this tagging occurs in EIM.
+Advantages:
+Perceived simplicity, as it utilizes the system where AUs already exist.
+Avoids data duplication or synchronization issues between EIM and E/M regarding AUs.
+Leverages existing reporting structures within EIM.
+Implication: If this option is chosen, the need for E/M to store detailed AU information might be significantly reduced or eliminated for the purpose of tagging. E/M might only need a reference ID if any linkage back to EIM is required within E/M itself.
+Summary of Considerations:
+
+E/M Tagging (Option A): Requires data integration (API or File Drop), technical setup, and a decision on how much AU data to store in E/M. Potentially keeps audit-related work consolidated in E/M if that's the primary audit tool.
+EIM Tagging (Option B): Leverages the existing AU repository and reporting system (EIM). Requires permission changes in EIM. Generally simpler from a data integration perspective, assuming EIM can accommodate the tagging workflow.
