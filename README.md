@@ -1,1 +1,7 @@
-I found the internal audit conducted on the [System Name] system to be a very positive exercise. Working with Cathy, Akbar, and their team was a smooth experience. Although no material technical findings were uncovered, the audit proved its worth by identifying areas for refinement, including a small cosmetic fix and valuable suggestions for process and training improvements. It serves as a great reminder that the audit process itself is key for continuous improvement and validating our controls.
+Hi Ian,
+
+We're implementing a permanent system change to import all risk classifications daily.
+
+Initially, this automated feed will populate the Non-issue exception module, using classifications marked as "root cause." This ensures we capture value changes instantly without manual syncing.
+
+The data fields involved are: Level 0, Level 1, Level 1 Description, Level 2, Level 2 Description, Risk Classification Type, and Status.
