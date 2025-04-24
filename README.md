@@ -1,1 +1,3 @@
+We receive two files related to the findings: controls and assessable units. There's a strange discrepancy in processing times – controls run at 10:00 PM, but assessable units run at 9:32 AM, even though we get both files at the same time in the morning. I'll need to check with Production Support for the exact server arrival time since I don't have access to that information.
 
+Separately, I need to adjust the ingestion process to filter out everything except non-issue exceptions. Once that's done, is there a specific time you'd prefer the processing to happen? Otherwise, I'll schedule it for sometime in the morning after we've received the files.
