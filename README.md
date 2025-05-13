@@ -1,47 +1,44 @@
 Title:
-Display Redline Changes and Version Metadata for Citations in Newly Published Groups
+Prompt for Mapping/Attestation Review When Validation Responses Remain Unchanged
 
 Story:
-As a user reviewing regulatory group publications,
-I want to see both redlined and clean versions of citation content along with the version date,
-So that I can clearly identify what has changed in each citation and when.
+As a validator performing multiple rounds of validation,
+I want to be prompted when responses remain unchanged from a previous validation,
+So that I can decide whether a new mapping/attestation should still be required due to a material change in content.
 
 Description:
-When a Regulatory Group is newly published:
+When a second, third, or subsequent validation is performed and the validator's responses are identical to those provided in the previous validation round:
 
-The current version of a citation is defined as the version provided as part of the published RegGroup.
+The system should present an additional checkbox asking whether the mappers should still be required to perform a new mapping/attestation.
 
-The system will compare the current version against its immediate previous version for the purposes of generating a redline.
+This allows the validator to flag cases where, despite no change in their answers, the underlying citation content may have materially changed, warranting a fresh mapping.
 
-If multiple versions were published in close succession, only the most recent change will be shown in the redline.
+Important Note:
 
-The redline will be displayed for all citations tied to the published group that have a version greater than 1,
-even if that citation was not modified in the current publication.
+This only applies when validation responses are the same as in the previous round.
 
-Two content fields will be maintained for each citation:
+If any responses have changed, the system already automatically triggers a new mapping/attestation.
 
-One showing the redlined version (current vs previous)
-
-One showing the clean version (current only)
-
-Each citation will also display its last updated date or version date for transparency.
+Example: If the Regulatory Theme is changed, assessable units tied to the old theme are automatically removed, requiring reassignment to the new theme.
 
 Acceptance Criteria:
 
- The “current version” is based on the citation version included in the published Regulatory Group
+ When validation responses remain unchanged from the previous round, a checkbox appears:
+“Require new mapping/attestation due to a material change in content”
 
- Redline comparison uses the immediate prior version of that citation
+ This checkbox is only shown in cases where responses are identical to the previous validation
 
- Redline is displayed for all citations in the published group with version > 1
+ If the checkbox is selected, the system will initiate a new mapping/attestation process
 
- Two content fields are stored/displayed: redlined and clean
+ If the checkbox is left unchecked, no new mapping will be triggered
 
- Each citation includes a visible version or last updated date
+ If responses differ from the previous validation, the checkbox is not shown, and the system triggers mapping/attestation automatically (as it does today)
 
- Data is available in the UI and for export/reporting purposes
+ The checkbox selection is recorded and auditable
 
 Notes:
 
-A redline being present does not imply that the citation changed during the current group publication—only that the citation has a previous version available.
+This provides flexibility for edge cases where the regulatory meaning has changed without affecting validation answers (e.g., wording or scope clarification).
 
-This supports auditability and simplifies review for downstream users.
+Helps reduce unnecessary mapping efforts while ensuring compliance integrity.
+
