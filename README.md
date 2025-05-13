@@ -1,31 +1,38 @@
-Capture Mapped Assessable Units by Regional Segment on Attestation Completion
+Title:
+Auto-Create Draft Validation for Previously Validated RegGroups Upon New Publication
 
 Story:
-As a compliance or audit stakeholder,
-I want each Mapping Attestation record to include a snapshot of assessable units that were mapped at the time of attestation for the specific regional segment,
-So that I can clearly verify what was attested to without relying on the full RegGroup history log.
+As a validator,
+I want the system to automatically generate a draft validation when a previously validated RegGroup is re-published,
+So that I can quickly review changes (via redlines, version dates, etc.) and confirm whether any updates or downstream actions are required.
 
 Description:
-When a Mapping Attestation is completed:
+When a RegGroup is newly published, and a validation has previously occurred for that RegGroup and region:
 
-The system must capture and store a snapshot of the assessable units that are mapped to the relevant RegGroup and belong to the attestation’s assigned regional segment.
+The system should automatically create a new validation record in “Draft” status, carrying over the responses from the most recent completed validation.
 
-This list of assessable units should be saved directly in the attestation record to support audit traceability and reduce the need to investigate RegGroup mapping history.
+This allows validators to perform a “light touch” review, focusing only on redline changes, citation update dates, or other material updates.
 
-The snapshot is static and reflects the mappings only at the time of attestation.
+If no changes are needed, the validator can simply submit the draft as-is.
 
-This includes assessable units mapped through any method (standard mapping workflow, manual assignment, or system-generated rules).
+Even if the responses remain unchanged, the validator may still choose to trigger a mapping/attestation, as defined in a separate story.
+
+These draft validations should appear in a distinct dashboard bucket, separate from validations for RegGroups that have not been validated before.
+
+The RegGroup record should also clearly show the publication date, which can be used alongside citation-level version dates and redlines to help inform the review.
 
 Acceptance Criteria:
 
- Upon attestation completion, capture a list of assessable units mapped to the RegGroup and assigned to the attestation’s regional segment
+ When a RegGroup is published and has a prior completed validation, a new validation record is auto-created in Draft status
 
- Only assessable units within the matching regional segment are included in the snapshot
+ Draft validation pre-populates with responses from the most recent prior validation
 
- The snapshot is saved within the Mapping Attestation record and is immutable
+ The associated RegGroup's publication date is saved and visible in the record
 
- The list remains unchanged even if mappings are modified post-attestation
+ Draft validations appear in a separate bucket on the dashboard, e.g., "Previously Validated RegGroups – Requires Review"
 
- This applies regardless of how the assessable units were added (standard mapping or manual assignment)
+ New (never-before validated) RegGroups appear under “New RegGroups – Require Initial Validation”
 
- Auditors and stakeholders can view this list without reviewing RegGroup mapping logs
+ Validators can review redlines, citation version dates, and publication date to decide if changes are needed
+
+ Validators can choose to submit with no changes, or update responses and/or flag the need for a new mapping/attestation
