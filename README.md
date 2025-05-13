@@ -1,49 +1,40 @@
-Handle Empty API Responses as Errors to Prevent Unintended RegGroup Archiving and Assessable Unit Delinking
-
-Type: Bug / Technical Story
+Title:
+Revert Regulatory Content Overview Dashboard to Legacy Dashboard Technology for Stability
 
 Story:
-As a system integrator,
-I want the script to treat empty API responses as errors instead of valid results,
-So that we avoid mistakenly archiving RegGroups and delinking assessable units due to false assumptions of deletion.
+As a RegComp user,
+I want the Regulatory Content Overview dashboard to reliably load and respond quickly,
+So that I can access and review regulatory content without technical issues or delays.
 
 Description:
-Currently, we perform an API call to fetch RegGroup data. In some cases, the API call is technically successful (e.g., returns HTTP 200) but the body of the response is empty.
+RSA Archer introduced a new dashboard framework, and we adopted this for the Regulatory Content Overview dashboard during the software upgrade in June/July 2024.
 
-Our current logic interprets this empty response as meaning the RegGroup no longer exists (e.g., deleted), which triggers:
+However, in practice, the new dashboard technology has proven unstable:
 
-The automatic archiving of the RegGroup
+Users occasionally encounter a failure to load, with the only workaround being to close the tab and reopen it.
 
-The automatic delinking of any assessable units associated with that RegGroup
+This results in a poor user experience and undermines confidence in the system’s reliability.
 
-This behavior is incorrect and introduces risk of data loss or false compliance gaps.
+Solution:
 
-Fix Required:
+Revert the Regulatory Content Overview dashboard to use the legacy (old) dashboard technology.
 
-Update the script to treat an empty response as an error, even if the HTTP status is 200
+This older framework is more responsive, stable, and does not suffer from loading issues.
 
-When an empty response is detected:
+Although a future software upgrade later this year may resolve the issue in the new dashboard engine, it will not meet our June 30th release/onboarding deadline.
 
-Log the event as an error (e.g., “Empty response received for RegGroup ID: XYZ”)
-
-Do not proceed with archiving or delinking
-
-Stop the script (or skip to next item, depending on broader context)
+Reverting ensures a stable experience in time for release and onboarding activities.
 
 Acceptance Criteria:
 
- Script checks for empty body/content even when HTTP status is 200
+ Regulatory Content Overview dashboard is converted back to the legacy dashboard format
 
- If response is empty:
+ Dashboard loads reliably without requiring tab refresh or restart
 
- Log the issue with the relevant RegGroup ID
+ No loss of existing dashboard functionality or filters
 
- Do not archive the RegGroup
+ Ready and deployed in time for June 30 onboarding/release milestone
 
- Do not delink assessable units
+Notes:
 
- Stop or safely skip processing for that RegGroup (based on processing mode)
-
- Normal processing continues for valid (non-empty) responses
-
- Regression tested to ensure RegGroups are only archived when truly unavailable
+If future updates resolve the issue, we may re-evaluate use of the newer dashboard tech in a later phase
