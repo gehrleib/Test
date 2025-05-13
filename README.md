@@ -1,38 +1,35 @@
-Title:
-Auto-Create Draft Validation for Previously Validated RegGroups Upon New Publication
+Treat Empty API Response as an Error to Prevent Incorrect RegGroup Archiving
 
-Story:
-As a validator,
-I want the system to automatically generate a draft validation when a previously validated RegGroup is re-published,
-So that I can quickly review changes (via redlines, version dates, etc.) and confirm whether any updates or downstream actions are required.
+Story / Bug:
+As a system administrator,
+I want to prevent RegGroups from being incorrectly archived when an API returns an empty response,
+So that assessable units are not mistakenly delinked due to false assumptions about RegGroup availability.
 
 Description:
-When a RegGroup is newly published, and a validation has previously occurred for that RegGroup and region:
+Currently, when an API call to retrieve a RegGroup returns an empty response, the script incorrectly interprets this as the RegGroup being unavailable or deleted.
 
-The system should automatically create a new validation record in “Draft” status, carrying over the responses from the most recent completed validation.
+This triggers a false archive of the RegGroup and leads to assessable units being automatically delinked, creating downstream data integrity issues.
 
-This allows validators to perform a “light touch” review, focusing only on redline changes, citation update dates, or other material updates.
+To resolve this:
 
-If no changes are needed, the validator can simply submit the draft as-is.
+The script should be updated to treat empty responses as an error condition, rather than a valid "not found" result.
 
-Even if the responses remain unchanged, the validator may still choose to trigger a mapping/attestation, as defined in a separate story.
-
-These draft validations should appear in a distinct dashboard bucket, separate from validations for RegGroups that have not been validated before.
-
-The RegGroup record should also clearly show the publication date, which can be used alongside citation-level version dates and redlines to help inform the review.
+If an empty response is detected, the script must log an error and stop execution, rather than proceeding with archiving or delinking actions.
 
 Acceptance Criteria:
 
- When a RegGroup is published and has a prior completed validation, a new validation record is auto-created in Draft status
+ If the API call is successful but returns an empty payload/body, the script treats it as an error
 
- Draft validation pre-populates with responses from the most recent prior validation
+ The script logs a clear error message (e.g., "Empty API response for RegGroup [ID] – skipping archive")
 
- The associated RegGroup's publication date is saved and visible in the record
+ The script halts further processing for that RegGroup
 
- Draft validations appear in a separate bucket on the dashboard, e.g., "Previously Validated RegGroups – Requires Review"
+ No archiving or assessable unit delinking is triggered from empty responses
 
- New (never-before validated) RegGroups appear under “New RegGroups – Require Initial Validation”
+ RegGroups are only archived if the API explicitly indicates deletion or unavailability
 
- Validators can review redlines, citation version dates, and publication date to decide if changes are needed
+Notes:
 
- Validators can choose to submit with no changes, or update responses and/or flag the need for a new mapping/attestation
+This change safeguards against false-positive deletions caused by temporary API issues, rate-limiting, or content delays.
+
+Consider adding retry logic or alerting if repeated empty responses occur for the same RegGroup.
