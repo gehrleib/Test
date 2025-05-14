@@ -1,47 +1,29 @@
-Allow Segment Override During Validation and Trigger Mapping When Segment Changes
+Refactor CALMA to Non-Issue Exceptions Integration in RegComp
 
 Story:
-As a validator,
-I want the ability to override the Issuing Body’s segment during validation (with rationale),
-So that I can ensure the correct regional segment is applied for validation and mapping purposes, even if the Issuing Body’s default segment is not appropriate.
+As a system administrator,
+I want to refactor the integration between CALMA and Non-Issue Exceptions in RegComp,
+So that only relevant records are ingested and properly mapped to internal metadata, ensuring consistency and auditability.
 
 Description:
-The segment value currently resides on the Issuing Body and this will remain the source of truth. However, during the completion of a Validation, the following changes are required:
+We need to refactor the existing integration that ingests data from CALMA into the Non-Issue Exceptions module within RegComp.
 
-The validation form will display the segment from the associated Issuing Body as the default.
+Ingestion Logic:
+The source file contains a field called Non_Issue_Identifier.
 
-A checkbox option will be available to allow the validator to override the default segment.
+Only records where Non_Issue_Identifier = "Yes" will be ingested into RegComp.
 
-If selected, the user must provide a rationale for the override.
+The integration must support ingesting the following fields:
 
-This overridden segment value will take precedence over the Issuing Body’s segment.
+Subject
 
-The override is specific to that validation instance.
+Description
 
-If a new validation is performed and the override checkbox is not selected, the system will default back to using the Issuing Body’s current segment.
+Root Cause
 
-Impact on Mapping/Attestation:
+Control or Assessable Unit (only one will be present depending on the file structure)
 
-Changes to the Issuing Body’s segment already trigger a new mapping/attestation – this behavior should remain unchanged.
+Field Population Rules:
+Originating Practice will always be set to "Compliance Monitoring & Testing"
 
-A new override of the segment during validation must also trigger mapping/attestation for the applicable regional segment.
-
-Acceptance Criteria:
-
- Validation screen displays the current Issuing Body’s segment by default
-
- Validator has an option to override the segment via checkbox
-
- If override is selected, a required rationale field appears
-
- The override segment value is stored and takes precedence over the Issuing Body segment
-
- If no override is selected in future validations, the system reverts to using the current Issuing Body’s segment
-
- Any change to the segment (whether via override or Issuing Body update) triggers a new mapping/attestation process
-
- Override status and rationale are auditable and visible within the validation record
-
-Notes:
-
-Overrides help address edge cases where the regulatory ownership or application differs from the Issuing Body’s default.
+Segment, Line of Business, and Regulatory Theme will be derived from the tagged Control or Assessable Unit, depending on which is present
