@@ -13,6 +13,10 @@
     <xsl:variable name="sectionPublishDateGuid" select="'dff6a5bc-5333-48bc-b6b9-0ea383a8fca7'"/>
     <xsl:variable name="reviewDateGuid" select="'a12bde54-8b48-4b5b-89a6-dbd76be9876c'"/>
     <xsl:variable name="regulatoryThemeGuid" select="'2f6271ce-487a-4f8f-8704-335594f34bd7'"/>
+    
+    <xsl:variable name="overallStatusGuidPlaceholder" select="'overall-status-guid-placeholder'"/> 
+    <xsl:variable name="terminalStatuses" select="('Approved', 'Rejected')"/>
+    <xsl:variable name="approvedStatus" select="'Approved'"/>
 
     <xsl:template match="/Records">
         <ArcherRecords>
@@ -22,44 +26,57 @@
 
     <xsl:template match="Record[@levelGuid=$sectionLevelGuid]">
         <xsl:variable name="currentSection" select="."/>
-        <xsl:variable name="sectionContentId" select="$currentSection/@contentId"/>
+        <xsl:variable name="allValidationRecords" select="$currentSection/Record[@levelGuid=$validationLevelGuid]"/>
 
-        <xsl:variable name="sectionPublishDateField" select="$currentSection/Field[@guid=$sectionPublishDateGuid and normalize-space(@xmlConvertedValue) != '']"/>
+        <xsl:if test="exists($allValidationRecords)">
+            
+            <xsl:variable name="allVPsInTerminalState"
+                select="every $vr in $allValidationRecords satisfies
+                            ($vr/Field[@guid=$overallStatusGuidPlaceholder]/ListValues/ListValue/@displayName = $terminalStatuses)"/>
 
-        <xsl:if test="$sectionPublishDateField">
-            <xsl:variable name="sectionPublishDate" select="xs:dateTime($sectionPublishDateField/@xmlConvertedValue)"/>
+            <xsl:if test="$allVPsInTerminalState">
+                <xsl:variable name="approvedVPsWithReviewDate"
+                    select="$allValidationRecords
+                                [Field[@guid=$overallStatusGuidPlaceholder]/ListValues/ListValue/@displayName = $approvedStatus]
+                                [Field[@guid=$reviewDateGuid and normalize-space(@xmlConvertedValue) != '']]"/>
 
-            <xsl:variable name="allValidationRecords" select="$currentSection/Record[@levelGuid=$validationLevelGuid]"/>
+                <xsl:if test="exists($approvedVPsWithReviewDate)">
+                    
+                    <xsl:variable name="reviewDatesFromEligibleVPs"
+                        select="$approvedVPsWithReviewDate/Field[@guid=$reviewDateGuid]/@xmlConvertedValue/xs:dateTime(.)"/>
+                    
+                    <xsl:if test="exists($reviewDatesFromEligibleVPs)">
+                        <xsl:variable name="maxReviewDateFromEligible" select="max($reviewDatesFromEligibleVPs)"/>
+                        <xsl:variable name="chosenValidationRecord"
+                            select="($approvedVPsWithReviewDate
+                                        [xs:dateTime(Field[@guid=$reviewDateGuid]/@xmlConvertedValue) = $maxReviewDateFromEligible])[1]"/>
+                        <xsl:variable name="chosenReviewDate" select="$maxReviewDateFromEligible"/>
 
-            <xsl:if test="exists($allValidationRecords)">
-                <xsl:variable name="validationRecordsWithReviewDate"
-                              select="$allValidationRecords[Field[@guid=$reviewDateGuid and normalize-space(@xmlConvertedValue) != '']]"/>
-
-                <xsl:if test="count($validationRecordsWithReviewDate) = count($allValidationRecords)">
-
-                    <xsl:variable name="reviewDatesAsDateTime"
-                                  select="$validationRecordsWithReviewDate/Field[@guid=$reviewDateGuid]/@xmlConvertedValue/xs:dateTime(.)"/>
-
-                    <xsl:if test="exists($reviewDatesAsDateTime)">
-                        <xsl:variable name="maxReviewDate" select="max($reviewDatesAsDateTime)"/>
-
-                        <xsl:if test="$sectionPublishDate > $maxReviewDate">
-                            <xsl:variable name="latestValidationRecord"
-                                          select="($validationRecordsWithReviewDate
-                                                    [xs:dateTime(Field[@guid=$reviewDateGuid]/@xmlConvertedValue) = $maxReviewDate])[1]"/>
-
-                            <ArcherRecord>
-                                <Section_ContentID>
-                                    <xsl:value-of select="$sectionContentId"/>
-                                </Section_ContentID>
-
-                                <xsl:apply-templates select="$latestValidationRecord/Field"/>
-                            </ArcherRecord>
+                        <xsl:variable name="sectionPublishDateField" select="$currentSection/Field[@guid=$sectionPublishDateGuid and normalize-space(@xmlConvertedValue) != '']"/>
+                        <xsl:if test="$sectionPublishDateField">
+                            <xsl:variable name="sectionPublishDate" select="xs:dateTime($sectionPublishDateField/@xmlConvertedValue)"/>
+                            <xsl:if test="$sectionPublishDate > $chosenReviewDate">
+                                <xsl:call-template name="CreateArcherRecord">
+                                    <xsl:with-param name="sectionContentId" select="$currentSection/@contentId"/>
+                                    <xsl:with-param name="validationRecordNode" select="$chosenValidationRecord"/>
+                                </xsl:call-template>
+                            </xsl:if>
                         </xsl:if>
                     </xsl:if>
                 </xsl:if>
             </xsl:if>
         </xsl:if>
+    </xsl:template>
+
+    <xsl:template name="CreateArcherRecord">
+        <xsl:param name="sectionContentId"/>
+        <xsl:param name="validationRecordNode"/>
+        <ArcherRecord>
+            <Section_ContentID>
+                <xsl:value-of select="$sectionContentId"/>
+            </Section_ContentID>
+            <xsl:apply-templates select="$validationRecordNode/Field"/>
+        </ArcherRecord>
     </xsl:template>
 
     <xsl:template match="Field">
@@ -77,7 +94,6 @@
                             </Item>
                         </xsl:for-each>
                     </xsl:when>
-
                     <xsl:when test="ListValues/ListValue">
                         <xsl:value-of select="ListValues/ListValue[1]/@displayName"/>
                     </xsl:when>
