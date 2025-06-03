@@ -1,1 +1,41 @@
 
+<xsl:stylesheet version="3.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                exclude-result-prefixes="xs">
+
+    <xsl:output method="xml" indent="yes" encoding="utf-16"/>
+
+    <xsl:mode on-no-match="shallow-copy"/>
+
+    <xsl:template match="Record">
+        <xsl:copy>
+            <xsl:apply-templates select="@*"/>
+            
+            <xsl:variable name="parent-regional-segment" 
+                          select="Field[@guid='efe722d8-3500-4f2e-a2d3-057df541c588']/Reference/normalize-space(.)" 
+                          as="xs:string?"/>
+            
+            <xsl:for-each select="node()">
+                <xsl:choose>
+                    <xsl:when test="self::Record">
+                        <xsl:variable name="child-regional-segment" 
+                                      select="Field[@guid='95cdb36e-7999-4e71-ae70-55094a21ee83']/Reference/normalize-space(.)" 
+                                      as="xs:string?"/>
+                        
+                        <xsl:if test="exists($parent-regional-segment) and 
+                                      exists($child-regional-segment) and 
+                                      $parent-regional-segment = $child-regional-segment">
+                            <xsl:apply-templates select="."/>
+                        </xsl:if>
+                        
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:apply-templates select="."/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:for-each>
+        </xsl:copy>
+    </xsl:template>
+
+</xsl:stylesheet>
