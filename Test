@@ -1,41 +1,20 @@
-
-<xsl:stylesheet version="3.0"
-                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                exclude-result-prefixes="xs">
-
-    <xsl:output method="xml" indent="yes" encoding="utf-16"/>
-
-    <xsl:mode on-no-match="shallow-copy"/>
-
-    <xsl:template match="Record">
-        <xsl:copy>
-            <xsl:apply-templates select="@*"/>
-            
-            <xsl:variable name="parent-regional-segment" 
-                          select="Field[@guid='efe722d8-3500-4f2e-a2d3-057df541c588']/Reference/normalize-space(.)" 
-                          as="xs:string?"/>
-            
-            <xsl:for-each select="node()">
-                <xsl:choose>
-                    <xsl:when test="self::Record">
-                        <xsl:variable name="child-regional-segment" 
-                                      select="Field[@guid='95cdb36e-7999-4e71-ae70-55094a21ee83']/Reference/normalize-space(.)" 
-                                      as="xs:string?"/>
-                        
-                        <xsl:if test="exists($parent-regional-segment) and 
-                                      exists($child-regional-segment) and 
-                                      $parent-regional-segment = $child-regional-segment">
-                            <xsl:apply-templates select="."/>
-                        </xsl:if>
-                        
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:apply-templates select="."/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:for-each>
-        </xsl:copy>
-    </xsl:template>
-
-</xsl:stylesheet>
+Subject: Update on API Issue & Reg Group Clarification
+Hey [Their Name],
+Thanks for reaching out about how to reproduce that API issue.
+I think I've identified the problem as being on our side. It seems we weren't caching DNS initially, which likely caused the timeouts. We've since resolved this by implementing a DNS cache with a TTL of up to 5 minutes, and that seems to have fixed the issue in our lower environments.
+Recent Improvements
+Here's a breakdown of recent changes:
+Optimizations:
+ * We've increased the page-length to 200 from 50.
+ * We've added logic to terminate the script if no reggroups are provided. In such cases, an HTTP 200 (OK) status code is now explicitly returned to us, indicating a successful termination under that specific condition, rather than an error or an indefinite hang.
+Enhancements:
+ * We now perform a second call to each citation if the citation is greater than 1.
+ * Regarding the redline revisions, we perform these by comparing the citation of a previous version to generate the revised document.
+Since the core issue was with our DNS handling, we shouldn't encounter this problem in our lower environments anymore. Please note that our testing is currently limited to these lower environments and isn't in production yet. We won't have full confirmation of the resolution in production until June 26th, at which point the script will be scheduled to run daily at 1:00 a.m.
+We'll provide the payload we were using so you have it for your records. Let us know if you have any other questions.
+Question for Lana about Reg Group Dates
+I also wanted to ask Lana to clarify something about the reg groups. Specifically, does the reg group have a published date?
+My understanding is that the created date indicates when the group was first pre-published. The last updated date could reflect various changes, such as group name or tags, which I believe update the group but don't necessarily signify a new version of the group itself.
+Could you please forward this specific question to Lana?
+Best,
+[Your Name]
