@@ -1,20 +1,43 @@
-Subject: Update on API Issue & Reg Group Clarification
-Hey [Their Name],
-Thanks for reaching out about how to reproduce that API issue.
-I think I've identified the problem as being on our side. It seems we weren't caching DNS initially, which likely caused the timeouts. We've since resolved this by implementing a DNS cache with a TTL of up to 5 minutes, and that seems to have fixed the issue in our lower environments.
-Recent Improvements
-Here's a breakdown of recent changes:
-Optimizations:
- * We've increased the page-length to 200 from 50.
- * We've added logic to terminate the script if no reggroups are provided. In such cases, an HTTP 200 (OK) status code is now explicitly returned to us, indicating a successful termination under that specific condition, rather than an error or an indefinite hang.
-Enhancements:
- * We now perform a second call to each citation if the citation is greater than 1.
- * Regarding the redline revisions, we perform these by comparing the citation of a previous version to generate the revised document.
-Since the core issue was with our DNS handling, we shouldn't encounter this problem in our lower environments anymore. Please note that our testing is currently limited to these lower environments and isn't in production yet. We won't have full confirmation of the resolution in production until June 26th, at which point the script will be scheduled to run daily at 1:00 a.m.
-We'll provide the payload we were using so you have it for your records. Let us know if you have any other questions.
-Question for Lana about Reg Group Dates
-I also wanted to ask Lana to clarify something about the reg groups. Specifically, does the reg group have a published date?
-My understanding is that the created date indicates when the group was first pre-published. The last updated date could reflect various changes, such as group name or tags, which I believe update the group but don't necessarily signify a new version of the group itself.
-Could you please forward this specific question to Lana?
-Best,
-[Your Name]
+You've hit on a very good point. The purpose statement, as it stands, does indeed have some overlap with the "Key Responsibilities & Permissions." While the purpose sets the high-level "why," and responsibilities detail the "how," there's definitely room to refine the purpose to be less duplicative and more succinct, acting as a true summary of the role's essence.
+Let's adjust the Purpose to focus purely on the ultimate goal and the core function of the Validator, without listing out the specific questions that are already covered in the responsibilities.
+Here's a more refined and less duplicative version of the Purpose, followed by the full updated role description for context:
+Validator Role Description (System Permissions - Regional Segment Scope)
+Role Name: Validator
+Purpose: To critically assess and formally determine the applicability, impact, regulatory theme, and rationale for Regulatory Groups (Reg groups) within their assigned Regional segments in the system. The Validator ensures these core determinations are accurate, complete, and adhere to RBC's established guidelines and segment overrides, thereby upholding the integrity of the firm's regulatory compliance data. They manage the validation workflow for both new and materially changed existing Reg groups.
+Reasoning for the change:
+ * It now clearly states the action (critically assess and formally determine) and the object (applicability, impact, regulatory theme, rationale).
+ * It emphasizes what they are determining without listing the exact questions, leaving that detail for the "Key Responsibilities."
+ * It still highlights the scope (Regional segments) and the ultimate goal (integrity of RBC's regulatory compliance data).
+ * It avoids repeating the full list of questions that appear in the responsibilities.
+Here's the full updated role description with the refined purpose:
+Validator Role Description (System Permissions - Regional Segment Scope)
+Role Name: Validator
+Purpose: To critically assess and formally determine the applicability, impact, regulatory theme, and rationale for Regulatory Groups (Reg groups) within their assigned Regional segments in the system. The Validator ensures these core determinations are accurate, complete, and adhere to RBC's established guidelines and segment overrides, thereby upholding the integrity of the firm's regulatory compliance data. They manage the validation workflow for both new and materially changed existing Reg groups.
+Key Responsibilities & Permissions:
+ * For Newly Created Reg Groups (within assigned Regional Segments):
+   * Upon the creation of a new Reg group within their assigned Regional segments, the Validator is responsible for creating a new validation record.
+   * The Validator must then fill out the required responses and determinations for this new validation, ensuring alignment with RBC-specified themes and any applicable segment overrides.
+   * This includes answering specific questions on the validation form, such as: "Does the Reg group apply to RBC?" "Does the Reg group impact RBC?" "What is the regulatory theme?" "What is the rationale for these choices?" and "Is there a need to override specific segments?"
+ * For Existing Reg Groups with Past Validations (within assigned Regional Segments - Light Touch Review):
+   * The system will automatically create a new validation record whenever there is a material change to an existing Reg group that has undergone a past validation.
+   * Material changes include, but are not limited to:
+     * A change in regulatory content.
+     * Additions or removals of content or attributes relevant to the Reg group.
+   * These auto-generated validation records will contain the previous responses as a baseline, enabling a "light touch" review.
+   * The Validator's responsibility is to:
+     * Review the updated regulatory content and any revisions presented via redline within the system.
+     * Ensure all changes are accurately reflected and comply with established guidelines. This includes reviewing and, if necessary, updating answers to validation questions (e.g., "Does the Reg group apply to RBC?").
+     * Resubmit the validation record, either without changes if the review confirms accuracy, or after making any necessary adjustments to the responses as deemed fit by the team.
+ * Review and Approval of Reg Group Determinations (Scoped to Assigned Regional Segments):
+   * Access to view only Reg group entries that belong to or are under the Validator's assigned Regional segments.
+   * Permission to verify that each Reg group's determination (whether manually created for new groups or system-generated for updates) aligns with RBC-specified themes.
+   * Permission to verify that each Reg group's determination incorporates any segment overrides specific to that Reg group.
+   * Ability to approve or reject (with clear rationale) Reg group determinations within their assigned Regional segments.
+ * Data Integrity & Compliance Oversight (Scoped to Assigned Regional Segments):
+   * Ability to access and review audit trails related to Reg group changes and determinations within their assigned Regional segments.
+   * Contribution to the overall compliance framework by ensuring data accuracy and adherence to regulatory standards within the system, specifically for the Reg groups under their assigned Regional segments.
+Required Attributes (within the system context):
+ * High attention to detail.
+ * Strong understanding of regulatory requirements and internal RBC guidelines pertaining to Reg groups.
+ * Ability to identify discrepancies or non-compliance.
+ * Familiarity with the specific Reg groups and business context of their assigned Regional segments.
