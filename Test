@@ -1,27 +1,22 @@
-Got it. This clarifies that re-mapping isn't always a full re-do, but sometimes just an attestation.
-Here's the updated role description for the Regulatory Content Mapper, integrating the "map or attest" option for material changes:
-Regulatory Content Mapper Role Description (System Permissions - Regional Segment Scope)
-Role Name: Regulatory Content Mapper
-Purpose: To precisely link regulatory group (Reg group) determinations to the relevant assessable units within their assigned Regional segments in the system. The Regulatory Content Mapper uses the validated information, such as the regulatory theme provided by the Validator, to ensure that Reg groups are accurately mapped to the correct assessable units. They are also responsible for re-evaluating and either re-mapping or attesting to existing mappings when material changes to Reg groups occur, maintaining compliance and operational clarity within their specified regional scope.
+You are absolutely right to ask for that clarification. Given that the purpose is now solely focused on risk assessment from content changes, the "Key Responsibilities" need to reflect that sharpened focus exclusively.
+I will remove the previous responsibilities related to direct approval of Validator and Mapper work, as that no longer aligns with the refined purpose.
+Here is the updated Regulatory Lead Role Description with the focused purpose and corresponding key responsibilities:
+Regulatory Lead Role Description (System Permissions - Regional Segment Scope)
+Role Name: Regulatory Lead
+Purpose: To critically assess changes in regulatory content on assessable units within their assigned Regional segments in the system. The Regulatory Lead specifically reviews assessable units where regulatory content has been added or removed via the Mapper, determines whether such changes impact or alter the associated risk profile (increasing or decreasing it), and, if so, triggers necessary new risk assessments to ensure continuous and proactive risk management for RBC.
 Key Responsibilities & Permissions:
- * Mapping Based on Validator's Determinations:
-   * Access to view the validated responses for Reg groups (e.g., regulatory theme, applicability, impact) as provided by the Validator for Reg groups within their assigned Regional segments.
-   * Utilize these validated responses, particularly the regulatory theme, as the basis for mapping Reg groups to appropriate assessable units.
- * Re-evaluation and Attestation/Re-mapping Due to Material Changes (Scoped to Assigned Regional Segments):
-   * When a material change occurs to a Reg group (such as a change in segments, country, or jurisdiction) within their assigned Regional segments, the Mapper is required to re-evaluate the associated assessable units mapping.
-   * Based on this re-evaluation, the Mapper will either:
-     * Attest that the existing mapping remains accurate and appropriate, requiring a specific action in the system to confirm its validity.
-     * Re-map the Reg group to new or updated assessable units if the material change necessitates a different linkage.
-   * This ensures that the mapping remains accurate and compliant with the updated Reg group attributes.
- * Assessable Unit Selection (Scoped to Assigned Regional Segments):
-   * Ability to browse and select from a predefined list of assessable units.
-   * Crucially, they can only choose and map assessable units that belong to or are associated with their assigned Regional segments. The system will enforce this regional scope limitation.
-   * Permission to establish the linkage or relationship between a validated Reg group and one or more selected assessable units.
- * Data Integrity & Compliance Support:
-   * Contribute to the accuracy and completeness of the regulatory compliance framework by ensuring correct mapping of Reg groups to assessable units.
-   * Adhere to internal RBC guidelines and best practices for content mapping.
+ * Risk Impact Assessment and Triggering of Risk Assessments:
+   * Review a dedicated list or queue of assessable units within their assigned Regional segments where regulatory content has been added or removed via the Regulatory Content Mapper.
+   * For these identified changes, the Regulatory Lead is responsible for determining whether the addition or removal of regulatory content impacts, increases, or decreases the inherent or residual risk associated with the specific assessable units.
+   * Based on this risk determination, the Regulatory Lead has the authority within the system to trigger a new risk assessment process for the affected assessable units.
+ * Oversight of Content-to-Risk Linkage:
+   * Monitor the effectiveness of the system's process in flagging assessable unit changes for risk review.
+   * Ensure that the link between regulatory content changes and their potential risk implications is consistently identified and acted upon.
+ * Data Integrity & Compliance Adherence (Risk Context):
+   * Contribute to the accuracy of the risk data by ensuring that risk assessment triggers are initiated appropriately based on content changes.
+   * Access to reporting functionalities to monitor the status of triggered risk assessments related to content changes within their scope.
 Required Attributes (within the system context):
- * Strong understanding of RBC's organizational structure and assessable unit hierarchy within their assigned Regional segments.
- * Familiarity with the types of regulatory content and how they relate to business operations.
- * Detail-oriented with a focus on accurate data linkage.
- * Ability to interpret Validator's determinations and translate them into appropriate mappings.
+ * Deep subject matter expertise in regulatory risk management and compliance, specifically within their assigned Regional segments.
+ * Strong analytical and critical thinking skills for risk identification and impact assessment.
+ * Comprehensive understanding of RBC's business operations and how regulatory content changes translate into operational or compliance risk.
+ * Accountability for initiating appropriate risk assessments based on content modifications within their purview.
