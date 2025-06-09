@@ -1,43 +1,27 @@
-You've hit on a very good point. The purpose statement, as it stands, does indeed have some overlap with the "Key Responsibilities & Permissions." While the purpose sets the high-level "why," and responsibilities detail the "how," there's definitely room to refine the purpose to be less duplicative and more succinct, acting as a true summary of the role's essence.
-Let's adjust the Purpose to focus purely on the ultimate goal and the core function of the Validator, without listing out the specific questions that are already covered in the responsibilities.
-Here's a more refined and less duplicative version of the Purpose, followed by the full updated role description for context:
-Validator Role Description (System Permissions - Regional Segment Scope)
-Role Name: Validator
-Purpose: To critically assess and formally determine the applicability, impact, regulatory theme, and rationale for Regulatory Groups (Reg groups) within their assigned Regional segments in the system. The Validator ensures these core determinations are accurate, complete, and adhere to RBC's established guidelines and segment overrides, thereby upholding the integrity of the firm's regulatory compliance data. They manage the validation workflow for both new and materially changed existing Reg groups.
-Reasoning for the change:
- * It now clearly states the action (critically assess and formally determine) and the object (applicability, impact, regulatory theme, rationale).
- * It emphasizes what they are determining without listing the exact questions, leaving that detail for the "Key Responsibilities."
- * It still highlights the scope (Regional segments) and the ultimate goal (integrity of RBC's regulatory compliance data).
- * It avoids repeating the full list of questions that appear in the responsibilities.
-Here's the full updated role description with the refined purpose:
-Validator Role Description (System Permissions - Regional Segment Scope)
-Role Name: Validator
-Purpose: To critically assess and formally determine the applicability, impact, regulatory theme, and rationale for Regulatory Groups (Reg groups) within their assigned Regional segments in the system. The Validator ensures these core determinations are accurate, complete, and adhere to RBC's established guidelines and segment overrides, thereby upholding the integrity of the firm's regulatory compliance data. They manage the validation workflow for both new and materially changed existing Reg groups.
+Got it. This clarifies that re-mapping isn't always a full re-do, but sometimes just an attestation.
+Here's the updated role description for the Regulatory Content Mapper, integrating the "map or attest" option for material changes:
+Regulatory Content Mapper Role Description (System Permissions - Regional Segment Scope)
+Role Name: Regulatory Content Mapper
+Purpose: To precisely link regulatory group (Reg group) determinations to the relevant assessable units within their assigned Regional segments in the system. The Regulatory Content Mapper uses the validated information, such as the regulatory theme provided by the Validator, to ensure that Reg groups are accurately mapped to the correct assessable units. They are also responsible for re-evaluating and either re-mapping or attesting to existing mappings when material changes to Reg groups occur, maintaining compliance and operational clarity within their specified regional scope.
 Key Responsibilities & Permissions:
- * For Newly Created Reg Groups (within assigned Regional Segments):
-   * Upon the creation of a new Reg group within their assigned Regional segments, the Validator is responsible for creating a new validation record.
-   * The Validator must then fill out the required responses and determinations for this new validation, ensuring alignment with RBC-specified themes and any applicable segment overrides.
-   * This includes answering specific questions on the validation form, such as: "Does the Reg group apply to RBC?" "Does the Reg group impact RBC?" "What is the regulatory theme?" "What is the rationale for these choices?" and "Is there a need to override specific segments?"
- * For Existing Reg Groups with Past Validations (within assigned Regional Segments - Light Touch Review):
-   * The system will automatically create a new validation record whenever there is a material change to an existing Reg group that has undergone a past validation.
-   * Material changes include, but are not limited to:
-     * A change in regulatory content.
-     * Additions or removals of content or attributes relevant to the Reg group.
-   * These auto-generated validation records will contain the previous responses as a baseline, enabling a "light touch" review.
-   * The Validator's responsibility is to:
-     * Review the updated regulatory content and any revisions presented via redline within the system.
-     * Ensure all changes are accurately reflected and comply with established guidelines. This includes reviewing and, if necessary, updating answers to validation questions (e.g., "Does the Reg group apply to RBC?").
-     * Resubmit the validation record, either without changes if the review confirms accuracy, or after making any necessary adjustments to the responses as deemed fit by the team.
- * Review and Approval of Reg Group Determinations (Scoped to Assigned Regional Segments):
-   * Access to view only Reg group entries that belong to or are under the Validator's assigned Regional segments.
-   * Permission to verify that each Reg group's determination (whether manually created for new groups or system-generated for updates) aligns with RBC-specified themes.
-   * Permission to verify that each Reg group's determination incorporates any segment overrides specific to that Reg group.
-   * Ability to approve or reject (with clear rationale) Reg group determinations within their assigned Regional segments.
- * Data Integrity & Compliance Oversight (Scoped to Assigned Regional Segments):
-   * Ability to access and review audit trails related to Reg group changes and determinations within their assigned Regional segments.
-   * Contribution to the overall compliance framework by ensuring data accuracy and adherence to regulatory standards within the system, specifically for the Reg groups under their assigned Regional segments.
+ * Mapping Based on Validator's Determinations:
+   * Access to view the validated responses for Reg groups (e.g., regulatory theme, applicability, impact) as provided by the Validator for Reg groups within their assigned Regional segments.
+   * Utilize these validated responses, particularly the regulatory theme, as the basis for mapping Reg groups to appropriate assessable units.
+ * Re-evaluation and Attestation/Re-mapping Due to Material Changes (Scoped to Assigned Regional Segments):
+   * When a material change occurs to a Reg group (such as a change in segments, country, or jurisdiction) within their assigned Regional segments, the Mapper is required to re-evaluate the associated assessable units mapping.
+   * Based on this re-evaluation, the Mapper will either:
+     * Attest that the existing mapping remains accurate and appropriate, requiring a specific action in the system to confirm its validity.
+     * Re-map the Reg group to new or updated assessable units if the material change necessitates a different linkage.
+   * This ensures that the mapping remains accurate and compliant with the updated Reg group attributes.
+ * Assessable Unit Selection (Scoped to Assigned Regional Segments):
+   * Ability to browse and select from a predefined list of assessable units.
+   * Crucially, they can only choose and map assessable units that belong to or are associated with their assigned Regional segments. The system will enforce this regional scope limitation.
+   * Permission to establish the linkage or relationship between a validated Reg group and one or more selected assessable units.
+ * Data Integrity & Compliance Support:
+   * Contribute to the accuracy and completeness of the regulatory compliance framework by ensuring correct mapping of Reg groups to assessable units.
+   * Adhere to internal RBC guidelines and best practices for content mapping.
 Required Attributes (within the system context):
- * High attention to detail.
- * Strong understanding of regulatory requirements and internal RBC guidelines pertaining to Reg groups.
- * Ability to identify discrepancies or non-compliance.
- * Familiarity with the specific Reg groups and business context of their assigned Regional segments.
+ * Strong understanding of RBC's organizational structure and assessable unit hierarchy within their assigned Regional segments.
+ * Familiarity with the types of regulatory content and how they relate to business operations.
+ * Detail-oriented with a focus on accurate data linkage.
+ * Ability to interpret Validator's determinations and translate them into appropriate mappings.
