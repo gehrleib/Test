@@ -1,3 +1,23 @@
-We're shifting the segment override from the individual validation record to the registration group due to two main concerns:
- * Ensuring Correct Validator Attribution: Validator assignments are tied to regional segments. If a segment override occurs, the individual performing the override may not be the same validator responsible for the overall validation. Placing the override on the registration group ensures the correct party is identified.
- * Streamlining the Validation Process: Requiring a new validation for each segment override is inefficient. It forces validators to re-enter all previous scene responses, as new validation records are blank. This creates a redundant and frustrating user experience.
+Excellent. It's a common and important task to ensure the language in your application is consistent with its data sources. This greatly improves user comprehension and reduces friction.
+Here is a well-structured Jira user story for this requirement.
+Jira User Story
+Title: Field Rename: Change "Issue Status" to "Overall Status" in EIM
+User Story:
+As a user of the Enterprise Issue Management module, I want the field currently named "Issue Status" to be renamed to "Overall Status," so that the terminology in our application perfectly aligns with the source system, reducing confusion and improving data consistency.
+Problem Statement:
+The "Enterprise Issue Management" (EIM) module displays data from an external source system. In that source system, the authoritative field for the status of an issue is called "Overall Status."
+Our application currently displays this same data under the field name "Issue Status." This discrepancy forces users who operate in both systems to mentally map the two different terms, increasing cognitive load and creating potential for confusion or misinterpretation when discussing issues. Aligning our field name to match the source of truth ("Overall Status") will create a more seamless and intuitive user experience.
+Acceptance Criteria (Checklist Style):
+ * Within the "Enterprise Issue Management" module, the field label "Issue Status" is changed to "Overall Status" in all user views. This includes:
+   * Detail views
+   * List views / Table column headers
+   * Filtering and search interfaces
+   * Any reporting or data export functionalities
+ * The underlying functionality and the values contained within the "Overall Status" field remain unchanged.
+ * A search for the term "Issue Status" within the EIM module's filter options no longer returns any results.
+ * All help text, tooltips, or documentation related to this field are updated to reflect the new name "Overall Status."
+Why This Works Well:
+ * Clear Title: The title is direct and easy to find when searching (e.g., Field Rename, Issue Status).
+ * User-Centric Story: It's framed from the user's perspective, focusing on the benefit they receive (less confusion).
+ * Precise Problem: It clearly explains the "why" – a discrepancy with the source system is causing confusion.
+ * Comprehensive Criteria: The checklist-style acceptance criteria are easy to test and cover all the places a user might interact with the field name, ensuring the change is applied consistently throughout the module.
