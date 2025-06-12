@@ -1,20 +1,34 @@
-Excellent. This is a classic data validation story, crucial for maintaining data integrity. Here is a well-structured Jira user story to capture this requirement.
+Of course. This is a significant UI consolidation and enhancement story. The goal is to modernize a key view by replacing an old data source with two new, more relevant ones, and providing clear summary counts.
+Here is a complete Jira user story to capture this requirement.
 Jira User Story
-Title: Non-Issue Exceptions: Prevent Future Dates for "Identification Date"
+Title: Assessable Unit View: Display EIM Issues & Exceptions, Hide Legacy Findings
 User Story:
-As a user creating or editing a non-issue exception, I want the system to prevent me from selecting a future date in the "Identification Date" field, so that I can ensure all submitted data is logical, accurate, and reflects a real-world timeline.
+As an assessor or risk manager viewing an assessable unit, I want to see a clear summary of all associated "Enterprise Issue Management" (EIM) issues and "Non-Issue Exceptions," including counts of open and closed items, and I want the outdated "Issues and Findings" section to be hidden, so that I have a complete, accurate, and uncluttered view of all relevant issues in one place.
 Problem Statement:
-The "Identification Date" field in the Non-Issue Exception module is meant to capture the exact moment an exception was first identified. By definition, it is impossible to identify something in the future.
-The system currently allows users to select any date from the calendar picker, including future dates. This creates a significant data integrity risk. An exception with a future identification date is logically invalid and can lead to skewed metrics, inaccurate reports, and a loss of trust in the data. We need to enforce a validation rule to prevent these nonsensical entries at the point of input.
+The current assessable unit view is incomplete and misleading. It prominently displays the legacy "Issues and Findings" section, which is being phased out, while failing to show two new, critical sources of information: "Enterprise Issue Management" issues and "Non-Issue Exceptions."
+This forces users to navigate to multiple, separate modules to get a full picture of an assessable unit's risk posture, creating inefficiency and a high probability that critical issues or exceptions will be missed during an assessment. To make informed decisions, users need a single, consolidated view that displays all current and relevant issue types while hiding the obsolete ones.
 Acceptance Criteria (Checklist Style):
- * When a user selects a date in the "Identification Date" field within the Non-Issue Exception module, the system must perform a validation check.
- * If the selected date is after the current date (today), the system must reject the entry.
- * Upon rejecting a future date, a clear and user-friendly error message must be displayed (e.g., "Error: The Identification Date cannot be in the future.").
- * Users must be able to successfully select the current date (today) or any date in the past.
- * This validation must work correctly regardless of the user's local time zone. The system should compare the selected date against the server's current date.
- * The validation should trigger on both the creation of a new exception and the editing of an existing exception.
+1. Enterprise Issue Management (EIM) Display:
+ * A new section titled "Enterprise Issue Management" must be visible on the assessable unit view.
+ * This section must display a list of all EIM issues associated with the assessable unit.
+ * A summary count of all Open EIM issues must be clearly visible.
+ * A summary count of all Closed EIM issues must be clearly visible.
+ * The definition of "Open" and "Closed" statuses must align with the EIM module's status definitions.
+2. Non-Issue Exceptions Display:
+ * A new section titled "Non-Issue Exceptions" must be visible on the assessable unit view.
+ * This section must display a list of all Non-Issue Exceptions associated with the assessable unit.
+ * A summary count of all Open exceptions must be clearly visible.
+ * A summary count of all Closed exceptions must be clearly visible.
+3. Hiding Legacy Section:
+ * The entire section related to the old "Issues and Findings" must be completely removed from the assessable unit view.
+4. General & UI/UX:
+ * The new "Enterprise Issue Management" and "Non-Issue Exceptions" sections should be clearly distinct from each other.
+ * If there are zero issues or exceptions of a certain type, the counts should display "0" rather than hiding the section.
+ * The page layout should remain clean and organized after these changes.
+ * The performance of the assessable unit page should not be negatively impacted by loading these new sections.
 Why this User Story is Effective:
- * Clear Title: States the module, the field, and the action (Prevent Future Dates).
- * User-Centric Framing: It focuses on the user's need to enter valid data.
- * Strong Justification: The problem statement clearly explains why allowing future dates is a business problem (invalid data, skewed metrics, loss of trust).
- * Actionable & Testable Criteria: The acceptance criteria are a simple checklist for a developer to implement and a tester to verify. It covers the core logic (reject future, accept present/past), the user feedback (error message), and key technical considerations (time zones, edit vs. create).
+ * Holistic Title: The title summarizes all three parts of the request (Add EIM, Add Exceptions, Hide Legacy).
+ * Clear Business Value: The problem statement focuses on the negative business impact of the current design (inefficiency, risk of missing information) and the positive outcome of the change (a single, consolidated view).
+ * Grouped Criteria: The acceptance criteria are broken down into logical sub-sections, making it easy for developers and testers to address each part of the request systematically.
+ * Specificity on Counts: It explicitly calls for separate "Open" and "Closed" counts, which is a key part of your request and crucial for at-a-glance understanding.
+ * Considers the Edge Case: The criterion to display "0" instead of hiding sections ensures a consistent user experience, regardless of the data.
