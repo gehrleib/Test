@@ -1,20 +1,3 @@
-Subject: Update on API Issue & Reg Group Clarification
-Hey [Their Name],
-Thanks for reaching out about how to reproduce that API issue.
-I think I've identified the problem as being on our side, specifically concerning our DNS handling. It seems we were not previously caching DNS results, which likely caused the timeouts. This, combined with the nature of our asynchronous calls, may have led your cloud service provider (such as Cloudflare) to interpret the volume of uncached DNS requests as a potential DDoS attack. We've since resolved this by implementing a DNS cache with a TTL of up to 5 minutes, and that seems to have fixed the issue in our lower environments.
-Recent Improvements
-Here's a breakdown of recent changes:
-Optimizations:
- * We've increased the page-length to 200 from 50.
- * We've added logic to terminate the script if no reggroups are provided. In such cases, an HTTP 200 (OK) status code is now explicitly returned to us, indicating a successful termination under that specific condition, rather than an error or an indefinite hang.
-Enhancements:
- * We now perform a second call to each citation if the citation is greater than 1.
- * Regarding the redline revisions, we perform these by comparing the citation of a previous version to generate the revised document.
-Since the core issue was with our DNS handling, we shouldn't encounter this problem in our lower environments anymore. Please note that our testing is currently limited to these lower environments and isn't in production yet. We won't have full confirmation of the resolution in production until June 26th, at which point the script will be scheduled to run daily at 1:00 a.m.
-We'll provide the payload we were using so you have it for your records. Let us know if you have any other questions.
-Question for Lana about Reg Group Dates
-I also wanted to ask Lana to clarify something about the reg groups. Specifically, does the reg group have a published date?
-My understanding is that the created date indicates when the group was first pre-published. The last updated date could reflect various changes, such as group name or tags, which I believe update the group but don't necessarily signify a new version of the group itself.
-Could you please forward this specific question to Lana?
-Best,
-[Your Name]
+We're shifting the segment override from the individual validation record to the registration group due to two main concerns:
+ * Ensuring Correct Validator Attribution: Validator assignments are tied to regional segments. If a segment override occurs, the individual performing the override may not be the same validator responsible for the overall validation. Placing the override on the registration group ensures the correct party is identified.
+ * Streamlining the Validation Process: Requiring a new validation for each segment override is inefficient. It forces validators to re-enter all previous scene responses, as new validation records are blank. This creates a redundant and frustrating user experience.
