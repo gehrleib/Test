@@ -1,34 +1,32 @@
-Of course. This is a significant UI consolidation and enhancement story. The goal is to modernize a key view by replacing an old data source with two new, more relevant ones, and providing clear summary counts.
-Here is a complete Jira user story to capture this requirement.
-Jira User Story
-Title: Assessable Unit View: Display EIM Issues & Exceptions, Hide Legacy Findings
+Of course. Using user-friendly, Title Cased field names in the story makes it much more readable for all stakeholders, including Product Owners and business analysts. It ensures the business logic is clear, regardless of the underlying technical implementation.
+Here is the updated user story with user-friendly, Title Cased field names.
+Jira User Story (User-Friendly Field Names)
+Title: Refactor Risk Assessment Triggers to Use EIM Data
 User Story:
-As an assessor or risk manager viewing an assessable unit, I want to see a clear summary of all associated "Enterprise Issue Management" (EIM) issues and "Non-Issue Exceptions," including counts of open and closed items, and I want the outdated "Issues and Findings" section to be hidden, so that I have a complete, accurate, and uncluttered view of all relevant issues in one place.
+As the system, I want to refactor the automated risk assessment trigger logic to use "Enterprise Issue Management" (EIM) data instead of the legacy "Issues and Findings" data, so that risk assessments are triggered accurately and in a timely manner based on the authoritative source for issue data.
 Problem Statement:
-The current assessable unit view is incomplete and misleading. It prominently displays the legacy "Issues and Findings" section, which is being phased out, while failing to show two new, critical sources of information: "Enterprise Issue Management" issues and "Non-Issue Exceptions."
-This forces users to navigate to multiple, separate modules to get a full picture of an assessable unit's risk posture, creating inefficiency and a high probability that critical issues or exceptions will be missed during an assessment. To make informed decisions, users need a single, consolidated view that displays all current and relevant issue types while hiding the obsolete ones.
+Our current automated risk assessment triggers are built upon the legacy "Issues and Findings" data source, which is being deprecated. This logic is now obsolete and creates a significant business risk, as new or updated issues in the authoritative "Enterprise Issue Management" (EIM) system do not trigger necessary reviews.
+To maintain the integrity of our continuous monitoring and risk management processes, we must rebuild this logic to be driven exclusively by EIM data. This change will ensure that assessments are correctly initiated when high-severity risks emerge or when all known high-severity risks have been remediated for a given assessable unit.
+Note for Development: Field names below are user-friendly labels. The corresponding technical/database field names should be used in the implementation.
 Acceptance Criteria (Checklist Style):
-1. Enterprise Issue Management (EIM) Display:
- * A new section titled "Enterprise Issue Management" must be visible on the assessable unit view.
- * This section must display a list of all EIM issues associated with the assessable unit.
- * A summary count of all Open EIM issues must be clearly visible.
- * A summary count of all Closed EIM issues must be clearly visible.
- * The definition of "Open" and "Closed" statuses must align with the EIM module's status definitions.
-2. Non-Issue Exceptions Display:
- * A new section titled "Non-Issue Exceptions" must be visible on the assessable unit view.
- * This section must display a list of all Non-Issue Exceptions associated with the assessable unit.
- * A summary count of all Open exceptions must be clearly visible.
- * A summary count of all Closed exceptions must be clearly visible.
-3. Hiding Legacy Section:
- * The entire section related to the old "Issues and Findings" must be completely removed from the assessable unit view.
-4. General & UI/UX:
- * The new "Enterprise Issue Management" and "Non-Issue Exceptions" sections should be clearly distinct from each other.
- * If there are zero issues or exceptions of a certain type, the counts should display "0" rather than hiding the section.
- * The page layout should remain clean and organized after these changes.
- * The performance of the assessable unit page should not be negatively impacted by loading these new sections.
-Why this User Story is Effective:
- * Holistic Title: The title summarizes all three parts of the request (Add EIM, Add Exceptions, Hide Legacy).
- * Clear Business Value: The problem statement focuses on the negative business impact of the current design (inefficiency, risk of missing information) and the positive outcome of the change (a single, consolidated view).
- * Grouped Criteria: The acceptance criteria are broken down into logical sub-sections, making it easy for developers and testers to address each part of the request systematically.
- * Specificity on Counts: It explicitly calls for separate "Open" and "Closed" counts, which is a key part of your request and crucial for at-a-glance understanding.
- * Considers the Edge Case: The criterion to display "0" instead of hiding sections ensures a consistent user experience, regardless of the data.
+A. General & Data Source:
+ * The existing trigger logic that reads from the "Legacy Issues and Findings" data must be fully decommissioned and removed.
+ * The new trigger logic must exclusively use data from the "Enterprise Issue Management" (EIM) module.
+ * The logic must correctly associate EIM issues with their respective assessable units.
+B. Trigger 1: New High-Severity Issue Emerges
+ * A risk assessment IS triggered for an assessable unit when ALL of the following conditions are met:
+   * The assessable unit's Last Approved Control Rating is 'Adequate'.
+   * An associated EIM issue's state transitions from 'Draft' to 'Open'.
+   * The EIM issue has a Severity of '1' or '2'.
+   * The date of the transition to 'Open' is later than the assessable unit's Last Approved Date.
+ * A risk assessment IS NOT triggered if any of the above conditions are not met (e.g., if the Control Rating is 'Inadequate', the Severity is '3', or the issue date is before the Last Approved Date).
+C. Trigger 2: All High-Severity Issues Are Resolved
+ * A risk assessment IS triggered for an assessable unit when ALL of the following conditions are met:
+   * The assessable unit's Control Rating is 'Partially Adequate' or 'Inadequate'.
+   * A change to an associated EIM issue results in a state where ALL EIM issues with a Severity of '1' or '2' for that unit are now considered "resolved."
+   * The date of the final EIM issue becoming "resolved" is later than the assessable unit's Last Approved Date.
+ * Definition of "Resolved" for this trigger: An issue is considered resolved if its status is either:
+   * 'Closed'.
+   * OR 'Canceled', but only if its previous state was 'Open'. (An issue transitioning from 'Draft' to 'Canceled' does not count as resolved for this trigger).
+ * A risk assessment IS NOT triggered if even one Severity '1' or '2' issue remains in an 'Open' or other non-resolved state.
+ * A risk assessment IS NOT triggered if the unit's Control Rating is 'Adequate'.
