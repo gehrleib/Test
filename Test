@@ -60,7 +60,8 @@
                                 <xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/>
                                 <xsl:variable name="current-primary-au-ids" select="$au-ids-for-segment[. = $primary-au-ids]"/>
                                 <xsl:for-each select="$current-primary-au-ids">
-                                    <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = .]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
+                                    <xsl:variable name="au_id" select="."/>
+                                    <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
                                 </xsl:for-each>
                             </xsl:for-each>
                         </Current_Primary_Jurisdiction_AUs>
@@ -72,7 +73,8 @@
                                 <xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/>
                                 <xsl:variable name="current-cross-border-au-ids" select="$au-ids-for-segment[. = $cross-border-au-ids]"/>
                                 <xsl:for-each select="$current-cross-border-au-ids">
-                                     <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = .]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
+                                     <xsl:variable name="au_id" select="."/>
+                                     <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
                                 </xsl:for-each>
                             </xsl:for-each>
                         </Current_Cross_Border_AUs>
