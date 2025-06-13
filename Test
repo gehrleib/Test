@@ -1,88 +1,132 @@
-<xsl:stylesheet version="3.0"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
-    exclude-result-prefixes="xs map">
+That is an excellent suggestion, and thank you for your incredible patience. You are likely correct that the code block formatting itself is the problem. I will provide the entire stylesheet as plain text below, without any special formatting.
 
-    <xsl:output method="xml" indent="yes"/>
-    <xsl:strip-space elements="*"/>
+My apologies again for the difficulty. Here is the complete, commented stylesheet.
 
-    <xsl:variable name="gMaterialChanges" select="'3b9f9f1b-7987-48b0-b9a1-3f7b33ddb6f2'"/>
-    <xsl:variable name="gSegments"        select="'f5ca444b-fad0-4742-abbb-1873c5a04ff8'"/>
-    <xsl:variable name="gAUPrimary"       select="'1c0bbb5b-b2da-4ad7-9498-bc7243fa3e81'"/>
-    <xsl:variable name="gAUCrossBorder"   select="'2e4c1012-9670-410d-a6a1-0746b458e0d4'"/>
+***
 
-    <xsl:variable name="gDateOfChange"    select="'2244a286-7022-406d-9c88-a87186f5477e'"/>
-    <xsl:variable name="gUpdatedValue"    select="'1f0b84f4-3a6c-49fb-9c6e-7927fca10eaa'"/>
+&lt;xsl:stylesheet version="3.0"
+    xmlns:xsl="[http://www.w3.org/1999/XSL/Transform](http://www.w3.org/1999/XSL/Transform)"
+    xmlns:xs="[http://www.w3.org/2001/XMLSchema](http://www.w3.org/2001/XMLSchema)"
+    xmlns:map="[http://www.w3.org/2005/xpath-functions/map](http://www.w3.org/2005/xpath-functions/map)"
+    exclude-result-prefixes="xs map"&gt;
 
-    <xsl:variable name="gAssessableUnitRecord" select="'e1b271d7-fc99-4626-b2b0-ded2a3fcdcfb'"/>
-    <xsl:variable name="gAssessableUnitName"   select="'c48f85ab-2e91-4912-b4b5-e1b9432c0f27'"/>
-    <xsl:variable name="gSegmentForAU"         select="'569842b8-ad66-479f-8f50-a78cac8f20a2'"/>
+    &lt;!-- Defines the output as indented XML for readability. --&gt;
+    &lt;xsl:output method="xml" indent="yes"/&gt;
+    &lt;!-- Removes insignificant whitespace from the source XML to simplify processing. --&gt;
+    &lt;xsl:strip-space elements="*"/&gt;
 
-    <xsl:template match="/Records">
-        <ArcherRecords>
-            <xsl:for-each select="Record[not(@parentId > 0)]">
-                <xsl:variable name="current-record" select="."/>
+    &lt;!-- ====================================================================== --&gt;
+    &lt;!-- Global Variables for GUIDs                                             --&gt;
+    &lt;!-- Storing GUIDs in variables makes the code readable and easy to maintain. --&gt;
+    &lt;!-- ====================================================================== --&gt;
 
-                <xsl:variable name="au-segment-map" as="map(xs:string, xs:string)">
-                    <xsl:map>
-                        <xsl:for-each select="$current-record/Record[@levelGuid = $gAssessableUnitRecord]">
-                            <xsl:map-entry key="@contentId" select="Field[@guid = $gSegmentForAU]/ListValues/ListValue/string()"/>
-                        </xsl:for-each>
-                    </xsl:map>
-                </xsl:variable>
+    &lt;!-- GUIDs for top-level RegGroup record fields --&gt;
+    &lt;xsl:variable name="gMaterialChanges" select="'3b9f9f1b-7987-48b0-b9a1-3f7b33ddb6f2'"/&gt;
+    &lt;xsl:variable name="gSegments"        select="'f5ca444b-fad0-4742-abbb-1873c5a04ff8'"/&gt;
+    &lt;xsl:variable name="gAUPrimary"       select="'1c0bbb5b-b2da-4ad7-9498-bc7243fa3e81'"/&gt;
+    &lt;xsl:variable name="gAUCrossBorder"   select="'2e4c1012-9670-410d-a6a1-0746b458e0d4'"/&gt;
 
-                <xsl:variable name="sorted-changes">
-                    <xsl:perform-sort select="$current-record/Field[@guid = $gMaterialChanges]/Subform">
-                        <xsl:sort select="Field[@guid = $gDateOfChange]/@xmlConvertedValue" order="descending" data-type="text"/>
-                    </xsl:perform-sort>
-                </xsl:variable>
-                <xsl:variable name="latest-change" as="element()?" select="$sorted-changes/*[1]"/>
+    &lt;!-- GUIDs for fields within the Material Changes Subform --&gt;
+    &lt;xsl:variable name="gDateOfChange"    select="'2244a286-7022-406d-9c88-a87186f5477e'"/&gt;
+    &lt;xsl:variable name="gUpdatedValue"    select="'1f0b84f4-3a6c-49fb-9c6e-7927fca10eaa'"/&gt;
 
-                <xsl:variable name="previous-value-for-comparison" select="if ($latest-change) then normalize-space(replace($latest-change/Field[@guid = $gUpdatedValue], '&lt;br&gt;&lt;br&gt;', ', ')) else ''"/>
-                <xsl:variable name="previous-tokens" select="sort(tokenize($previous-value-for-comparison, ',\s*'))[normalize-space()]"/>
-                <xsl:variable name="updated-tokens" select="sort($current-record/Field[@guid = $gSegments]/Reference/string())[normalize-space()]"/>
+    &lt;!-- GUIDs for fields within the nested Assessable Unit records --&gt;
+    &lt;xsl:variable name="gAssessableUnitRecord" select="'e1b271d7-fc99-4626-b2b0-ded2a3fcdcfb'"/&gt;
+    &lt;xsl:variable name="gAssessableUnitName"   select="'c48f85ab-2e91-4912-b4b5-e1b9432c0f27'"/&gt;
+    &lt;xsl:variable name="gSegmentForAU"         select="'569842b8-ad66-479f-8f50-a78cac8f20a2'"/&gt;
 
-                <xsl:if test="not(deep-equal($previous-tokens, $updated-tokens))">
+    &lt;!-- ====================================================================== --&gt;
+    &lt;!-- Main Template                                                          --&gt;
+    &lt;!-- Entry point of the transformation, matches the root &lt;Records&gt; element. --&gt;
+    &lt;!-- ====================================================================== --&gt;
+    &lt;xsl:template match="/Records"&gt;
+        &lt;ArcherRecords&gt;
+            &lt;!-- Process each top-level 'Record' (a RegGroup), ignoring nested records. --&gt;
+            &lt;xsl:for-each select="Record[not(@parentId > 0)]"&gt;
+                &lt;!-- Store the current RegGroup record in a variable for easy access. --&gt;
+                &lt;xsl:variable name="current-record" select="."/&gt;
+
+                &lt;!-- Create an efficient lookup map of all Assessable Units within this RegGroup. --&gt;
+                &lt;!-- The map structure is {AssessableUnit_ContentID -> Segment_Name}. --&gt;
+                &lt;!-- This avoids repeatedly searching the XML tree later on. --&gt;
+                &lt;xsl:variable name="au-segment-map" as="map(xs:string, xs:string)"&gt;
+                    &lt;xsl:map&gt;
+                        &lt;xsl:for-each select="$current-record/Record[@levelGuid = $gAssessableUnitRecord]"&gt;
+                            &lt;xsl:map-entry key="@contentId" select="Field[@guid = $gSegmentForAU]/ListValues/ListValue/string()"/&gt;
+                        &lt;/xsl:for-each&gt;
+                    &lt;/xsl:map&gt;
+                &lt;/xsl:variable&gt;
+
+                &lt;!-- Get the most recent material change using a safe, two-step process. --&gt;
+                &lt;!-- This robust approach avoids syntax issues with different XSLT processors. --&gt;
+                &lt;!-- Step 1: Sort all change records into a temporary variable. --&gt;
+                &lt;xsl:variable name="sorted-changes"&gt;
+                    &lt;xsl:perform-sort select="$current-record/Field[@guid = $gMaterialChanges]/Subform"&gt;
+                        &lt;xsl:sort select="Field[@guid = $gDateOfChange]/@xmlConvertedValue" order="descending" data-type="text"/&gt;
+                    &lt;/xsl:perform-sort&gt;
+                &lt;/xsl:variable&gt;
+                &lt;!-- Step 2: Select only the first record (the latest one) from the temporary variable. --&gt;
+                &lt;xsl:variable name="latest-change" as="element()?" select="$sorted-changes/*[1]"/&gt;
+
+                &lt;!-- Prepare clean, sorted lists of segments for an accurate, order-independent comparison. --&gt;
+                &lt;xsl:variable name="previous-value-for-comparison" select="if ($latest-change) then normalize-space(replace($latest-change/Field[@guid = $gUpdatedValue], '&lt;br&gt;&lt;br&gt;', ', ')) else ''"/&gt;
+                &lt;xsl:variable name="previous-tokens" select="sort(tokenize($previous-value-for-comparison, ',\s*'))[normalize-space()]"/&gt;
+                &lt;xsl:variable name="updated-tokens" select="sort($current-record/Field[@guid = $gSegments]/Reference/string())[normalize-space()]"/&gt;
+
+                &lt;!-- The main condition: only generate an output record if the segment lists have actually changed. --&gt;
+                &lt;xsl:if test="not(deep-equal($previous-tokens, $updated-tokens))"&gt;
                     
-                    <xsl:variable name="previous-value-for-output" select="if ($latest-change) then $latest-change/Field[@guid = $gUpdatedValue]/string() else ''"/>
-                    <xsl:variable name="updated-value-for-output" select="string-join($current-record/Field[@guid = $gSegments]/Reference, '&lt;br&gt;&lt;br&gt;')"/>
+                    &lt;!-- Prepare the final string values for the output, formatted with the desired &lt;br&gt;&lt;br&gt; separator. --&gt;
+                    &lt;xsl:variable name="previous-value-for-output" select="if ($latest-change) then $latest-change/Field[@guid = $gUpdatedValue]/string() else ''"/&gt;
+                    &lt;xsl:variable name="updated-value-for-output" select="string-join($current-record/Field[@guid = $gSegments]/Reference, '&lt;br&gt;&lt;br&gt;')"/&gt;
                     
-                    <ArcherRecord>
-                        <Tracking_ID><xsl:value-of select="$current-record/@contentId"/></Tracking_ID>
-                        <Previous_Value><xsl:value-of select="$previous-value-for-output"/></Previous_Value>
-                        <Updated_Value><xsl:value-of select="$updated-value-for-output"/></Updated_Value>
+                    &lt;ArcherRecord&gt;
+                        &lt;Tracking_ID&gt;&lt;xsl:value-of select="$current-record/@contentId"/&gt;&lt;/Tracking_ID&gt;
+                        &lt;Previous_Value&gt;&lt;xsl:value-of select="$previous-value-for-output"/&gt;&lt;/Previous_Value&gt;
+                        &lt;Updated_Value&gt;&lt;xsl:value-of select="$updated-value-for-output"/&gt;&lt;/Updated_Value&gt;
 
-                        <Current_Primary_Jurisdiction_AUs>
-                            <xsl:variable name="primary-au-ids" select="$current-record/Field[@guid = $gAUPrimary]/Reference/@id"/>
-                            <xsl:for-each select="$updated-tokens">
-                                <xsl:variable name="segment-name" select="."/>
-                                <xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/>
-                                <xsl:variable name="current-primary-au-ids" select="$au-ids-for-segment[. = $primary-au-ids]"/>
-                                <xsl:for-each select="$current-primary-au-ids">
-                                    <xsl:variable name="au_id" select="."/>
-                                    <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
-                                </xsl:for-each>
-                            </xsl:for-each>
-                        </Current_Primary_Jurisdiction_AUs>
+                        &lt;!-- Find and list all current Assessable Units for the Primary Jurisdiction. --&gt;
+                        &lt;Current_Primary_Jurisdiction_AUs&gt;
+                            &lt;!-- Get the list of active Primary AU contentIds. --&gt;
+                            &lt;xsl:variable name="primary-au-ids" select="$current-record/Field[@guid = $gAUPrimary]/Reference/@id"/&gt;
+                            &lt;!-- For each current segment... --&gt;
+                            &lt;xsl:for-each select="$updated-tokens"&gt;
+                                &lt;xsl:variable name="segment-name" select="."/&gt;
+                                &lt;!-- ...use the map to find all AUs associated with this segment. --&gt;
+                                &lt;xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/&gt;
+                                &lt;!-- ...filter that list to include only those AUs active in the Primary Jurisdiction list. --&gt;
+                                &lt;xsl:variable name="current-primary-au-ids" select="$au-ids-for-segment[. = $primary-au-ids]"/&gt;
+                                &lt;!-- ...for each resulting AU, find and output its name. --&gt;
+                                &lt;xsl:for-each select="$current-primary-au-ids"&gt;
+                                    &lt;xsl:variable name="au_id" select="."/&gt;
+                                    &lt;Assessable_Unit&gt;&lt;xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/&gt;&lt;/Assessable_Unit&gt;
+                                &lt;/xsl:for-each&gt;
+                            &lt;/xsl:for-each&gt;
+                        &lt;/Current_Primary_Jurisdiction_AUs&gt;
 
-                        <Current_Cross_Border_AUs>
-                            <xsl:variable name="cross-border-au-ids" select="$current-record/Field[@guid = $gAUCrossBorder]/Reference/@id"/>
-                            <xsl:for-each select="$updated-tokens">
-                                <xsl:variable name="segment-name" select="."/>
-                                <xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/>
-                                <xsl:variable name="current-cross-border-au-ids" select="$au-ids-for-segment[. = $cross-border-au-ids]"/>
-                                <xsl:for-each select="$current-cross-border-au-ids">
-                                     <xsl:variable name="au_id" select="."/>
-                                     <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
-                                </xsl:for-each>
-                            </xsl:for-each>
-                        </Current_Cross_Border_AUs>
+                        &lt;!-- Find and list all current Assessable Units for the Cross Border jurisdiction. --&gt;
+                        &lt;Current_Cross_Border_AUs&gt;
+                            &lt;!-- Get the list of active Cross Border AU contentIds. --&gt;
+                            &lt;xsl:variable name="cross-border-au-ids" select="$current-record/Field[@guid = $gAUCrossBorder]/Reference/@id"/&gt;
+                            &lt;!-- For each current segment... --&gt;
+                            &lt;xsl:for-each select="$updated-tokens"&gt;
+                                &lt;xsl:variable name="segment-name" select="."/&gt;
+                                &lt;!-- ...use the map to find all AUs associated with this segment. --&gt;
+                                &lt;xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/&gt;
+                                &lt;!-- ...filter that list to include only those AUs active in the Cross Border list. --&gt;
+                                &lt;xsl:variable name="current-cross-border-au-ids" select="$au-ids-for-segment[. = $cross-border-au-ids]"/&gt;
+                                &lt;!-- ...for each resulting AU, find and output its name. --&gt;
+                                &lt;xsl:for-each select="$current-cross-border-au-ids"&gt;
+                                     &lt;xsl:variable name="au_id" select="."/&gt;
+                                     &lt;Assessable_Unit&gt;&lt;xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/&gt;&lt;/Assessable_Unit&gt;
+                                &lt;/xsl:for-each&gt;
+                            &lt;/xsl:for-each&gt;
+                        &lt;/Current_Cross_Border_AUs&gt;
 
-                    </ArcherRecord>
-                </xsl:if>
-            </xsl:for-each>
-        </ArcherRecords>
-    </xsl:template>
+                    &lt;/ArcherRecord&gt;
+                &lt;/xsl:if&gt;
+            &lt;/xsl:for-each&gt;
+        &lt;/ArcherRecords&gt;
+    &lt;/xsl:template&gt;
 
-</xsl:stylesheet>
+&lt;/xsl:stylesheet&gt;
