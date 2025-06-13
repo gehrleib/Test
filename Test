@@ -1,32 +1,85 @@
-Of course. Using user-friendly, Title Cased field names in the story makes it much more readable for all stakeholders, including Product Owners and business analysts. It ensures the business logic is clear, regardless of the underlying technical implementation.
-Here is the updated user story with user-friendly, Title Cased field names.
-Jira User Story (User-Friendly Field Names)
-Title: Refactor Risk Assessment Triggers to Use EIM Data
-User Story:
-As the system, I want to refactor the automated risk assessment trigger logic to use "Enterprise Issue Management" (EIM) data instead of the legacy "Issues and Findings" data, so that risk assessments are triggered accurately and in a timely manner based on the authoritative source for issue data.
-Problem Statement:
-Our current automated risk assessment triggers are built upon the legacy "Issues and Findings" data source, which is being deprecated. This logic is now obsolete and creates a significant business risk, as new or updated issues in the authoritative "Enterprise Issue Management" (EIM) system do not trigger necessary reviews.
-To maintain the integrity of our continuous monitoring and risk management processes, we must rebuild this logic to be driven exclusively by EIM data. This change will ensure that assessments are correctly initiated when high-severity risks emerge or when all known high-severity risks have been remediated for a given assessable unit.
-Note for Development: Field names below are user-friendly labels. The corresponding technical/database field names should be used in the implementation.
-Acceptance Criteria (Checklist Style):
-A. General & Data Source:
- * The existing trigger logic that reads from the "Legacy Issues and Findings" data must be fully decommissioned and removed.
- * The new trigger logic must exclusively use data from the "Enterprise Issue Management" (EIM) module.
- * The logic must correctly associate EIM issues with their respective assessable units.
-B. Trigger 1: New High-Severity Issue Emerges
- * A risk assessment IS triggered for an assessable unit when ALL of the following conditions are met:
-   * The assessable unit's Last Approved Control Rating is 'Adequate'.
-   * An associated EIM issue's state transitions from 'Draft' to 'Open'.
-   * The EIM issue has a Severity of '1' or '2'.
-   * The date of the transition to 'Open' is later than the assessable unit's Last Approved Date.
- * A risk assessment IS NOT triggered if any of the above conditions are not met (e.g., if the Control Rating is 'Inadequate', the Severity is '3', or the issue date is before the Last Approved Date).
-C. Trigger 2: All High-Severity Issues Are Resolved
- * A risk assessment IS triggered for an assessable unit when ALL of the following conditions are met:
-   * The assessable unit's Control Rating is 'Partially Adequate' or 'Inadequate'.
-   * A change to an associated EIM issue results in a state where ALL EIM issues with a Severity of '1' or '2' for that unit are now considered "resolved."
-   * The date of the final EIM issue becoming "resolved" is later than the assessable unit's Last Approved Date.
- * Definition of "Resolved" for this trigger: An issue is considered resolved if its status is either:
-   * 'Closed'.
-   * OR 'Canceled', but only if its previous state was 'Open'. (An issue transitioning from 'Draft' to 'Canceled' does not count as resolved for this trigger).
- * A risk assessment IS NOT triggered if even one Severity '1' or '2' issue remains in an 'Open' or other non-resolved state.
- * A risk assessment IS NOT triggered if the unit's Control Rating is 'Adequate'.
+<xsl:stylesheet version="3.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:map="http://www.w3.org/2005/xpath-functions/map"
+    exclude-result-prefixes="xs map">
+
+    <xsl:output method="xml" indent="yes"/>
+    <xsl:strip-space elements="*"/>
+
+    <xsl:variable name="gMaterialChanges" select="'3b9f9f1b-7987-48b0-b9a1-3f7b33ddb6f2'"/>
+    <xsl:variable name="gSegments"        select="'f5ca444b-fad0-4742-abbb-1873c5a04ff8'"/>
+    <xsl:variable name="gAUPrimary"       select="'1c0bbb5b-b2da-4ad7-9498-bc7243fa3e81'"/>
+    <xsl:variable name="gAUCrossBorder"   select="'2e4c1012-9670-410d-a6a1-0746b458e0d4'"/>
+
+    <xsl:variable name="gDateOfChange"    select="'2244a286-7022-406d-9c88-a87186f5477e'"/>
+    <xsl:variable name="gUpdatedValue"    select="'1f0b84f4-3a6c-49fb-9c6e-7927fca10eaa'"/>
+
+    <xsl:variable name="gAssessableUnitRecord" select="'e1b271d7-fc99-4626-b2b0-ded2a3fcdcfb'"/>
+    <xsl:variable name="gAssessableUnitName"   select="'c48f85ab-2e91-4912-b4b5-e1b9432c0f27'"/>
+    <xsl:variable name="gSegmentForAU"         select="'569842b8-ad66-479f-8f50-a78cac8f20a2'"/>
+
+    <xsl:template match="/Records">
+        <ArcherRecords>
+            <xsl:for-each select="Record[not(@parentId > 0)]">
+                <xsl:variable name="current-record" select="."/>
+
+                <xsl:variable name="au-segment-map" as="map(xs:string, xs:string)">
+                    <xsl:map>
+                        <xsl:for-each select="$current-record/Record[@levelGuid = $gAssessableUnitRecord]">
+                            <xsl:map-entry key="@contentId" select="Field[@guid = $gSegmentForAU]/ListValues/ListValue/string()"/>
+                        </xsl:for-each>
+                    </xsl:map>
+                </xsl:variable>
+
+                <xsl:variable name="latest-change" as="element()?" >
+                    <xsl:perform-sort select="$current-record/Field[@guid = $gMaterialChanges]/Subform">
+                        <xsl:sort select="Field[@guid = $gDateOfChange]/@xmlConvertedValue" order="descending" data-type="text"/>
+                    </xsl:perform-sort>
+                </xsl:variable>
+
+                <xsl:variable name="previous-value-for-comparison" select="if ($latest-change) then normalize-space(replace($latest-change/Field[@guid = $gUpdatedValue], '&lt;br&gt;&lt;br&gt;', ', ')) else ''"/>
+                <xsl:variable name="previous-tokens" select="sort(tokenize($previous-value-for-comparison, ',\s*'))[normalize-space()]"/>
+                <xsl:variable name="updated-tokens" select="sort($current-record/Field[@guid = $gSegments]/Reference/string())[normalize-space()]"/>
+
+                <xsl:if test="not(deep-equal($previous-tokens, $updated-tokens))">
+                    
+                    <xsl:variable name="previous-value-for-output" select="if ($latest-change) then $latest-change/Field[@guid = $gUpdatedValue]/string() else ''"/>
+                    <xsl:variable name="updated-value-for-output" select="string-join($current-record/Field[@guid = $gSegments]/Reference, '&lt;br&gt;&lt;br&gt;')"/>
+                    
+                    <ArcherRecord>
+                        <Tracking_ID><xsl:value-of select="$current-record/@contentId"/></Tracking_ID>
+                        <Previous_Value><xsl:value-of select="$previous-value-for-output"/></Previous_Value>
+                        <Updated_Value><xsl:value-of select="$updated-value-for-output"/></Updated_Value>
+
+                        <Current_Primary_Jurisdiction_AUs>
+                            <xsl:variable name="primary-au-ids" select="$current-record/Field[@guid = $gAUPrimary]/Reference/@id"/>
+                            <xsl:for-each select="$updated-tokens">
+                                <xsl:variable name="segment-name" select="."/>
+                                <xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/>
+                                <xsl:variable name="current-primary-au-ids" select="$au-ids-for-segment[. = $primary-au-ids]"/>
+                                <xsl:for-each select="$current-primary-au-ids">
+                                    <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = .]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
+                                </xsl:for-each>
+                            </xsl:for-each>
+                        </Current_Primary_Jurisdiction_AUs>
+
+                        <Current_Cross_Border_AUs>
+                            <xsl:variable name="cross-border-au-ids" select="$current-record/Field[@guid = $gAUCrossBorder]/Reference/@id"/>
+                            <xsl:for-each select="$updated-tokens">
+                                <xsl:variable name="segment-name" select="."/>
+                                <xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/>
+                                <xsl:variable name="current-cross-border-au-ids" select="$au-ids-for-segment[. = $cross-border-au-ids]"/>
+                                <xsl:for-each select="$current-cross-border-au-ids">
+                                     <Assessable_Unit><xsl:value-of select="$current-record/Record[@contentId = .]/Field[@guid = $gAssessableUnitName]"/></Assessable_Unit>
+                                </xsl:for-each>
+                            </xsl:for-each>
+                        </Current_Cross_Border_AUs>
+
+                    </ArcherRecord>
+                </xsl:if>
+            </xsl:for-each>
+        </ArcherRecords>
+    </xsl:template>
+
+</xsl:stylesheet>
