@@ -32,11 +32,11 @@
                     </xsl:map>
                 </xsl:variable>
 
-                <xsl:variable name="latest-change" as="element()?" >
-                    <xsl:perform-sort select="$current-record/Field[@guid = $gMaterialChanges]/Subform">
-                        <xsl:sort select="Field[@guid = $gDateOfChange]/@xmlConvertedValue" order="descending" data-type="text"/>
+                <xsl:variable name="latest-change" as="element()?" select="(
+                    <xsl:perform-sort select='$current-record/Field[@guid = $gMaterialChanges]/Subform'>
+                        <xsl:sort select='Field[@guid = $gDateOfChange]/@xmlConvertedValue' order='descending' data-type='text'/>
                     </xsl:perform-sort>
-                </xsl:variable>
+                )[1]"/>
 
                 <xsl:variable name="previous-value-for-comparison" select="if ($latest-change) then normalize-space(replace($latest-change/Field[@guid = $gUpdatedValue], '&lt;br&gt;&lt;br&gt;', ', ')) else ''"/>
                 <xsl:variable name="previous-tokens" select="sort(tokenize($previous-value-for-comparison, ',\s*'))[normalize-space()]"/>
