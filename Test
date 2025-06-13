@@ -1,14 +1,15 @@
-That is an excellent suggestion, and thank you for your incredible patience. You are likely correct that the code block formatting itself is the problem. I will provide the entire stylesheet as plain text below, without any special formatting.
+Of course. Here are the requested renames applied to the final, commented stylesheet.
 
-My apologies again for the difficulty. Here is the complete, commented stylesheet.
+I have renamed the output elements to `<Primary_Jurisidiction>` and `<Cross_Border>`, and the variable `gSegmentForAU` to `gAssessableUnitSegment`.
+
+Here is the final version as plain text to ensure it displays correctly for you.
 
 ***
 
-&lt;xsl:stylesheet version="3.0"
+&lt;xsl:stylesheet version="2.0"
     xmlns:xsl="[http://www.w3.org/1999/XSL/Transform](http://www.w3.org/1999/XSL/Transform)"
     xmlns:xs="[http://www.w3.org/2001/XMLSchema](http://www.w3.org/2001/XMLSchema)"
-    xmlns:map="[http://www.w3.org/2005/xpath-functions/map](http://www.w3.org/2005/xpath-functions/map)"
-    exclude-result-prefixes="xs map"&gt;
+    exclude-result-prefixes="xs"&gt;
 
     &lt;!-- Defines the output as indented XML for readability. --&gt;
     &lt;xsl:output method="xml" indent="yes"/&gt;
@@ -33,7 +34,7 @@ My apologies again for the difficulty. Here is the complete, commented styleshee
     &lt;!-- GUIDs for fields within the nested Assessable Unit records --&gt;
     &lt;xsl:variable name="gAssessableUnitRecord" select="'e1b271d7-fc99-4626-b2b0-ded2a3fcdcfb'"/&gt;
     &lt;xsl:variable name="gAssessableUnitName"   select="'c48f85ab-2e91-4912-b4b5-e1b9432c0f27'"/&gt;
-    &lt;xsl:variable name="gSegmentForAU"         select="'569842b8-ad66-479f-8f50-a78cac8f20a2'"/&gt;
+    &lt;xsl:variable name="gAssessableUnitSegment"         select="'569842b8-ad66-479f-8f50-a78cac8f20a2'"/&gt;
 
     &lt;!-- ====================================================================== --&gt;
     &lt;!-- Main Template                                                          --&gt;
@@ -45,17 +46,6 @@ My apologies again for the difficulty. Here is the complete, commented styleshee
             &lt;xsl:for-each select="Record[not(@parentId > 0)]"&gt;
                 &lt;!-- Store the current RegGroup record in a variable for easy access. --&gt;
                 &lt;xsl:variable name="current-record" select="."/&gt;
-
-                &lt;!-- Create an efficient lookup map of all Assessable Units within this RegGroup. --&gt;
-                &lt;!-- The map structure is {AssessableUnit_ContentID -> Segment_Name}. --&gt;
-                &lt;!-- This avoids repeatedly searching the XML tree later on. --&gt;
-                &lt;xsl:variable name="au-segment-map" as="map(xs:string, xs:string)"&gt;
-                    &lt;xsl:map&gt;
-                        &lt;xsl:for-each select="$current-record/Record[@levelGuid = $gAssessableUnitRecord]"&gt;
-                            &lt;xsl:map-entry key="@contentId" select="Field[@guid = $gSegmentForAU]/ListValues/ListValue/string()"/&gt;
-                        &lt;/xsl:for-each&gt;
-                    &lt;/xsl:map&gt;
-                &lt;/xsl:variable&gt;
 
                 &lt;!-- Get the most recent material change using a safe, two-step process. --&gt;
                 &lt;!-- This robust approach avoids syntax issues with different XSLT processors. --&gt;
@@ -70,11 +60,27 @@ My apologies again for the difficulty. Here is the complete, commented styleshee
 
                 &lt;!-- Prepare clean, sorted lists of segments for an accurate, order-independent comparison. --&gt;
                 &lt;xsl:variable name="previous-value-for-comparison" select="if ($latest-change) then normalize-space(replace($latest-change/Field[@guid = $gUpdatedValue], '&lt;br&gt;&lt;br&gt;', ', ')) else ''"/&gt;
-                &lt;xsl:variable name="previous-tokens" select="sort(tokenize($previous-value-for-comparison, ',\s*'))[normalize-space()]"/&gt;
-                &lt;xsl:variable name="updated-tokens" select="sort($current-record/Field[@guid = $gSegments]/Reference/string())[normalize-space()]"/&gt;
+                &lt;xsl:variable name="previous-tokens" as="xs:string*"&gt;
+                    &lt;xsl:for-each select="tokenize(normalize-space($previous-value-for-comparison), ',\s*')"&gt;
+                        &lt;xsl:if test="normalize-space(.) != ''"&gt;
+                            &lt;xsl:sequence select="."/&gt;
+                        &lt;/xsl:if&gt;
+                    &lt;/xsl:for-each&gt;
+                &lt;/xsl:variable&gt;
+                &lt;xsl:variable name="sorted-previous-tokens" select="sort($previous-tokens)"/&gt;
+
+                &lt;xsl:variable name="updated-tokens" as="xs:string*"&gt;
+                     &lt;xsl:for-each select="$current-record/Field[@guid = $gSegments]/Reference/string()"&gt;
+                        &lt;xsl:if test="normalize-space(.) != ''"&gt;
+                            &lt;xsl:sequence select="."/&gt;
+                        &lt;/xsl:if&gt;
+                    &lt;/xsl:for-each&gt;
+                &lt;/xsl:variable&gt;
+                &lt;xsl:variable name="sorted-updated-tokens" select="sort($updated-tokens)"/&gt;
+
 
                 &lt;!-- The main condition: only generate an output record if the segment lists have actually changed. --&gt;
-                &lt;xsl:if test="not(deep-equal($previous-tokens, $updated-tokens))"&gt;
+                &lt;xsl:if test="not(deep-equal($sorted-previous-tokens, $sorted-updated-tokens))"&gt;
                     
                     &lt;!-- Prepare the final string values for the output, formatted with the desired &lt;br&gt;&lt;br&gt; separator. --&gt;
                     &lt;xsl:variable name="previous-value-for-output" select="if ($latest-change) then $latest-change/Field[@guid = $gUpdatedValue]/string() else ''"/&gt;
@@ -86,14 +92,14 @@ My apologies again for the difficulty. Here is the complete, commented styleshee
                         &lt;Updated_Value&gt;&lt;xsl:value-of select="$updated-value-for-output"/&gt;&lt;/Updated_Value&gt;
 
                         &lt;!-- Find and list all current Assessable Units for the Primary Jurisdiction. --&gt;
-                        &lt;Current_Primary_Jurisdiction_AUs&gt;
+                        &lt;Primary_Jurisidiction&gt;
                             &lt;!-- Get the list of active Primary AU contentIds. --&gt;
                             &lt;xsl:variable name="primary-au-ids" select="$current-record/Field[@guid = $gAUPrimary]/Reference/@id"/&gt;
                             &lt;!-- For each current segment... --&gt;
-                            &lt;xsl:for-each select="$updated-tokens"&gt;
+                            &lt;xsl:for-each select="$sorted-updated-tokens"&gt;
                                 &lt;xsl:variable name="segment-name" select="."/&gt;
-                                &lt;!-- ...use the map to find all AUs associated with this segment. --&gt;
-                                &lt;xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/&gt;
+                                &lt;!-- ...find all AUs associated with this segment by searching the XML tree directly. --&gt;
+                                &lt;xsl:variable name="au-ids-for-segment" select="$current-record/Record[@levelGuid = $gAssessableUnitRecord][Field[@guid = $gAssessableUnitSegment]/ListValues/ListValue = $segment-name]/@contentId"/&gt;
                                 &lt;!-- ...filter that list to include only those AUs active in the Primary Jurisdiction list. --&gt;
                                 &lt;xsl:variable name="current-primary-au-ids" select="$au-ids-for-segment[. = $primary-au-ids]"/&gt;
                                 &lt;!-- ...for each resulting AU, find and output its name. --&gt;
@@ -102,17 +108,17 @@ My apologies again for the difficulty. Here is the complete, commented styleshee
                                     &lt;Assessable_Unit&gt;&lt;xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/&gt;&lt;/Assessable_Unit&gt;
                                 &lt;/xsl:for-each&gt;
                             &lt;/xsl:for-each&gt;
-                        &lt;/Current_Primary_Jurisdiction_AUs&gt;
+                        &lt;/Primary_Jurisidiction&gt;
 
                         &lt;!-- Find and list all current Assessable Units for the Cross Border jurisdiction. --&gt;
-                        &lt;Current_Cross_Border_AUs&gt;
+                        &lt;Cross_Border&gt;
                             &lt;!-- Get the list of active Cross Border AU contentIds. --&gt;
                             &lt;xsl:variable name="cross-border-au-ids" select="$current-record/Field[@guid = $gAUCrossBorder]/Reference/@id"/&gt;
                             &lt;!-- For each current segment... --&gt;
-                            &lt;xsl:for-each select="$updated-tokens"&gt;
+                            &lt;xsl:for-each select="$sorted-updated-tokens"&gt;
                                 &lt;xsl:variable name="segment-name" select="."/&gt;
-                                &lt;!-- ...use the map to find all AUs associated with this segment. --&gt;
-                                &lt;xsl:variable name="au-ids-for-segment" select="map:keys($au-segment-map)[$au-segment-map(.) = $segment-name]"/&gt;
+                                &lt;!-- ...find all AUs associated with this segment by searching the XML tree directly. --&gt;
+                                &lt;xsl:variable name="au-ids-for-segment" select="$current-record/Record[@levelGuid = $gAssessableUnitRecord][Field[@guid = $gAssessableUnitSegment]/ListValues/ListValue = $segment-name]/@contentId"/&gt;
                                 &lt;!-- ...filter that list to include only those AUs active in the Cross Border list. --&gt;
                                 &lt;xsl:variable name="current-cross-border-au-ids" select="$au-ids-for-segment[. = $cross-border-au-ids]"/&gt;
                                 &lt;!-- ...for each resulting AU, find and output its name. --&gt;
@@ -121,7 +127,7 @@ My apologies again for the difficulty. Here is the complete, commented styleshee
                                      &lt;Assessable_Unit&gt;&lt;xsl:value-of select="$current-record/Record[@contentId = $au_id]/Field[@guid = $gAssessableUnitName]"/&gt;&lt;/Assessable_Unit&gt;
                                 &lt;/xsl:for-each&gt;
                             &lt;/xsl:for-each&gt;
-                        &lt;/Current_Cross_Border_AUs&gt;
+                        &lt;/Cross_Border&gt;
 
                     &lt;/ArcherRecord&gt;
                 &lt;/xsl:if&gt;
