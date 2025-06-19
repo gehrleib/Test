@@ -1,16 +1,1 @@
-
-Subject: Re: Data Migration
-Hi Althea,
-Thanks for reaching out and for clarifying. Here's an updated version focusing on the data migration and spot-checking details:
- * Migration Date: We are promoting the configuration on June 26th, with all data being ingested and migrated by the end of June 27th. PIV can begin on June 30th.
- * Migration Tasks for Spot Check Data:
-   a.  Exact fields and what to spot check for:
-   The two main things for your team to check are:
-   * RegGroups Reconciliation: Ensure that all items in your pinpoint citation to RegGroup mapping file (your reconciliation file) are present. Equally important, verify that there are no additional RegGroups that should not be there. There's a good chance I will raise specific discrepancies on June 27th if records are missing, or if records are present that should not be. I would then expect your team to review and resolve any identified discrepancies.
-   * Validation Responses (Norton Rose Data Set): As part of the migration efforts, I will be performing a validation for each record by inserting all responses previously based on the Norton Rose data set. It would be a good idea for your team to double-check that those responses are accurate.
-   * Regulatory Theme and RBC Applicability: Beyond the above, verify that the validation responses for each RegGroup are correct. For example, does the RegGroup apply to RBC, does it impose requirements on RBC, and is the regulatory theme accurate?
-   * Dashboard Accuracy: Ensure the dashboard looks correct. This includes verifying the number of items without validation (this should be 0, as there shouldn't be any new RegGroups without validation) and that the number of RegGroups requiring mapping is accurate (e.g., acknowledging the hundreds of pinpoint citations today that have not yet been mapped or attested to). Also, for pinpoint citations merged into a single RegGroup, ensure all assessable units are accurately reflected.
-   b.  Spot-check deadline: I don't need this completed by any specific date. This spot-checking is effectively your "go" or "no-go" to go live.
-If it's easier to discuss over a call, please let me know.
-Thanks,
-Brandon
+"Yes, you're right; OAT and Production aren't identical environments, though their underlying configurations and data sets are quite comparable. In fact, OAT should logically be underperforming given its constrained infrastructure and fewer resources. That's precisely why it's so concerning that identical modules are loading in 20 seconds in Production, but nearly instantaneously in OAT. This behavior is counter-intuitive and points to an issue we need to address.'
