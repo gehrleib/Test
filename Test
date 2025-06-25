@@ -1,9 +1,16 @@
-Here's a draft email incorporating your points:
-Subject: Updates on Reconciliation and Archer Reporting
-Hi [Recipient Name],
-Following your reconciliation, it would be best to provide a final file containing only the salaries required for production. This will allow me to easily identify any citations that are present but shouldn't be, or any that are missing.
-Regarding the validation responses, I'll be sharing a link to a report [or "a personalized report"] for your review. You'll be able to export this data, ensuring you always have access to the most current information.
-Finally, I think it would be beneficial to schedule a meeting for an Archer knowledge transfer. I anticipate Max may ask you to do more reporting out of Archer, so understanding how to build your own reports will be a valuable skill.
-Let me know what time works best for the Archer meeting.
-Best,
-[Your Name]
+Subject: Update: RegComp Data Migration & Validation Plan
+Hi Matthew,
+Following up on our discussion, here's a detailed breakdown of the plan for the RegComp data migration and validation, incorporating the expanded points:
+ * Confirming the Data Transfer Date: We need to finalize the specific date for the data transfer. This date will mark the migration of the validation responses as well as the mapping of assessable units.
+ * Ensuring CUBE Data is in a Published State for Daily Pulls: We need to ensure that all production data within CUBE is in a published state. This will allow it to be included in the automated daily pulls into RegComp.
+ * Automated Daily Data Transfer from CUBE to RegComp (RCM) starting June 26th: Data will be automatically pulled daily from CUBE into RegComp, starting on June 26th.
+ * Tech Team's Initial Data Quality Assessment Post-Ingestion: The tech team will conduct an initial assessment to confirm data quality after the data has been ingested into RegComp.
+ * Automated Creation and Submission of Validation Records: Validation records will be automatically created for each RegGroup and submitted in an approved state based on information from the Norton Rose dataset.
+ * KL's Validation Process: KL will be responsible for performing the data validation. This validation will occur after the automated creation and submission of validation records. The specific process for KL's validation will be defined by the tech team at the Thursday AM meeting.
+ * Addressing Non-Reconciling Items and Exceptions: Items that do not reconcile, acting as exceptions to the bulk validation, will require review and rationalization by KL, with an estimated completion time of one week. These discrepancies could include extra RegGroups or missing RegGroups that are present on spreadsheets but not being ingested into the system.
+ * Granting User Access (Go-Live): User access will be granted, marking the system's go-live date. This will allow users to actively utilize the system after the data has been fully validated.
+ * Archiving Non-Applicable RegGroups (~5000): Approximately 5000 RegGroups identified as not applicable (meaning they neither apply to RBC nor impose requirements on RBC) will be archived. Initially, these items will be ingested into the CUBE data set to maintain a record, and then subsequently archived in RegComp.
+ * Tech Team's Fresh Data Pull and Verification: The tech team will perform a new data pull and conduct an additional verification. During this step, the final Excel spreadsheet of what is expected to be in production will be compared against what is actually in RegComp. This comparison will help determine what data is accurate, what is potentially missing, or what has been added that should not be there.
+Please let me know if you have any questions or require further clarification on any of these points.
+Thanks,
+The Tech Team
