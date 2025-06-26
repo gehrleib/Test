@@ -1,53 +1,21 @@
 # In APIClient class
-    async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
+    async def _send_request(self, method: str, url: str, headers: dict, data: dict = None) -> tuple:
         """
-        Retry a function with exponential backoff for handling transient errors.
-
-        This wrapper now explicitly retries on 502, 503, and 504 status codes,
-        and other connection-related ClientErrors. It will not retry on client
-        errors like 404 Not Found.
-
-        Args:
-            func (Callable): The asynchronous function to retry.
-            *args: Positional arguments to pass to the function.
-            **kwargs: Keyword arguments to pass to the function.
-
+        Sends a single HTTP request and raises an exception for non-2xx responses.
+        This function is intended to be wrapped by the exponential backoff logic.
+        
         Returns:
-            Any: The result of the function.
+            A tuple containing the JSON content and the response headers.
         """
-        max_retries = 5
-        base_delay = 1
-        # Define server-side status codes that are worth retrying
-        retriable_status_codes = {502, 503, 504}
-
-        for retry in range(max_retries):
-            try:
-                # Attempt to call the function with its arguments
-                return await func(*args, **kwargs)
-            except aiohttp.ClientResponseError as e:
-                # Check if the status code is in our defined set of retriable codes.
-                if e.status in retriable_status_codes:
-                    if retry == max_retries - 1:
-                        logging.error(f"Max retries reached for {type(e).__name__} (status: {e.status}). Giving up. Error: {e}")
-                        raise
-                    
-                    delay = base_delay * (2**retry) + random.uniform(0, 1)
-                    logging.warning(
-                        f"Retry {retry + 1}/{max_retries} after {delay:.2f} seconds due to "
-                        f"retriable ClientResponseError ({e.status}): {e}"
-                    )
-                    await asyncio.sleep(delay)
-                else:
-                    # If the error is not one we want to retry (e.g., 404, 403), log it and re-raise immediately.
-                    logging.warning(f"Request resulted in a non-retriable status {e.status}. Not retrying. Error: {e}")
-                    raise
-            except aiohttp.ClientError as e:  # Catch other client errors (e.g., connection errors, timeouts)
-                if retry == max_retries - 1:
-                    logging.error(f"Max retries reached for non-response ClientError {type(e).__name__}. Giving up. Error: {e}")
-                    raise
-                
-                delay = base_delay * (2**retry) + random.uniform(0, 1)
-                logging.warning(
-                    f"Retry {retry + 1}/{max_retries} after {delay:.2f} seconds due to {type(e).__name__}: {e}"
-                )
-                await asyncio.sleep(delay)
+        async with self.session.request(
+            method, url, headers=headers, json=data, proxy=self.proxy
+        ) as response:
+            # This is the crucial step: Raise an exception for bad status codes (4xx or 5xx).
+            # This ensures a 502 Bad Gateway immediately becomes a ClientResponseError.
+            response.raise_for_status()
+            
+            # If the status is successful (2xx), proceed to parse the response.
+            text_content = await response.text()
+            
+            # Return headers as well, as they are needed for pagination info.
+            return orjson.loads(text_content), response.headers
