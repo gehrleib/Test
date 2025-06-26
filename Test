@@ -1,175 +1,56 @@
-# In APIClient class in CUBE.py
+# In CUBE.py, at the top level of the script
 
-    async def get_token(self, force_refresh: bool = False) -> str:
-        """
-        Retrieves an authentication token, refreshing it if it's expired
-        or if a refresh is explicitly forced.
+def load_and_validate_env_vars():
+    """
+    Loads environment variables and validates that all required variables are set.
 
-        Args:
-            force_refresh: If True, a new token will be fetched even if the
-                           current one is not expired. Defaults to False.
+    This function implements a "Fail-Fast" strategy. If any critical
+    configuration is missing, it logs a critical error and immediately
+    terminates the script to prevent runtime errors.
+    """
+    load_dotenv(ENV_FILE)
+    
+    # Define all configuration variables essential for the script to run.
+    required_vars = [
+        "API_ID_URL",
+        "API_CONNECT_URL",
+        "USER",
+        "PASSWORD",
+        "SCOPE",
+        "CLIENT_ID",
+        "CLIENT_SECRET",
+        "X_CUSTOM_ENTITY",
+    ]
 
-        Returns:
-            The access token string.
-        """
-        # Return the cached token if it's still valid and a refresh isn't forced.
-        if (
-            self.token
-            and self.token_expiration
-            and time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD
-            and not force_refresh
-        ):
-            return self.token
+    # Conditionally require proxy variables only if USE_PROXY is enabled.
+    if os.getenv("USE_PROXY", "False").lower() == "true":
+        proxy_vars = ["PROXY_USERNAME", "PROXY_PASSWORD", "PROXY_URL"]
+        required_vars.extend(proxy_vars)
 
-        # Otherwise, fetch a new token from the authentication server.
-        url = f"{API_ID_URL}/connect/token"
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        data = {
-            "grant_type": "password",
-            "username": os.getenv("USER"),
-            "password": os.getenv("PASSWORD"),
-            "scope": os.getenv("SCOPE"),
-            "client_id": os.getenv("CLIENT_ID"),
-            "client_secret": os.getenv("CLIENT_SECRET"),
-        }
+    # Identify any required variables that are missing or empty.
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
 
-        # The token request itself does not use the backoff wrapper, as a failure here is critical.
-        async with self.session.post(
-            url, data=data, headers=headers, proxy=self.proxy
-        ) as response:
-            response.raise_for_status()
-            text_content = await response.text()
-            token_data = orjson.loads(text_content)
-            self.token = token_data["access_token"]
-            self.token_expiration = time.time() + token_data["expires_in"]
-            logging.info("Successfully fetched new API token.")
-            return self.token
+    if missing_vars:
+        error_message = f"Critical configuration error. Missing required environment variables: {', '.join(missing_vars)}"
+        logging.critical(error_message)
+        sys.exit(error_message)
 
-    async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
-        """
-        Wraps a function call with an exponential backoff retry mechanism.
+# --- Immediately execute the validation function upon script startup ---
+load_and_validate_env_vars()
 
-        This function catches specific, transient server-side errors
-        (like 502, 503, 429) and retries the wrapped function with an
-        increasing delay.
-        """
-        max_retries = 5
-        base_delay = 1
-        # A comprehensive set of status codes that indicate a temporary,
-        # server-side issue worth retrying.
-        retriable_status_codes = {408, 429, 500, 502, 503, 504, 520}
 
-        for retry in range(max_retries):
-            try:
-                # Attempt to execute the wrapped function and return its result.
-                return await func(*args, **kwargs)
-            except aiohttp.ClientResponseError as e:
-                # If the error's status code is in our retriable list, proceed with backoff.
-                if e.status in retriable_status_codes:
-                    if retry == max_retries - 1:
-                        logging.error(f"Max retries reached for status {e.status}. Giving up. Error: {e}")
-                        raise
-                    
-                    delay = base_delay * (2**retry) + random.uniform(0, 1)
-                    logging.warning(
-                        f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to "
-                        f"retriable status {e.status}: {e}"
-                    )
-                    await asyncio.sleep(delay)
-                else:
-                    # For non-retriable statuses (e.g., 404 Not Found), log and fail immediately.
-                    logging.error(f"Request failed with non-retriable status {e.status}. Error: {e}")
-                    raise
-            except aiohttp.ClientError as e:  # Catch other issues like connection errors.
-                if retry == max_retries - 1:
-                    logging.error(f"Max retries reached for ClientError. Giving up. Error: {e}")
-                    raise
-                
-                delay = base_delay * (2**retry) + random.uniform(0, 1)
-                logging.warning(
-                    f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to {type(e).__name__}: {e}"
-                )
-                await asyncio.sleep(delay)
+# --- Global Variable Definitions ---
+# Because validation passed, these variables can be loaded with confidence
+# that they are not None, satisfying static analysis and preventing runtime errors.
 
-    async def _send_request(self, method: str, url: str, headers: dict, data: dict = None) -> tuple:
-        """
-        Sends a single HTTP request and handles the response.
+USE_PROXY: bool = os.getenv("USE_PROXY", "False").lower() == "true"
+PROXY_USERNAME: str = os.getenv("PROXY_USERNAME")
+PROXY_PASSWORD: str = os.getenv("PROXY_PASSWORD")
+PROXY_URL: str = os.getenv("PROXY_URL")
+API_ID_URL: str = os.getenv("API_ID_URL")
+API_CONNECT_URL: str = os.getenv("API_CONNECT_URL")
+X_CUSTOM_ENTITY: str = os.getenv("X_CUSTOM_ENTITY")
+TOKEN_REFRESH_THRESHOLD: int = 300
 
-        This method includes special logic to handle a 500 Internal Server Error
-        by immediately attempting a single retry with a refreshed token. For all
-        other responses, it relies on raise_for_status() to trigger the main
-        backoff mechanism on failure.
-
-        Returns:
-            A tuple containing the parsed JSON content and the response headers.
-        """
-        async with self.session.request(
-            method, url, headers=headers, json=data, proxy=self.proxy
-        ) as response:
-            # Special handling for 500 errors, which may indicate a token issue.
-            if response.status == 500:
-                logging.warning("Received 500 Internal Server Error. Refreshing token for an immediate retry.")
-                refreshed_headers = headers.copy()
-                refreshed_headers["Authorization"] = f"Bearer {await self.get_token(force_refresh=True)}"
-
-                # Perform the one-time immediate retry.
-                async with self.session.request(
-                    method, url, headers=refreshed_headers, json=data, proxy=self.proxy
-                ) as retry_response:
-                    # If this retry also fails, raise_for_status() will pass the error
-                    # up to the exponential backoff wrapper.
-                    retry_response.raise_for_status()
-                    text_content = await retry_response.text()
-                    return orjson.loads(text_content), retry_response.headers
-
-            # For all other statuses, raise an exception on failure (4xx/5xx).
-            # This is the primary trigger for the exponential backoff mechanism.
-            response.raise_for_status()
-            
-            text_content = await response.text()
-            return orjson.loads(text_content), response.headers
-
-    async def make_request(self, method, url, data=None):
-        """
-        Performs a full API request, orchestrating token management,
-        pagination, and the resilient retry mechanism for every API call.
-        """
-        # Prepare headers for the initial request.
-        headers = {
-            "Connection": "keep-alive",
-            "Authorization": f"Bearer {await self.get_token()}",
-            "x-page-current": "1",
-            "x-page-length": "2500",
-            "x-custom-entity": X_CUSTOM_ENTITY,
-            "Content-Type": "application/json-patch+json",
-            "api-version": "3.0",
-        }
-
-        # Make the first page request, wrapped in our robust backoff logic.
-        first_page_content, response_headers = await self.fetch_with_exponential_backoff(
-            self._send_request, method, url, headers, data
-        )
-
-        all_responses = first_page_content
-        total_pages = int(response_headers.get("x-page-count", 1))
-
-        # If the response is paginated, fetch all subsequent pages concurrently.
-        if total_pages > 1:
-            tasks = []
-            for page_num in range(2, total_pages + 1):
-                page_headers = headers.copy()
-                page_headers["x-page-current"] = str(page_num)
-                # Each subsequent page request is also individually wrapped in the backoff logic.
-                task = self.fetch_with_exponential_backoff(
-                    self._send_request, method, url, page_headers, data
-                )
-                tasks.append(task)
-            
-            # Wait for all paginated requests to complete.
-            page_results = await asyncio.gather(*tasks)
-            
-            # The result from each task is a tuple (content, headers); we extend with the content.
-            for page_content, _ in page_results:
-                all_responses.extend(page_content)
-
-        return all_responses
+# LAST_RUN has a safe default and is not considered a critical failure if missing.
+LAST_RUN: datetime = datetime.fromisoformat(os.getenv("LAST_RUN") or "1970-01-01T00:00:00+00:00")
