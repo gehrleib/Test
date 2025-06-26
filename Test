@@ -1,4 +1,47 @@
-# In APIClient class
+async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
+        """
+        Retry a function with exponential backoff for handling transient errors.
+
+        This wrapper explicitly retries on specific server-side status codes
+        and other connection-related ClientErrors.
+        """
+        max_retries = 5
+        base_delay = 1
+        # A comprehensive list of retriable status codes
+        retriable_status_codes = {408, 429, 500, 502, 503, 504, 520}
+
+        for retry in range(max_retries):
+            try:
+                # Attempt to call the function with its arguments
+                return await func(*args, **kwargs)
+            except aiohttp.ClientResponseError as e:
+                # Check if the status code is in our defined set of retriable codes.
+                if e.status in retriable_status_codes:
+                    if retry == max_retries - 1:
+                        logging.error(f"Max retries reached for {type(e).__name__} (status: {e.status}). Giving up. Error: {e}")
+                        raise
+                    
+                    delay = base_delay * (2**retry) + random.uniform(0, 1)
+                    logging.warning(
+                        f"Retry {retry + 1}/{max_retries} after {delay:.2f} seconds due to "
+                        f"retriable ClientResponseError ({e.status}): {e}"
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    # If the error is not one we want to retry (e.g., 404), log it and re-raise immediately.
+                    logging.warning(f"Request resulted in a non-retriable status {e.status}. Not retrying. Error: {e}")
+                    raise
+            except aiohttp.ClientError as e:  # Catch other client errors (e.g., connection errors, timeouts)
+                if retry == max_retries - 1:
+                    logging.error(f"Max retries reached for non-response ClientError {type(e).__name__}. Giving up. Error: {e}")
+                    raise
+                
+                delay = base_delay * (2**retry) + random.uniform(0, 1)
+                logging.warning(
+                    f"Retry {retry + 1}/{max_retries} after {delay:.2f} seconds due to {type(e).__name__}: {e}"
+                )
+                await asyncio.sleep(delay)
+
     async def _send_request(self, method: str, url: str, headers: dict, data: dict = None) -> tuple:
         """
         Sends a single HTTP request and raises an exception for non-2xx responses.
@@ -10,12 +53,49 @@
         async with self.session.request(
             method, url, headers=headers, json=data, proxy=self.proxy
         ) as response:
-            # This is the crucial step: Raise an exception for bad status codes (4xx or 5xx).
-            # This ensures a 502 Bad Gateway immediately becomes a ClientResponseError.
+            # Crucial step: Raise an exception for bad status codes (4xx or 5xx).
             response.raise_for_status()
             
-            # If the status is successful (2xx), proceed to parse the response.
             text_content = await response.text()
-            
-            # Return headers as well, as they are needed for pagination info.
             return orjson.loads(text_content), response.headers
+
+    async def make_request(self, method, url, data=None):
+        """
+        Perform an HTTP request asynchronously, handling token refresh, retries,
+        and pagination. Each individual HTTP call is wrapped with exponential backoff.
+        """
+        headers = {
+            "Connection": "keep-alive",
+            "Authorization": f"Bearer {await self.get_token()}",
+            "x-page-current": "1",
+            "x-page-length": "2500",
+            "x-custom-entity": X_CUSTOM_ENTITY,
+            "Content-Type": "application/json-patch+json",
+            "api-version": "3.0",
+        }
+
+        # The first page request is wrapped with our robust backoff logic.
+        first_page_content, response_headers = await self.fetch_with_exponential_backoff(
+            self._send_request, method, url, headers, data
+        )
+
+        all_responses = first_page_content
+        total_pages = int(response_headers.get("x-page-count", 1))
+
+        if total_pages > 1:
+            tasks = []
+            for page_num in range(2, total_pages + 1):
+                page_headers = headers.copy()
+                page_headers["x-page-current"] = str(page_num)
+                # Each subsequent paginated request is *also* individually wrapped.
+                task = self.fetch_with_exponential_backoff(
+                    self._send_request, method, url, page_headers, data
+                )
+                tasks.append(task)
+            
+            page_results = await asyncio.gather(*tasks)
+            
+            for page_content, _ in page_results:
+                all_responses.extend(page_content)
+
+        return all_responses
