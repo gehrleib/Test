@@ -4,55 +4,61 @@
         """
         Wraps a function with an exponential backoff retry mechanism.
 
-        Catches transient server-side errors, connection issues, timeouts, and
-        cancellation errors, retrying the function with increasing delays.
+        This function is designed to be highly resilient by catching and retrying
+        a comprehensive set of transient network and server errors, including
+        connection issues, timeouts, and specific server-side HTTP status codes.
+
+        Args:
+            func: The asynchronous function to execute and retry.
+            *args: Positional arguments to pass to the wrapped function.
+            **kwargs: Keyword arguments to pass to the wrapped function.
+
+        Returns:
+            The return value of the wrapped function if successful.
+
+        Raises:
+            The final exception if all retry attempts fail, or an exception
+            if a non-retriable error occurs.
         """
         max_retries = 5
         base_delay = 1
+        # A set of HTTP status codes that indicate a temporary server-side
+        # issue and are safe to retry.
         retriable_status_codes = {408, 429, 500, 502, 503, 504, 520}
 
         for retry in range(max_retries):
             try:
+                # The "happy path": attempt to execute the function and return on success.
                 return await func(*args, **kwargs)
             
-            # --- ADDED THIS BLOCK TO HANDLE TIMEOUTS ---
-            except asyncio.TimeoutError as e:
-                if retry == max_retries - 1:
-                    logging.error(f"Max retries reached for TimeoutError. Giving up. Error: {e}")
-                    raise
-                
-                delay = base_delay * (2**retry) + random.uniform(0, 1)
-                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to TimeoutError.")
-                await asyncio.sleep(delay)
-            # --- END OF ADDED BLOCK ---
-
-            except asyncio.CancelledError as e:
-                if retry == max_retries - 1:
-                    logging.error(f"Max retries reached for CancelledError. Giving up. Error: {e}")
-                    raise
-                
-                delay = base_delay * (2**retry) + random.uniform(0, 1)
-                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to CancelledError.")
-                await asyncio.sleep(delay)
-
-            except aiohttp.ClientResponseError as e:
-                if e.status not in retriable_status_codes:
+            # This single 'except' block now catches all potential transient errors.
+            except (
+                aiohttp.ClientError,  # Base class for connection errors, etc.
+                asyncio.TimeoutError, # Covers request timeouts.
+                asyncio.CancelledError # Covers cancellations from abrupt connection loss.
+            ) as e:
+                # --- Special Case Check ---
+                # If the error is a ClientResponseError, we must check if its status
+                # is one we should actually retry (e.g., we don't want to retry a 404).
+                if isinstance(e, aiohttp.ClientResponseError) and e.status not in retriable_status_codes:
                     logging.error(f"Request failed with non-retriable status {e.status}. Error: {e}")
+                    raise # Re-raise the exception to stop the process.
+
+                # --- Unified Retry Logic ---
+                # If we've reached the max number of retries, give up and raise the final exception.
+                if retry == max_retries - 1:
+                    logging.error(f"Max retries reached. Giving up. Final error: {type(e).__name__}: {e}")
                     raise
 
-                if retry == max_retries - 1:
-                    logging.error(f"Max retries reached for status {e.status}. Giving up. Error: {e}")
-                    raise
-                
+                # Calculate the delay with jitter to prevent thundering herd problems.
                 delay = base_delay * (2**retry) + random.uniform(0, 1)
-                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to retriable status {e.status}: {e}")
-                await asyncio.sleep(delay)
 
-            except aiohttp.ClientError as e:
-                if retry == max_retries - 1:
-                    logging.error(f"Max retries reached for ClientError. Giving up. Error: {e}")
-                    raise
+                # Log a clear warning about the retry attempt.
+                status_info = f" (status: {e.status})" if isinstance(e, aiohttp.ClientResponseError) else ""
+                logging.warning(
+                    f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to "
+                    f"retriable error: {type(e).__name__}{status_info}"
+                )
                 
-                delay = base_delay * (2**retry) + random.uniform(0, 1)
-                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to {type(e).__name__}: {e}")
+                # Wait before the next attempt.
                 await asyncio.sleep(delay)
