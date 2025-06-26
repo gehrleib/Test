@@ -4,8 +4,8 @@
         """
         Wraps a function with an exponential backoff retry mechanism.
 
-        Catches transient server-side errors, connection issues, and cancellation
-        errors, retrying the function with increasing delays to improve resilience.
+        Catches transient server-side errors, connection issues, timeouts, and
+        cancellation errors, retrying the function with increasing delays.
         """
         max_retries = 5
         base_delay = 1
@@ -15,9 +15,18 @@
             try:
                 return await func(*args, **kwargs)
             
-            # --- ADDED THIS BLOCK TO HANDLE CANCELLEDERRORS ---
+            # --- ADDED THIS BLOCK TO HANDLE TIMEOUTS ---
+            except asyncio.TimeoutError as e:
+                if retry == max_retries - 1:
+                    logging.error(f"Max retries reached for TimeoutError. Giving up. Error: {e}")
+                    raise
+                
+                delay = base_delay * (2**retry) + random.uniform(0, 1)
+                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to TimeoutError.")
+                await asyncio.sleep(delay)
+            # --- END OF ADDED BLOCK ---
+
             except asyncio.CancelledError as e:
-                logging.warning(f"Request was cancelled, likely due to connection loss. Retrying...")
                 if retry == max_retries - 1:
                     logging.error(f"Max retries reached for CancelledError. Giving up. Error: {e}")
                     raise
@@ -25,7 +34,6 @@
                 delay = base_delay * (2**retry) + random.uniform(0, 1)
                 logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to CancelledError.")
                 await asyncio.sleep(delay)
-            # --- END OF ADDED BLOCK ---
 
             except aiohttp.ClientResponseError as e:
                 if e.status not in retriable_status_codes:
