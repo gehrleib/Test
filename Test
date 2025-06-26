@@ -1,20 +1,50 @@
-# At the bottom of CUBE.py
+# In APIClient class in CUBE.py
 
-async def run_script():
-    """
-    A wrapper function to initialize and run the APIClient using it as an
-    async context manager, ensuring proper startup and shutdown.
-    """
-    try:
-        # The 'async with' statement ensures __aenter__ is called on entry
-        # and __aexit__ is called on exit, even if errors occur.
-        async with APIClient() as client:
-            await client.main()
-    except Exception as e:
-        # Catch any final, unhandled exceptions from the main logic.
-        logging.critical(f"An unhandled exception occurred in the main script run: {e}", exc_info=True)
-        sys.exit(1)
+    async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
+        """
+        Wraps a function with an exponential backoff retry mechanism.
 
-if __name__ == "__main__":
-    asyncio.run(run_script())
-    update_last_run()
+        Catches transient server-side errors, connection issues, and cancellation
+        errors, retrying the function with increasing delays to improve resilience.
+        """
+        max_retries = 5
+        base_delay = 1
+        retriable_status_codes = {408, 429, 500, 502, 503, 504, 520}
+
+        for retry in range(max_retries):
+            try:
+                return await func(*args, **kwargs)
+            
+            # --- ADDED THIS BLOCK TO HANDLE CANCELLEDERRORS ---
+            except asyncio.CancelledError as e:
+                logging.warning(f"Request was cancelled, likely due to connection loss. Retrying...")
+                if retry == max_retries - 1:
+                    logging.error(f"Max retries reached for CancelledError. Giving up. Error: {e}")
+                    raise
+                
+                delay = base_delay * (2**retry) + random.uniform(0, 1)
+                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to CancelledError.")
+                await asyncio.sleep(delay)
+            # --- END OF ADDED BLOCK ---
+
+            except aiohttp.ClientResponseError as e:
+                if e.status not in retriable_status_codes:
+                    logging.error(f"Request failed with non-retriable status {e.status}. Error: {e}")
+                    raise
+
+                if retry == max_retries - 1:
+                    logging.error(f"Max retries reached for status {e.status}. Giving up. Error: {e}")
+                    raise
+                
+                delay = base_delay * (2**retry) + random.uniform(0, 1)
+                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to retriable status {e.status}: {e}")
+                await asyncio.sleep(delay)
+
+            except aiohttp.ClientError as e:
+                if retry == max_retries - 1:
+                    logging.error(f"Max retries reached for ClientError. Giving up. Error: {e}")
+                    raise
+                
+                delay = base_delay * (2**retry) + random.uniform(0, 1)
+                logging.warning(f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to {type(e).__name__}: {e}")
+                await asyncio.sleep(delay)
