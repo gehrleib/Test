@@ -1,59 +1,129 @@
-async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
-        """
-        Retry a function with exponential backoff for handling transient errors.
+# In APIClient class in CUBE.py
 
-        This wrapper explicitly retries on specific server-side status codes
-        and other connection-related ClientErrors.
+    async def get_token(self, force_refresh: bool = False) -> str:
+        """
+        Retrieves an authentication token, refreshing it if it's expired
+        or if a refresh is explicitly forced.
+
+        Args:
+            force_refresh: If True, a new token will be fetched even if the
+                           current one is not expired. Defaults to False.
+
+        Returns:
+            The access token string.
+        """
+        # Return the cached token if it's still valid and a refresh isn't forced.
+        if (
+            self.token
+            and self.token_expiration
+            and time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD
+            and not force_refresh
+        ):
+            return self.token
+
+        # Otherwise, fetch a new token from the authentication server.
+        url = f"{API_ID_URL}/connect/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {
+            "grant_type": "password",
+            "username": os.getenv("USER"),
+            "password": os.getenv("PASSWORD"),
+            "scope": os.getenv("SCOPE"),
+            "client_id": os.getenv("CLIENT_ID"),
+            "client_secret": os.getenv("CLIENT_SECRET"),
+        }
+
+        # The token request itself does not use the backoff wrapper, as a failure here is critical.
+        async with self.session.post(
+            url, data=data, headers=headers, proxy=self.proxy
+        ) as response:
+            response.raise_for_status()
+            text_content = await response.text()
+            token_data = orjson.loads(text_content)
+            self.token = token_data["access_token"]
+            self.token_expiration = time.time() + token_data["expires_in"]
+            logging.info("Successfully fetched new API token.")
+            return self.token
+
+    async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
+        """
+        Wraps a function call with an exponential backoff retry mechanism.
+
+        This function catches specific, transient server-side errors
+        (like 502, 503, 429) and retries the wrapped function with an
+        increasing delay.
         """
         max_retries = 5
         base_delay = 1
-        # A comprehensive list of retriable status codes
+        # A comprehensive set of status codes that indicate a temporary,
+        # server-side issue worth retrying.
         retriable_status_codes = {408, 429, 500, 502, 503, 504, 520}
 
         for retry in range(max_retries):
             try:
-                # Attempt to call the function with its arguments
+                # Attempt to execute the wrapped function and return its result.
                 return await func(*args, **kwargs)
             except aiohttp.ClientResponseError as e:
-                # Check if the status code is in our defined set of retriable codes.
+                # If the error's status code is in our retriable list, proceed with backoff.
                 if e.status in retriable_status_codes:
                     if retry == max_retries - 1:
-                        logging.error(f"Max retries reached for {type(e).__name__} (status: {e.status}). Giving up. Error: {e}")
+                        logging.error(f"Max retries reached for status {e.status}. Giving up. Error: {e}")
                         raise
                     
                     delay = base_delay * (2**retry) + random.uniform(0, 1)
                     logging.warning(
-                        f"Retry {retry + 1}/{max_retries} after {delay:.2f} seconds due to "
-                        f"retriable ClientResponseError ({e.status}): {e}"
+                        f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to "
+                        f"retriable status {e.status}: {e}"
                     )
                     await asyncio.sleep(delay)
                 else:
-                    # If the error is not one we want to retry (e.g., 404), log it and re-raise immediately.
-                    logging.warning(f"Request resulted in a non-retriable status {e.status}. Not retrying. Error: {e}")
+                    # For non-retriable statuses (e.g., 404 Not Found), log and fail immediately.
+                    logging.error(f"Request failed with non-retriable status {e.status}. Error: {e}")
                     raise
-            except aiohttp.ClientError as e:  # Catch other client errors (e.g., connection errors, timeouts)
+            except aiohttp.ClientError as e:  # Catch other issues like connection errors.
                 if retry == max_retries - 1:
-                    logging.error(f"Max retries reached for non-response ClientError {type(e).__name__}. Giving up. Error: {e}")
+                    logging.error(f"Max retries reached for ClientError. Giving up. Error: {e}")
                     raise
                 
                 delay = base_delay * (2**retry) + random.uniform(0, 1)
                 logging.warning(
-                    f"Retry {retry + 1}/{max_retries} after {delay:.2f} seconds due to {type(e).__name__}: {e}"
+                    f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to {type(e).__name__}: {e}"
                 )
                 await asyncio.sleep(delay)
 
     async def _send_request(self, method: str, url: str, headers: dict, data: dict = None) -> tuple:
         """
-        Sends a single HTTP request and raises an exception for non-2xx responses.
-        This function is intended to be wrapped by the exponential backoff logic.
-        
+        Sends a single HTTP request and handles the response.
+
+        This method includes special logic to handle a 500 Internal Server Error
+        by immediately attempting a single retry with a refreshed token. For all
+        other responses, it relies on raise_for_status() to trigger the main
+        backoff mechanism on failure.
+
         Returns:
-            A tuple containing the JSON content and the response headers.
+            A tuple containing the parsed JSON content and the response headers.
         """
         async with self.session.request(
             method, url, headers=headers, json=data, proxy=self.proxy
         ) as response:
-            # Crucial step: Raise an exception for bad status codes (4xx or 5xx).
+            # Special handling for 500 errors, which may indicate a token issue.
+            if response.status == 500:
+                logging.warning("Received 500 Internal Server Error. Refreshing token for an immediate retry.")
+                refreshed_headers = headers.copy()
+                refreshed_headers["Authorization"] = f"Bearer {await self.get_token(force_refresh=True)}"
+
+                # Perform the one-time immediate retry.
+                async with self.session.request(
+                    method, url, headers=refreshed_headers, json=data, proxy=self.proxy
+                ) as retry_response:
+                    # If this retry also fails, raise_for_status() will pass the error
+                    # up to the exponential backoff wrapper.
+                    retry_response.raise_for_status()
+                    text_content = await retry_response.text()
+                    return orjson.loads(text_content), retry_response.headers
+
+            # For all other statuses, raise an exception on failure (4xx/5xx).
+            # This is the primary trigger for the exponential backoff mechanism.
             response.raise_for_status()
             
             text_content = await response.text()
@@ -61,9 +131,10 @@ async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
 
     async def make_request(self, method, url, data=None):
         """
-        Perform an HTTP request asynchronously, handling token refresh, retries,
-        and pagination. Each individual HTTP call is wrapped with exponential backoff.
+        Performs a full API request, orchestrating token management,
+        pagination, and the resilient retry mechanism for every API call.
         """
+        # Prepare headers for the initial request.
         headers = {
             "Connection": "keep-alive",
             "Authorization": f"Bearer {await self.get_token()}",
@@ -74,7 +145,7 @@ async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
             "api-version": "3.0",
         }
 
-        # The first page request is wrapped with our robust backoff logic.
+        # Make the first page request, wrapped in our robust backoff logic.
         first_page_content, response_headers = await self.fetch_with_exponential_backoff(
             self._send_request, method, url, headers, data
         )
@@ -82,19 +153,22 @@ async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
         all_responses = first_page_content
         total_pages = int(response_headers.get("x-page-count", 1))
 
+        # If the response is paginated, fetch all subsequent pages concurrently.
         if total_pages > 1:
             tasks = []
             for page_num in range(2, total_pages + 1):
                 page_headers = headers.copy()
                 page_headers["x-page-current"] = str(page_num)
-                # Each subsequent paginated request is *also* individually wrapped.
+                # Each subsequent page request is also individually wrapped in the backoff logic.
                 task = self.fetch_with_exponential_backoff(
                     self._send_request, method, url, page_headers, data
                 )
                 tasks.append(task)
             
+            # Wait for all paginated requests to complete.
             page_results = await asyncio.gather(*tasks)
             
+            # The result from each task is a tuple (content, headers); we extend with the content.
             for page_content, _ in page_results:
                 all_responses.extend(page_content)
 
