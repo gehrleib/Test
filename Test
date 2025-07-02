@@ -1,64 +1,19 @@
-# In APIClient class in CUBE.py
-
-    async def fetch_with_exponential_backoff(self, func, *args, **kwargs):
-        """
-        Wraps a function with an exponential backoff retry mechanism.
-
-        This function is designed to be highly resilient by catching and retrying
-        a comprehensive set of transient network and server errors, including
-        connection issues, timeouts, and specific server-side HTTP status codes.
-
-        Args:
-            func: The asynchronous function to execute and retry.
-            *args: Positional arguments to pass to the wrapped function.
-            **kwargs: Keyword arguments to pass to the wrapped function.
-
-        Returns:
-            The return value of the wrapped function if successful.
-
-        Raises:
-            The final exception if all retry attempts fail, or an exception
-            if a non-retriable error occurs.
-        """
-        max_retries = 5
-        base_delay = 1
-        # A set of HTTP status codes that indicate a temporary server-side
-        # issue and are safe to retry.
-        retriable_status_codes = {408, 429, 500, 502, 503, 504, 520}
-
-        for retry in range(max_retries):
-            try:
-                # The "happy path": attempt to execute the function and return on success.
-                return await func(*args, **kwargs)
-            
-            # This single 'except' block now catches all potential transient errors.
-            except (
-                aiohttp.ClientError,  # Base class for connection errors, etc.
-                asyncio.TimeoutError, # Covers request timeouts.
-                asyncio.CancelledError # Covers cancellations from abrupt connection loss.
-            ) as e:
-                # --- Special Case Check ---
-                # If the error is a ClientResponseError, we must check if its status
-                # is one we should actually retry (e.g., we don't want to retry a 404).
-                if isinstance(e, aiohttp.ClientResponseError) and e.status not in retriable_status_codes:
-                    logging.error(f"Request failed with non-retriable status {e.status}. Error: {e}")
-                    raise # Re-raise the exception to stop the process.
-
-                # --- Unified Retry Logic ---
-                # If we've reached the max number of retries, give up and raise the final exception.
-                if retry == max_retries - 1:
-                    logging.error(f"Max retries reached. Giving up. Final error: {type(e).__name__}: {e}")
-                    raise
-
-                # Calculate the delay with jitter to prevent thundering herd problems.
-                delay = base_delay * (2**retry) + random.uniform(0, 1)
-
-                # Log a clear warning about the retry attempt.
-                status_info = f" (status: {e.status})" if isinstance(e, aiohttp.ClientResponseError) else ""
-                logging.warning(
-                    f"Retry {retry + 1}/{max_retries} after {delay:.2f}s due to "
-                    f"retriable error: {type(e).__name__}{status_info}"
-                )
-                
-                # Wait before the next attempt.
-                await asyncio.sleep(delay)
+Okay, I have your input for questions 2 through 7. I will now rewrite these responses, aiming for a professional tone and avoiding your exact phrasing, similar to how I handled Question 1.
+Here is the full draft of your response to Brandon, including the rewritten sections:
+Hi Brandon,
+I'm sending you some feedback we have received during the pilot war room that we needed some clarification on feasibility from you and wanted to bring these to your attention for any potential enhancements in your next release.
+Here are some of my questions/understanding of the feedback summarized for you to provide your comments for each of the items from the table below:
+1. This item was when a user requested bulk updates during the AU mapping process.
+My response during the time was that bulk updates are discouraged. This is primarily because when performing bulk updates via a job or API, the system does not execute the same validation checks that are present on the front end. This includes crucial verifications, such as ensuring the segment, country, and regulatory theme of the RegGroup align with the corresponding Assessable Unit (AU). Consequently, this significantly elevates the risk of data inaccuracies due to potential human error. Furthermore, the current bulk request functionality operates as a "replace all," rather than offering options to append or remove data. This design necessitates that users maintain a comprehensive awareness of all existing mappings, a task that becomes particularly challenging when dealing with multi-jurisdictional RegGroups.
+2. There were some instances during the pilot war room when users were trying to search for regulatory themes, for example "Complaint" did not show up at the top, but other regulatory themes without the word "Complaint" in them showed up before anything including the word "Complaint".
+Regarding the search functionality and the indexing of terms within regulatory themes, this aspect is managed at the platform or tool level. It is not an area that can be configured or adjusted by me.
+3. This was a request to change the wording for "Attest" and terminologies updates to change it to something more intuitive like "Confirm Mapping", this may require additional discussions on what the new terminology for Attest should be. I wanted to confirm that once the terminology has been confirmed, you are able to make updates to this.
+Yes, we are able to accommodate modifications to both field names and their corresponding values in this context. Our decision to use "Attest" was made because a user's action can involve either performing a new mapping or formally attesting that an existing value is accurate.
+4. Please confirm that RegComp already has role-based filtering and regional filtering, to only show users the applicable fields to them.
+Indeed, all roles within the system are granted at a regional segment level. The three defined roles are Validator, Mapper, and Lead. The dashboard is designed to dynamically update based on a user's specific entitlements, and the current dashboard should be sufficient. However, we remain open to making adjustments where feasible, based on user feedback received once the system goes live.
+5. This one is a minor enhancement in the validation form, the feedback was that if a user had selected the function as "compliance", then the regulatory theme type should auto populate as "conduct", similarly for functions to auto populate the theme type as FCOP.
+The reason we have distinct questions for "function" and "theme" is due to the workflow where all regulatory groups are initially routed to the compliance team. This structured approach enables the compliance team to effectively descope items that are subsequently identified as FCOP (Financial Crime Operations Policy). For instance, if "compliance" is initially chosen for the function and the theme is then determined to be FCOP, the validation process concludes for that item, and it is removed from the compliance team's dashboard.
+6. Please let me know if there is the ability to manage multiple risk assessments from different legal entities and whether this would be a feasible enhancement.
+I am unclear on how the concept of legal entities specifically impacts the necessity for a risk assessment, particularly in relation to changes in regulatory content, such as additions or removals.
+7. Once a risk assessment is triggered from the "Impact assessment" tile in RegComp, where does it then get routed to?
+Upon being triggered from the "Impact assessment" tile in RegComp, the item would be routed to the Risk Assessment Overview Dashboard. Ideally, if it is refreshed, this action would force the relevant assessable unit into a draft state, at which point the First Line of Defense (LoD) would be duly notified.
