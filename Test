@@ -1,3 +1,13 @@
-My validation efforts will not include the lssuing Body, RegBook, or RegGroup metadata. This information is pulled directly from the cube, making it a fixed data point. The KL team has already performed the necessary reconciliation to ensure each pinpoint citation has an associated RegGroup ID. Instead, I will focus on ensuring the following values are correctly populated from the Norton Rose equivalent record: RegGroup Applies to RBC, RegGroup Imposes Requires on RBC, Regulatory Theme, and the four mappings to assessable units. It's important to be aware that the Rules for Fls, Applicable to RBc (Legislation), Reason Legislation Applicable/Inapplicable, and Entity fields will no longer be accessible.
-
- you may observe subtle differences in regulator names (issuing body), legislation names (RegBook), and other numerical values. These variations can occur when merging reggroups with multiple themes or when regulatory content has been repealed.
+You've identified an important nuance! Thanks for pointing that out. The previous acceptance criteria didn't explicitly cover the scenario where only non-issue exceptions are present.
+Let's refine that specific acceptance criterion to reflect this.
+User Story: Display EIM Issues and Non-Issue Exceptions on Exam Record
+As a Reg Comp user, I need the Exam Record to accurately display linked issues from Enterprise Issue Management (EIM) and allow for the creation of non-issue exceptions, so that the indicative exam rating is correctly determined and all relevant issue information is readily available in a read-only format.
+Acceptance Criteria:
+ * The Enterprise Issue Management (EIM) issues linked to an exam record are displayed in a read-only table.
+ * A banner stating "All issues are now created in Enterprise issue management EIM tool." is displayed above the EIM issues section on the exam record.
+ * Users can create non-issue exceptions directly from the exam record.
+ * If a non-issue exception is added, and no EIM issues are linked, the indicative exam rating becomes Satisfactory.
+ * The EIM issues table displays the following columns: Issue ID, Date Created, Issue Short Name, Issue Severity, Expected Completion Date, Date Closed, and Overall Status.
+ * The non-issue exceptions table displays the following columns: Non-Issue Exception ID, Date Created, Short Name, Date Closed, and Status.
+ * The indicative exam rating logic and its calculation remain unchanged for scenarios involving EIM issues, continuing to use the severity from EIM issues to determine the rating.
+This updated criterion: "If a non-issue exception is added, and no EIM issues are linked, the indicative exam rating becomes Satisfactory" now precisely captures the condition you've highlighted.
