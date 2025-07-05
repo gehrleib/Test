@@ -1,1 +1,84 @@
-=IFERROR(TRIM(MID(A1,SEARCH("Skipping Group ID ",A1)+16,SEARCH(":",A1,SEARCH("Skipping Group ID ",A1)+16)-(SEARCH("Skipping Group ID ",A1)+16))),"")
+import re
+import argparse
+from typing import Set
+
+def parse_log_file(file_path: str) -> Set[str]:
+    """
+    Parses a log file to extract all unique Group IDs from 'Skipping' log lines.
+
+    Args:
+        file_path: The path to the log file.
+
+    Returns:
+        A set of unique Group ID strings found in the file.
+    """
+    # This regular expression is specifically designed to find and capture the
+    # group ID from your log format, e.g., "Skipping Group ID GRP-123:..."
+    group_id_pattern = re.compile(r"Skipping Group ID (.+?):")
+    skipped_ids = set()
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                match = group_id_pattern.search(line)
+                if match:
+                    # The first captured group (the part in parentheses) is the ID.
+                    skipped_ids.add(match.group(1))
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+        exit(1)
+    except Exception as e:
+        print(f"An error occurred while reading '{file_path}': {e}")
+        exit(1)
+        
+    return skipped_ids
+
+def compare_logs(file1_path: str, file2_path: str):
+    """
+    Compares two log files to find differences in skipped Group IDs.
+    
+    Args:
+        file1_path: Path to the first (older) log file.
+        file2_path: Path to the second (newer) log file.
+    """
+    print(f"Comparing log files:\n- Old Log: {file1_path}\n- New Log: {file2_path}\n")
+
+    # Parse both files to get sets of their skipped IDs.
+    ids_from_file1 = parse_log_file(file1_path)
+    ids_from_file2 = parse_log_file(file2_path)
+
+    # Use set mathematics to find the differences.
+    # 'Removed' means it was skipped in the old log but not in the new one.
+    removed_ids = ids_from_file1 - ids_from_file2
+    
+    # 'Added' means it was skipped in the new log but not in the old one.
+    added_ids = ids_from_file2 - ids_from_file1
+
+    print("-" * 30)
+    
+    if not removed_ids and not added_ids:
+        print("✅ No differences found. The set of skipped groups is identical.")
+    else:
+        if added_ids:
+            print(f"➕ Groups ADDED to the skip list in the new log ({len(added_ids)}):")
+            for group_id in sorted(list(added_ids)):
+                print(f"  - {group_id}")
+            print()
+
+        if removed_ids:
+            print(f"➖ Groups REMOVED from the skip list in the new log ({len(removed_ids)}):")
+            for group_id in sorted(list(removed_ids)):
+                print(f"  - {group_id}")
+            print()
+
+if __name__ == "__main__":
+    # Set up the command-line argument parser for a user-friendly experience.
+    parser = argparse.ArgumentParser(
+        description="Compare two application logs to find differences in skipped Group IDs."
+    )
+    parser.add_argument("old_log", help="The path to the first or older log file.")
+    parser.add_argument("new_log", help="The path to the second or newer log file.")
+    
+    args = parser.parse_args()
+    
+    compare_logs(args.old_log, args.new_log)
