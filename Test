@@ -1,47 +1,123 @@
+import re
 import argparse
+from typing import Set, Tuple, Dict, List
 
-def diagnose_file(file_path: str):
+def parse_log_file(file_path: str) -> Tuple[Dict[str, str], int, int]:
     """
-    Reads a log file and prints a raw, diagnostic representation of lines
-    that contain the key phrase "Skipping Group ID".
+    Parses a log file to extract skipped Group IDs and the reason for skipping.
 
     Args:
-        file_path: The path to the log file to diagnose.
+        file_path: The path to the log file.
+
+    Returns:
+        A tuple containing:
+        - A dictionary mapping each skipped Group ID to its skip reason.
+        - The total number of lines read.
+        - The number of lines that matched the 'Skipping' pattern.
     """
-    key_phrase = "Skipping Group ID"
-    lines_found = 0
-    
-    print(f"\n--- Running Diagnostics on: {file_path} ---\n")
-    
+    # This regex now captures both the Group ID (Group 1) and the reason (Group 2).
+    group_id_pattern = re.compile(
+        r"Skipping Group ID (.+?):\s*(.+)",
+        re.IGNORECASE
+    )
+    skipped_groups_map = {}
+    lines_read = 0
+    lines_matched = 0
+
     try:
-        # Open the file in binary mode to see the raw bytes
-        with open(file_path, 'rb') as f:
-            for i, line_bytes in enumerate(f, 1):
-                # Decode each line individually, ignoring errors
-                line_str = line_bytes.decode('utf-8', errors='ignore')
-                
-                if key_phrase.lower() in line_str.lower():
-                    lines_found += 1
-                    if lines_found <= 10: # Only print the first 10 matches
-                        print(f"Match found on line {i}:")
-                        # repr() will show invisible characters like \n, \t, etc.
-                        print(f"  - Raw representation: {repr(line_str)}")
-                        print("-" * 20)
-                        
+        with open(file_path, 'r', encoding='utf-16') as f:
+            for line in f:
+                lines_read += 1
+                match = group_id_pattern.search(line)
+                if match:
+                    lines_matched += 1
+                    group_id = match.group(1).strip()
+                    reason = match.group(2).strip()
+                    skipped_groups_map[group_id] = reason
     except FileNotFoundError:
         print(f"Error: The file '{file_path}' was not found.")
-        return
+        exit(1)
+    except Exception as e:
+        print(f"An error occurred while reading '{file_path}': {e}")
+        exit(1)
         
-    if lines_found > 0:
-        print(f"\nDiagnostic complete. Found the key phrase in {lines_found} lines.")
+    return skipped_groups_map, lines_read, lines_matched
+
+def get_non_unique_ids(skipped_map: Dict[str, str]) -> List[str]:
+    """
+    Filters the map of skipped groups to find only those skipped due to
+    non-unique bookSourceIds.
+    """
+    non_unique_ids = []
+    for group_id, reason in skipped_map.items():
+        if "multiple distinct booksourceids" in reason.lower():
+            non_unique_ids.append(group_id)
+    return sorted(non_unique_ids)
+
+def compare_logs(file1_path: str, file2_path: str):
+    """Compares two log files for differences and lists non-unique skips."""
+    print(f"Comparing log files:\n- Old Log: {file1_path}\n- New Log: {file2_path}\n")
+
+    map1, read1, matched1 = parse_log_file(file1_path)
+    map2, read2, matched2 = parse_log_file(file2_path)
+
+    ids1 = set(map1.keys())
+    ids2 = set(map2.keys())
+
+    # --- Standard Diagnostics ---
+    print("--- Diagnostics ---")
+    print(f"File 1 ('{file1_path}'):")
+    print(f"  - Total lines read:       {read1:,}")
+    print(f"  - Lines with 'Skipping...': {matched1:,}")
+    print(f"  - Unique skipped IDs found: {len(ids1):,}")
+    print()
+    print(f"File 2 ('{file2_path}'):")
+    print(f"  - Total lines read:       {read2:,}")
+    print(f"  - Lines with 'Skipping...': {matched2:,}")
+    print(f"  - Unique skipped IDs found: {len(ids2):,}")
+    print("-" * 20)
+
+    # --- Difference Calculation ---
+    removed_ids = ids1 - ids2
+    added_ids = ids2 - ids1
+
+    if not removed_ids and not added_ids:
+        print("\n✅ No differences found in the set of skipped groups.")
     else:
-        print("\nDiagnostic complete. The key phrase 'Skipping Group ID' was not found in any line.")
+        if added_ids:
+            print(f"\n➕ Groups ADDED to the skip list in the new log ({len(added_ids):,})")
+            for group_id in sorted(list(added_ids)):
+                print(f"  - {group_id}")
+            print()
+        if removed_ids:
+            print(f"\n➖ Groups REMOVED from the skip list in the new log ({len(removed_ids):,})")
+            for group_id in sorted(list(removed_ids)):
+                print(f"  - {group_id}")
+            print()
+
+    # --- Non-Unique ID Reporting ---
+    non_unique_file1 = get_non_unique_ids(map1)
+    non_unique_file2 = get_non_unique_ids(map2)
+
+    print("\n--- Groups Skipped Due to Non-Unique bookSourceIds ---")
+    if non_unique_file1:
+        print(f"\n📄 From Old Log ('{file1_path}') ({len(non_unique_file1):,}):")
+        for group_id in non_unique_file1:
+            print(f"  - {group_id}")
+    else:
+        print(f"\n📄 No groups found in '{file1_path}' skipped for this reason.")
+        
+    if non_unique_file2:
+        print(f"\n📄 From New Log ('{file2_path}') ({len(non_unique_file2):,}):")
+        for group_id in non_unique_file2:
+            print(f"  - {group_id}")
+    else:
+        print(f"\n📄 No groups found in '{file2_path}' skipped for this reason.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Diagnose a log file for hidden characters or formatting issues."
-    )
-    parser.add_argument("log_file", help="The path to the log file to diagnose.")
+    parser = argparse.ArgumentParser(description="Compare two application logs to find differences in skipped Group IDs.")
+    parser.add_argument("old_log", help="The path to the first or older log file.")
+    parser.add_argument("new_log", help="The path to the second or newer log file.")
     
     args = parser.parse_args()
-    diagnose_file(args.log_file)
+    compare_logs(args.old_log, args.new_log)
