@@ -67,4 +67,36 @@ def compare_logs(file1_path: str, file2_path: str, debug_mode: bool):
     print(f"  - Lines matching pattern: {matched1:,}")
     print(f"  - Unique skipped IDs found: {len(ids_from_file1):,}")
     print()
-    print(f"File 2
+    print(f"File 2 ('{file2_path}'):")
+    print(f"  - Total lines read:       {read2:,}")
+    print(f"  - Lines matching pattern: {matched2:,}")
+    print(f"  - Unique skipped IDs found: {len(ids_from_file2):,}")
+    print("-" * 20)
+
+    removed_ids = ids_from_file1 - ids_from_file2
+    added_ids = ids_from_file2 - ids_from_file1
+
+    if not removed_ids and not added_ids:
+        print("\n✅ No differences found. The set of skipped groups is identical.")
+        if matched1 == 0 and matched2 == 0:
+            print("   Warning: The pattern 'Skipping Group ID <GUID>' was not found in either file.")
+    else:
+        if added_ids:
+            print(f"\n➕ Groups ADDED to the skip list in the new log ({len(added_ids):,})")
+            for group_id in sorted(list(added_ids)):
+                print(f"  - {group_id}")
+            print()
+        if removed_ids:
+            print(f"\n➖ Groups REMOVED from the skip list in the new log ({len(removed_ids):,})")
+            for group_id in sorted(list(removed_ids)):
+                print(f"  - {group_id}")
+            print()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Compare two application logs to find differences in skipped Group IDs.")
+    parser.add_argument("old_log", help="The path to the first or older log file.")
+    parser.add_argument("new_log", help="The path to the second or newer log file.")
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode to print matched lines.")
+    
+    args = parser.parse_args()
+    compare_logs(args.old_log, args.new_log, args.debug)
