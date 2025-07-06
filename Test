@@ -1,30 +1,39 @@
 import re
 import argparse
-from typing import Set
+from typing import Set, Tuple
 
-def parse_log_file(file_path: str) -> Set[str]:
+def parse_log_file(file_path: str) -> Tuple[Set[str], int, int]:
     """
-    Parses a log file to extract all unique Group IDs from 'Skipping' log lines.
+    Parses a log file to extract unique Group IDs from 'Skipping' log lines.
 
-    This version is robust against file encoding issues by ignoring characters
-    that cannot be decoded.
+    This version includes diagnostic counts and a more flexible regex.
 
     Args:
         file_path: The path to the log file.
 
     Returns:
-        A set of unique Group ID strings found in the file.
+        A tuple containing:
+        - A set of unique Group ID strings.
+        - The total number of lines read from the file.
+        - The number of lines that matched the 'Skipping' pattern.
     """
-    group_id_pattern = re.compile(r"Skipping Group ID (.+?):")
+    # This regex is now more flexible, allowing for potential whitespace
+    # variations around the colon.
+    group_id_pattern = re.compile(r"Skipping Group ID (.+?)\s*:")
     skipped_ids = set()
+    lines_read = 0
+    lines_matched = 0
 
     try:
-        # The key change is adding errors='ignore' to handle encoding mismatches.
+        # Open with errors='ignore' to handle potential encoding issues from the terminal.
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             for line in f:
+                lines_read += 1
                 match = group_id_pattern.search(line)
                 if match:
-                    skipped_ids.add(match.group(1))
+                    lines_matched += 1
+                    # The first captured group is the ID. .strip() removes whitespace.
+                    skipped_ids.add(match.group(1).strip())
     except FileNotFoundError:
         print(f"Error: The file '{file_path}' was not found.")
         exit(1)
@@ -32,7 +41,7 @@ def parse_log_file(file_path: str) -> Set[str]:
         print(f"An error occurred while reading '{file_path}': {e}")
         exit(1)
         
-    return skipped_ids
+    return skipped_ids, lines_read, lines_matched
 
 def compare_logs(file1_path: str, file2_path: str):
     """
@@ -44,26 +53,40 @@ def compare_logs(file1_path: str, file2_path: str):
     """
     print(f"Comparing log files:\n- Old Log: {file1_path}\n- New Log: {file2_path}\n")
 
-    ids_from_file1 = parse_log_file(file1_path)
-    ids_from_file2 = parse_log_file(file2_path)
+    ids_from_file1, read1, matched1 = parse_log_file(file1_path)
+    ids_from_file2, read2, matched2 = parse_log_file(file2_path)
+
+    # --- Diagnostic Output ---
+    print("--- Diagnostics ---")
+    print(f"File 1 ('{file1_path}'):")
+    print(f"  - Total lines read:    {read1:,}")
+    print(f"  - Lines with 'Skipping Group ID': {matched1:,}")
+    print(f"  - Unique skipped IDs found:     {len(ids_from_file1):,}")
+    print()
+    print(f"File 2 ('{file2_path}'):")
+    print(f"  - Total lines read:    {read2:,}")
+    print(f"  - Lines with 'Skipping Group ID': {matched2:,}")
+    print(f"  - Unique skipped IDs found:     {len(ids_from_file2):,}")
+    print("-" * 20)
+    # --- End of Diagnostics ---
 
     # Use set mathematics to find the differences.
     removed_ids = ids_from_file1 - ids_from_file2
     added_ids = ids_from_file2 - ids_from_file1
 
-    print("-" * 30)
-    
     if not removed_ids and not added_ids:
-        print("✅ No differences found. The set of skipped groups is identical.")
+        print("\n✅ No differences found. The set of skipped groups is identical.")
+        if matched1 == 0 and matched2 == 0:
+            print("   Warning: No 'Skipping Group ID' lines were matched in either file.")
     else:
         if added_ids:
-            print(f"➕ Groups ADDED to the skip list in the new log ({len(added_ids)}):")
+            print(f"\n➕ Groups ADDED to the skip list in the new log ({len(added_ids)}):")
             for group_id in sorted(list(added_ids)):
                 print(f"  - {group_id}")
             print()
 
         if removed_ids:
-            print(f"➖ Groups REMOVED from the skip list in the new log ({len(removed_ids)}):")
+            print(f"\n➖ Groups REMOVED from the skip list in the new log ({len(removed_ids)}):")
             for group_id in sorted(list(removed_ids)):
                 print(f"  - {group_id}")
             print()
