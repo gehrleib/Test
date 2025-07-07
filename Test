@@ -1,26 +1,100 @@
-# In fetch_section_details method, inside the for loop
+# In APIClient class in CUBE.py
 
-                # Check for the error case first and exit the current loop iteration.
+    async def fetch_section_details(self, group: dict) -> None:
+        """
+        Processes sections within a group if updated since the last run.
+
+        This method fetches full section details, normalizes content, and
+        concurrently fetches previous versions to generate HTML diffs.
+        """
+        # --- Stage 1: Initial Group Date Check & Current Section Details Fetch ---
+        raw_updated_date = group.get("updatedDate")
+        updated_dt = None
+        parsed_successfully = False
+
+        if raw_updated_date:
+            iso = raw_updated_date.replace("Z", "+00:00")
+            try:
+                updated_dt = datetime.fromisoformat(iso)
+                parsed_successfully = True
+            except ValueError:
+                try:
+                    updated_dt = datetime.strptime(raw_updated_date[:19], "%Y-%m-%dT%H:%M:%S")
+                    parsed_successfully = True
+                except ValueError:
+                    logging.warning(f"Failed to parse updatedDate '{raw_updated_date}' for group {group.get('regGroupSourceId', 'Unknown ID')}.")
+        
+        if parsed_successfully and updated_dt and updated_dt.tzinfo is None:
+            updated_dt = updated_dt.replace(tzinfo=timezone.utc)
+
+        if updated_dt and parsed_successfully:
+            group["updatedDate"] = updated_dt.isoformat(timespec="milliseconds")
+
+        if not updated_dt or updated_dt <= LAST_RUN:
+            group["section"] = []
+            return
+
+        section_details_response = await self.make_request(
+            "POST",
+            f"{API_CONNECT_URL}/api/RegSection/RegGroup?includeContent=true",
+            data={"regGroup": [{"sourceId": group.get("regGroupSourceId")}]},
+        )
+        full_section_details_list = section_details_response.get("regSection", [])
+        detail_map = {d.get("sourceId"): d for d in full_section_details_list}
+
+        original_sections_stubs = group.get("section", [])
+        
+        # --- Stage 2: Prepare Sections for Concurrent Diff Processing ---
+        sections_for_diff_processing = []
+        final_processed_sections_list = []
+
+        for section_stub in original_sections_stubs:
+            current_section_id = section_stub.get("sectionSourceId")
+            if not (full_details := detail_map.get(current_section_id)):
+                logging.error(f"Full details for section {current_section_id} not found. Skipping.")
+                continue
+
+            section_stub.update({
+                "versionDate": full_details.get("versionDate"),
+                "title": self._normalize_html_content(full_details.get("title")),
+                "content": self._normalize_html_content(full_details.get("content")),
+                "sectionLink": full_details.get("sectionLink")
+            })
+            section_stub["contentHtmlDiff"] = section_stub["content"]
+
+            if (
+                current_section_id
+                and (ordinal := section_stub.get("sectionVersionOrdinal"))
+                and isinstance(ordinal, int) and ordinal > 1
+                and section_stub["content"] is not None
+            ):
+                prev_version_url = f"{API_CONNECT_URL}/api/RegSection/{current_section_id}/{ordinal - 1}"
+                sections_for_diff_processing.append((section_stub, prev_version_url, current_section_id))
+            else:
+                final_processed_sections_list.append(section_stub)
+    
+        # --- Stage 3: Concurrently Fetch Previous Versions and Generate Diffs ---
+        if sections_for_diff_processing:
+            fetch_tasks = [self.make_request("GET", url) for _, url, _ in sections_for_diff_processing]
+            previous_versions_results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
+
+            for i, result_or_exc in enumerate(previous_versions_results):
+                section_stub, _, current_section_id_for_logging = sections_for_diff_processing[i]
+                
+                # Use a guard clause to handle failed API calls safely.
                 if isinstance(result_or_exc, Exception):
                     final_processed_sections_list.append(section_stub)
                     continue
                 
-                # --- This code is now guaranteed to be safe ---
-                # We use `cast` to explicitly tell Pylance that `result_or_exc` is now
-                # a dictionary, resolving the first "Cannot access attribute 'get'" error.
+                # `cast` is used to inform the static analyzer that `result_or_exc`
+                # is a dictionary here, resolving potential type errors.
                 previous_section_data_wrapper = cast(dict, result_or_exc)
                 raw_previous_content = None
 
-                # --- CORRECTED LOGIC START ---
-                # First, safely get the inner 'section' dictionary from the wrapper.
+                # Safely get the inner 'section' dictionary before accessing its content.
                 section_dict = previous_section_data_wrapper.get("section")
-
-                # Next, check if that inner dictionary exists and is a valid dictionary.
                 if isinstance(section_dict, dict):
-                    # Now Pylance knows that section_dict is not None, so it is safe
-                    # to call .get("content") on it.
                     raw_previous_content = section_dict.get("content")
-                # --- CORRECTED LOGIC END ---
 
                 normalized_previous_content = self._normalize_html_content(raw_previous_content)
                 normalized_current_content = section_stub["content"]
@@ -36,3 +110,11 @@
                         logging.error(f"Error during diff generation for section {current_section_id_for_logging}: {diff_error}")
                 
                 final_processed_sections_list.append(section_stub)
+
+        # --- Stage 4: Finalize Group's Section List ---
+        for section in final_processed_sections_list:
+            section.pop("bookSourceId", None)
+            section.pop("sectionVersionOrdinal", None)
+        
+        sections_with_content = [s for s in final_processed_sections_list if s.get("content")]
+        group["section"] = sections_with_content if sections_with_content else final_processed_sections_list
