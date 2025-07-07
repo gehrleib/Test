@@ -1,3 +1,8 @@
+# At the top of your CUBE.py file, add 'cast' to your typing import
+from typing import Optional, cast 
+
+# ... later in the file ...
+
 # In fetch_section_details method, inside the 'if sections_for_diff_processing:' block
 
             previous_versions_results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
@@ -5,34 +10,34 @@
             for i, result_or_exc in enumerate(previous_versions_results):
                 section_stub, _, current_section_id_for_logging = sections_for_diff_processing[i]
                 
-                # --- CORRECTED LOGIC USING IF/ELSE BLOCK ---
-                # First, check if the result is NOT an exception.
-                if not isinstance(result_or_exc, Exception):
-                    # If it's a successful result, all the diffing logic happens here.
-                    # Pylance knows `result_or_exc` is safe to use inside this block.
-                    previous_section_data_wrapper = result_or_exc
-                    raw_previous_content = None
-
-                    if previous_section_data_wrapper and isinstance(
-                        previous_section_data_wrapper.get("section"), dict
-                    ):
-                        raw_previous_content = previous_section_data_wrapper.get("section").get("content")
-
-                    normalized_previous_content = self._normalize_html_content(raw_previous_content)
-                    normalized_current_content = section_stub["content"]
-
-                    if normalized_previous_content and normalized_current_content != normalized_previous_content:
-                        try:
-                            section_stub["contentHtmlDiff"] = self._generate_placeholder_diff(
-                                normalized_previous_content,
-                                normalized_current_content,
-                                current_section_id_for_logging,
-                            )
-                        except Exception as diff_error:
-                            logging.error(f"Error during diff generation for section {current_section_id_for_logging}: {diff_error}")
-                # If the result WAS an exception, we simply do nothing with it, as the
-                # backoff function has already logged the final error.
+                # --- CORRECTED LOGIC USING A GUARD CLAUSE AND cast ---
+                # Check for the error case first and exit the current loop iteration.
+                if isinstance(result_or_exc, Exception):
+                    final_processed_sections_list.append(section_stub)
+                    continue
                 
-                # This line is now OUTSIDE the if/else block and runs for every item,
-                # ensuring the stub is always added to the final list, regardless of success or failure.
+                # --- This code is now guaranteed to be safe ---
+                # We use `cast` to explicitly tell Pylance that `result_or_exc` is now
+                # a dictionary, resolving the "Cannot access attribute 'get'" error.
+                previous_section_data_wrapper = cast(dict, result_or_exc)
+                raw_previous_content = None
+
+                if previous_section_data_wrapper and isinstance(
+                    previous_section_data_wrapper.get("section"), dict
+                ):
+                    raw_previous_content = previous_section_data_wrapper.get("section").get("content")
+
+                normalized_previous_content = self._normalize_html_content(raw_previous_content)
+                normalized_current_content = section_stub["content"]
+
+                if normalized_previous_content and normalized_current_content != normalized_previous_content:
+                    try:
+                        section_stub["contentHtmlDiff"] = self._generate_placeholder_diff(
+                            normalized_previous_content,
+                            normalized_current_content,
+                            current_section_id_for_logging,
+                        )
+                    except Exception as diff_error:
+                        logging.error(f"Error during diff generation for section {current_section_id_for_logging}: {diff_error}")
+                
                 final_processed_sections_list.append(section_stub)
