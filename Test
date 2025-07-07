@@ -1,69 +1,46 @@
-import argparse
-from collections import Counter
-from typing import List
+# In APIClient class in CUBE.py
 
-def find_duplicate_skips(file_path: str) -> None:
-    """
-    Parses a single log file to find Group IDs that are skipped multiple times.
+    async def fetch_groups(self) -> list:
+        """
+        Fetches all group records from the API with a stable sort order
+        to prevent pagination drift, and logs diagnostic counts.
+        """
+        logging.info("Beginning to fetch group data...")
 
-    Args:
-        file_path: The path to the log file to analyze.
-    """
-    key_phrase = "Skipping Group ID"
-    # We use a list this time to keep all occurrences, including duplicates.
-    all_skipped_ids: List[str] = []
-    lines_read = 0
+        # NOTE: The 'sort' parameter syntax is an example. You must confirm
+        # the correct parameter name and value format from the API documentation.
+        request_data = {
+            "status": "publish",
+            "regGroups": [
+                {"sourceId": "d5b079cf-5041-49b9-8183-5e2da221a343"},
+                {"sourceId": "2af8f5c4-b8c8-4716-94eb-a20ad52a5c9d"},
+                {"sourceId": "2926ead6-0a9a-4b6b-81a8-af5560f3cee0"},
+                {"sourceId": "d9eef6f7-9f33-4247-9d3f-947942857380"},
+                {"sourceId": "3a8bbe26-54fa-4615-8aaa-a8dbe1231259"},
+                {"sourceId": "6d7964c6-26b2-43c5-b474-dc84440a32df"},
+            ],
+            "sort": "createDate,regGroupSourceId" # Example of a stable, multi-level sort
+        }
 
-    try:
-        # Open with 'utf-16' encoding to correctly read PowerShell output logs.
-        with open(file_path, 'r', encoding='utf-16') as f:
-            for line in f:
-                lines_read += 1
-                if key_phrase.lower() in line.lower():
-                    try:
-                        # Split the line to isolate the Group ID.
-                        post_part = line.split(key_phrase, 1)[1]
-                        group_id = post_part.split(':', 1)[0]
-                        all_skipped_ids.append(group_id.strip())
-                    except IndexError:
-                        continue
-    except FileNotFoundError:
-        print(f"Error: The file '{file_path}' was not found.")
-        exit(1)
-    except Exception as e:
-        print(f"An error occurred while reading '{file_path}': {e}")
-        exit(1)
+        # The make_request call will handle pagination and retries.
+        groups = await self.make_request(
+            "POST",
+            f"{API_CONNECT_URL}/api/RegGroup/search",
+            data=request_data,
+        )
+        
+        # --- Diagnostic Count Logging ---
+        total_records_received = len(groups)
+        
+        # Calculate the number of unique groups by creating a set of their IDs.
+        unique_group_ids = {group.get("regGroupSourceId") for group in groups}
+        total_unique_records = len(unique_group_ids)
+        
+        logging.info(f"Fetch complete. Received {total_records_received:,} total records, with {total_unique_records:,} unique group IDs.")
+        
+        # Log a warning if duplicate records were received, which indicates a pagination issue.
+        if total_records_received > total_unique_records:
+            duplicate_count = total_records_received - total_unique_records
+            logging.warning(f"Detected {duplicate_count:,} duplicate group records in the paginated response.")
 
-    # --- Analysis and Reporting ---
-    print(f"\n--- Analysis for: {file_path} ---")
-    print(f"Total lines read: {lines_read:,}")
-    print(f"Total 'Skipping' entries found: {len(all_skipped_ids):,}")
-    print(f"Unique skipped IDs found: {len(set(all_skipped_ids)):,}")
-    print("-" * 30)
-
-    # Count the occurrences of each ID.
-    id_counts = Counter(all_skipped_ids)
-
-    # Filter for IDs that appeared more than once.
-    duplicate_ids = {id: count for id, count in id_counts.items() if count > 1}
-
-    if duplicate_ids:
-        print(f"✅ Found {len(duplicate_ids)} Group IDs that were skipped multiple times:")
-        # Sort by count (descending) and then by ID (ascending) for clear output.
-        sorted_duplicates = sorted(duplicate_ids.items(), key=lambda item: (-item[1], item[0]))
-        for group_id, count in sorted_duplicates:
-            print(f"  - ID: {group_id} (Skipped {count} times)")
-    else:
-        print("✅ No duplicate skipped Group IDs were found in the log file.")
-    
-    print("-" * 30)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Finds and lists Group IDs that were skipped multiple times in a log file."
-    )
-    parser.add_argument("log_file", help="The path to the application log file to analyze.")
-    
-    args = parser.parse_args()
-    find_duplicate_skips(args.log_file)
+        return groups
