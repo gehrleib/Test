@@ -1,43 +1,57 @@
-# ---------------------------------
-# API Endpoint Configuration
-# ---------------------------------
-# The base URL for the authentication server
-API_ID_URL=https://your-api-auth-server.com
-# The base URL for the main connect server
-API_CONNECT_URL=https://your-api-connect-server.com
+# In APIClient class in CUBE.py
 
-# ---------------------------------
-# Credentials and Authentication
-# ---------------------------------
-USER=your_username
-PASSWORD=your_secret_password
-SCOPE=api_scope
-CLIENT_ID=your_client_id
-CLIENT_SECRET=your_client_secret
+    async def check_proxy(self):
+        """
+        Performs a one-time check to verify the proxy is active and reachable.
 
-# ---------------------------------
-# Application-Specific Settings
-# ---------------------------------
-# The custom entity identifier required by the API
-X_CUSTOM_ENTITY=your_custom_entity_value
-# The number of records to fetch per paginated request
-PAGE_LENGTH=2500
+        This version attempts to connect to a list of external services to
+        mitigate the risk of a single service being down. The check only fails
+        if all services in the list are unreachable through the proxy.
+        """
+        # If the proxy is not configured, log it and exit the function.
+        if not self.proxy:
+            logging.info("Proxy is not enabled.")
+            return
 
-# ---------------------------------
-# Script State Management
-# ---------------------------------
-# The timestamp of the last successful script execution.
-# This value is managed automatically by the script. On the very first run,
-# you can leave it blank or use the provided default.
-# Format: YYYY-MM-DDTHH:MM:SS.sss+HH:MM (ISO 8601)
-LAST_RUN=1970-01-01T00:00:00+00:00
+        # A list of reliable, independent public IP checking services.
+        IP_CHECK_SERVICES = [
+            "https://api.ipify.org?format=json",
+            "https://api.seeip.org/jsonip",
+            "https://ipinfo.io/json"
+        ]
+        
+        # Log a masked version of the proxy URL for security.
+        proxy_url_to_log = f"http://{PROXY_USERNAME}:***@{PROXY_URL}"
+        logging.info(f"Proxy is enabled. Verifying connection to {proxy_url_to_log}...")
+        
+        if not self.session:
+            raise RuntimeError("Cannot check proxy status: ClientSession is not initialized.")
 
-# ---------------------------------
-# Optional Proxy Configuration
-# ---------------------------------
-# Set to 'true' to enable the proxy, or 'false' to disable it.
-USE_PROXY=false
-# The following are only required if USE_PROXY is set to 'true'
-PROXY_USERNAME=your_proxy_username
-PROXY_PASSWORD=your_proxy_password
-PROXY_URL=proxy.server.com:8080
+        last_error = None
+        for service_url in IP_CHECK_SERVICES:
+            try:
+                logging.debug(f"Attempting proxy check with service: {service_url}")
+                async with self.session.get(service_url, proxy=self.proxy, timeout=10) as response:
+                    # A 407 error is a "good" failure; it means the proxy is working but credentials are bad.
+                    if response.status == 407:
+                        logging.critical("Proxy Verification Failed: 407 Proxy Authentication Required. Please check credentials in config file.")
+                        sys.exit("Exiting due to proxy authentication failure.")
+                    
+                    response.raise_for_status()
+                    
+                    data = await response.json()
+                    public_ip = data.get("ip")
+                    logging.info(f"✅ Proxy verification successful. Outbound IP is {public_ip} (checked via {service_url})")
+                    return # Exit the function on the first successful check.
+
+            except Exception as e:
+                # If a service fails, log it as a warning and try the next one.
+                logging.warning(f"Proxy check service {service_url} failed. Error: {e}")
+                last_error = e
+                continue # Move to the next service in the list.
+
+        # This block only runs if the loop completes without a successful return.
+        logging.critical("Proxy Verification Failed: Could not connect through the proxy. All IP-checking services failed.")
+        if last_error:
+            logging.critical(f"Last known error: {last_error}")
+        sys.exit("Exiting due to proxy connection failure.")
