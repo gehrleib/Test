@@ -2,56 +2,74 @@
 
     async def check_proxy(self):
         """
-        Performs a one-time check to verify the proxy is active and reachable.
+        Performs a one-time, robust check to verify the proxy is active and routing traffic.
 
-        This version attempts to connect to a list of external services to
-        mitigate the risk of a single service being down. The check only fails
-        if all services in the list are unreachable through the proxy.
+        This method compares the public IP address seen with a direct connection vs.
+        a proxied connection. It correctly handles environments where a direct
+        connection is not allowed and silently tries multiple IP services for resilience.
         """
-        # If the proxy is not configured, log it and exit the function.
         if not self.proxy:
-            logging.info("Proxy is not enabled.")
+            logging.info("Proxy is not enabled. Skipping verification.")
             return
 
-        # A list of reliable, independent public IP checking services.
         IP_CHECK_SERVICES = [
             "https://api.ipify.org?format=json",
             "https://api.seeip.org/jsonip",
             "https://ipinfo.io/json"
         ]
         
-        # Log a masked version of the proxy URL for security.
-        proxy_url_to_log = f"http://{PROXY_USERNAME}:***@{PROXY_URL}"
-        logging.info(f"Proxy is enabled. Verifying connection to {proxy_url_to_log}...")
+        timeout = aiohttp.ClientTimeout(total=15)
         
         if not self.session:
             raise RuntimeError("Cannot check proxy status: ClientSession is not initialized.")
 
-        last_error = None
+        # --- Step 1: Attempt to get the public IP with a DIRECT connection ---
+        direct_ip = None
+        logging.info("Performing proxy check: Attempting to establish a direct connection...")
         for service_url in IP_CHECK_SERVICES:
             try:
-                logging.debug(f"Attempting proxy check with service: {service_url}")
-                async with self.session.get(service_url, proxy=self.proxy, timeout=10) as response:
-                    # A 407 error is a "good" failure; it means the proxy is working but credentials are bad.
+                async with self.session.get(service_url, timeout=timeout, proxy=None) as response:
+                    response.raise_for_status()
+                    data = await response.json()
+                    direct_ip = data.get("ip")
+                    if direct_ip:
+                        logging.info(f"Direct connection successful. Public IP without proxy is: {direct_ip}")
+                        break
+            except Exception:
+                # If a service fails, silently try the next one.
+                continue
+        
+        if not direct_ip:
+            logging.warning("Could not establish a direct connection. This may be expected if a proxy is required.")
+
+        # --- Step 2: Get the public IP WITH the proxy enabled ---
+        proxy_ip = None
+        proxy_url_to_log = f"http://{PROXY_USERNAME}:***@{PROXY_URL}"
+        logging.info(f"Proxy is enabled. Attempting to connect via proxy: {proxy_url_to_log}...")
+        for service_url in IP_CHECK_SERVICES:
+            try:
+                async with self.session.get(service_url, proxy=self.proxy, timeout=timeout) as response:
                     if response.status == 407:
-                        logging.critical("Proxy Verification Failed: 407 Proxy Authentication Required. Please check credentials in config file.")
+                        logging.critical("Proxy Verification Failed: 407 Proxy Authentication Required. Please check credentials.")
                         sys.exit("Exiting due to proxy authentication failure.")
                     
                     response.raise_for_status()
-                    
                     data = await response.json()
-                    public_ip = data.get("ip")
-                    logging.info(f"✅ Proxy verification successful. Outbound IP is {public_ip} (checked via {service_url})")
-                    return # Exit the function on the first successful check.
+                    proxy_ip = data.get("ip")
+                    if proxy_ip:
+                        logging.info(f"Proxy connection successful. The proxy's public IP is: {proxy_ip}")
+                        break
+            except Exception:
+                # If a service fails, silently try the next one.
+                continue
 
-            except Exception as e:
-                # If a service fails, log it as a warning and try the next one.
-                logging.warning(f"Proxy check service {service_url} failed. Error: {e}")
-                last_error = e
-                continue # Move to the next service in the list.
+        # --- Step 3: Compare IPs and Determine Final Status ---
+        if not proxy_ip:
+            logging.critical("Proxy Verification Failed: Could not get a response through the proxy from any IP service.")
+            sys.exit("Exiting due to proxy connection failure.")
 
-        # This block only runs if the loop completes without a successful return.
-        logging.critical("Proxy Verification Failed: Could not connect through the proxy. All IP-checking services failed.")
-        if last_error:
-            logging.critical(f"Last known error: {last_error}")
-        sys.exit("Exiting due to proxy connection failure.")
+        if direct_ip and direct_ip == proxy_ip:
+            logging.critical(f"Proxy Verification Failed: The IP address with and without the proxy is the same ({direct_ip}). The proxy is not routing traffic.")
+            sys.exit("Exiting because proxy is not functional.")
+        
+        logging.info("Proxy verification successful. Traffic is correctly routed through the proxy IP.")
