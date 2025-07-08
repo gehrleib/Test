@@ -3,17 +3,12 @@
     async def check_proxy(self):
         """
         Performs a one-time, robust check to verify the proxy is active and routing traffic.
-        This version provides a clearer, more logical sequence of log messages.
+        This version uses a clear and professional logging style.
         """
         if not self.proxy:
             logging.info("Proxy is not enabled. Skipping verification.")
             return
 
-        # --- REVISED LOGGING FLOW ---
-        # 1. Announce the start of the verification process.
-        proxy_url_to_log = f"http://{PROXY_USERNAME}:***@{PROXY_URL}"
-        logging.info(f"Proxy is enabled. Starting verification for: {proxy_url_to_log}")
-        
         IP_CHECK_SERVICES = [
             "https://api.ipify.org?format=json",
             "https://api.seeip.org/jsonip",
@@ -24,9 +19,12 @@
         if not self.session:
             raise RuntimeError("Cannot check proxy status: ClientSession is not initialized.")
 
-        # --- Step 1: Attempt to get the public IP with a DIRECT connection ---
+        # Announce the start of the verification process.
+        proxy_url_to_log = f"http://{PROXY_USERNAME}:***@{PROXY_URL}"
+        logging.info(f"Proxy is enabled. Verifying connection for: {proxy_url_to_log}")
+
+        # Step 1: Attempt to get the public IP with a direct connection.
         direct_ip = None
-        logging.info("--> Step 1 of 2: Attempting to establish a direct connection...")
         for service_url in IP_CHECK_SERVICES:
             try:
                 async with self.session.get(service_url, timeout=timeout, proxy=None) as response:
@@ -34,17 +32,17 @@
                     data = await response.json()
                     direct_ip = data.get("ip")
                     if direct_ip:
-                        logging.info(f"    Direct connection successful. Public IP without proxy is: {direct_ip}")
                         break
             except Exception:
                 continue
         
         if not direct_ip:
-            logging.warning("    Could not establish a direct connection. This may be expected if a proxy is required.")
+            logging.warning("Proxy check: Could not establish a direct connection.")
+        else:
+            logging.info(f"Proxy check: Direct connection IP is {direct_ip}.")
 
-        # --- Step 2: Get the public IP WITH the proxy enabled ---
+        # Step 2: Get the public IP WITH the proxy enabled.
         proxy_ip = None
-        logging.info("--> Step 2 of 2: Attempting to connect via proxy...")
         for service_url in IP_CHECK_SERVICES:
             try:
                 async with self.session.get(service_url, proxy=self.proxy, timeout=timeout) as response:
@@ -56,12 +54,11 @@
                     data = await response.json()
                     proxy_ip = data.get("ip")
                     if proxy_ip:
-                        logging.info(f"    Proxy connection successful. The proxy's public IP is: {proxy_ip}")
                         break
             except Exception:
                 continue
 
-        # --- Step 3: Compare IPs and Determine Final Status ---
+        # Step 3: Compare IPs and Determine Final Status.
         if not proxy_ip:
             logging.critical("Proxy Verification Failed: Could not get a response through the proxy.")
             sys.exit("Exiting due to proxy connection failure.")
@@ -70,4 +67,4 @@
             logging.critical(f"Proxy Verification Failed: The IP address is the same with and without the proxy ({direct_ip}). The proxy is not routing traffic.")
             sys.exit("Exiting because proxy is not functional.")
         
-        logging.info("Proxy verification successful. Traffic is correctly routed through the proxy.")
+        logging.info(f"Proxy verification successful. Traffic is correctly routed through proxy IP: {proxy_ip}")
