@@ -1,27 +1,31 @@
-# In APIClient class
+# In APIClient class in CUBE.py
 
     async def get_token(self, force_refresh: bool = False) -> str:
         """
-        Retrieves a valid authentication token, using a lock to prevent
-        race conditions from multiple concurrent requests.
+        Retrieves a valid authentication token, using a lock and a cooldown
+        timestamp to prevent race conditions from multiple concurrent requests.
         """
-        # First, check if the token is valid without acquiring the lock.
-        # This is a quick path for the majority of calls.
-        if not force_refresh and self.token and self.token_expiration and \
-           time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
-            return self.token
-
-        # If a refresh is needed, acquire the lock to ensure only one task proceeds.
+        # First, acquire the lock to ensure only one task can check or refresh
+        # the token at a time.
         async with self._token_lock:
-            # After acquiring the lock, we RE-CHECK the token's validity.
-            # This handles the case where another task has just finished refreshing it
-            # while this task was waiting for the lock.
+            # Check if a forced refresh is requested, but one just happened.
+            # This is the cooldown logic that solves the race condition.
+            if force_refresh and self.last_token_refresh_time:
+                time_since_last_refresh = time.time() - self.last_token_refresh_time
+                if time_since_last_refresh < 15:  # 15-second cooldown period
+                    logging.debug(
+                        f"Forced refresh requested, but a refresh occurred {time_since_last_refresh:.1f}s ago. "
+                        "Using existing token."
+                    )
+                    if self.token:
+                        return self.token
+
+            # After handling the cooldown, check if the current token is still valid.
             if not force_refresh and self.token and self.token_expiration and \
                time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
                 return self.token
 
-            # If we are here, we are the first and only task to get the lock while
-            # the token is expired or a refresh is forced.
+            # If we are here, we must fetch a new token.
             if self.session is None:
                 raise RuntimeError("ClientSession not initialized.")
 
@@ -44,6 +48,8 @@
 
                 self.token = token_data["access_token"]
                 self.token_expiration = time.time() + token_data["expires_in"]
+                # Update the timestamp after every successful refresh.
+                self.last_token_refresh_time = time.time()
                 
                 logging.info("Successfully fetched new API token.")
                 return self.token
