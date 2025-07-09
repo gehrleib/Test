@@ -2,30 +2,29 @@
 
     async def get_token(self, force_refresh: bool = False) -> str:
         """
-        Retrieves a valid authentication token, using a lock and a cooldown
-        timestamp to prevent race conditions from multiple concurrent requests.
+        Retrieves a valid authentication token, using a "double-checked locking"
+        pattern to prevent race conditions from multiple concurrent requests.
         """
-        # First, acquire the lock to ensure only one task can check or refresh
-        # the token at a time.
-        async with self._token_lock:
-            # Check if a forced refresh is requested, but one just happened.
-            # This is the cooldown logic that solves the race condition.
-            if force_refresh and self.last_token_refresh_time:
-                time_since_last_refresh = time.time() - self.last_token_refresh_time
-                if time_since_last_refresh < 15:  # 15-second cooldown period
-                    logging.debug(
-                        f"Forced refresh requested, but a refresh occurred {time_since_last_refresh:.1f}s ago. "
-                        "Using existing token."
-                    )
-                    if self.token:
-                        return self.token
+        # First, check if the token is valid without acquiring the lock.
+        # This is a fast path for the majority of calls that do not need a refresh.
+        if not force_refresh and self.token and self.token_expiration and \
+           time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
+            return self.token
 
-            # After handling the cooldown, check if the current token is still valid.
-            if not force_refresh and self.token and self.token_expiration and \
+        # If a refresh is needed, acquire the lock to ensure only one task proceeds.
+        async with self._token_lock:
+            # --- The Critical Second Check ---
+            # After acquiring the lock, we RE-CHECK the token's validity.
+            # This solves the race condition: if another task just refreshed the
+            # token while this task was waiting, this check will pass, and we
+            # will return the new token instantly without another API call,
+            # even if this task was originally called with force_refresh=True.
+            if self.token and self.token_expiration and \
                time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
                 return self.token
 
-            # If we are here, we must fetch a new token.
+            # If we are here, we are the only task holding the lock while the
+            # token is expired, so we must fetch a new one.
             if self.session is None:
                 raise RuntimeError("ClientSession not initialized.")
 
@@ -48,8 +47,6 @@
 
                 self.token = token_data["access_token"]
                 self.token_expiration = time.time() + token_data["expires_in"]
-                # Update the timestamp after every successful refresh.
-                self.last_token_refresh_time = time.time()
                 
                 logging.info("Successfully fetched new API token.")
                 return self.token
