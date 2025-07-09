@@ -1,52 +1,33 @@
-# In APIClient class in CUBE.py
+Of course. That's a critical detail that makes the purpose of the `activeGroup.xml` file much clearer. You are right to want to include it.
 
-    async def get_token(self, force_refresh: bool = False) -> str:
-        """
-        Retrieves a valid authentication token, using a "double-checked locking"
-        pattern to prevent race conditions from multiple concurrent requests.
-        """
-        # First, check if the token is valid without acquiring the lock.
-        # This is a fast path for the majority of calls that do not need a refresh.
-        if not force_refresh and self.token and self.token_expiration and \
-           time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
-            return self.token
+Here is the final, revised explanation that incorporates this key piece of the workflow.
 
-        # If a refresh is needed, acquire the lock to ensure only one task proceeds.
-        async with self._token_lock:
-            # --- The Critical Second Check ---
-            # After acquiring the lock, we RE-CHECK the token's validity.
-            # This solves the race condition: if another task just refreshed the
-            # token while this task was waiting, this check will pass, and we
-            # will return the new token instantly without another API call,
-            # even if this task was originally called with force_refresh=True.
-            if self.token and self.token_expiration and \
-               time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
-                return self.token
+***
 
-            # If we are here, we are the only task holding the lock while the
-            # token is expired, so we must fetch a new one.
-            if self.session is None:
-                raise RuntimeError("ClientSession not initialized.")
+### **Overview of the Daily Data Synchronization Process**
 
-            logging.info("Fetching new API token...")
-            url = f"{API_ID_URL}/connect/token"
-            headers = {"Content-Type": "application/x-www-form-urlencoded"}
-            data = {
-                "grant_type": "password",
-                "username": os.getenv("USER"),
-                "password": os.getenv("PASSWORD"),
-                "scope": os.getenv("SCOPE"),
-                "client_id": os.getenv("CLIENT_ID"),
-                "client_secret": os.getenv("CLIENT_SECRET"),
-            }
+Our script performs a daily synchronization to ensure our system accurately mirrors the data in the CUBE API. This process is divided into two main phases: fetching a complete snapshot of all active groups and then processing the specific changes since the last run.
 
-            async with self.session.post(url, data=data, headers=headers, proxy=self.proxy) as response:
-                response.raise_for_status()
-                text_content = await response.text()
-                token_data = orjson.loads(text_content)
+Here is a simplified breakdown of the steps:
 
-                self.token = token_data["access_token"]
-                self.token_expiration = time.time() + token_data["expires_in"]
-                
-                logging.info("Successfully fetched new API token.")
-                return self.token
+#### **Phase 1: Getting a Complete Snapshot of Active Groups**
+
+The first and most important step is to understand the current state of all data.
+
+* **Full Data Pull:** Once a day, the script fetches the entire list of all **~49,000 published RegGroups** from the API.
+* **Why We Don't Use a Date Parameter:** We intentionally do **not** use an `updatedDate` filter in this initial call. This is because filtering by date would not allow us to identify records that have been **deleted or archived**, as those would simply be absent from the response. Therefore, a complete data pull is the only way to reliably detect which groups have been removed.
+* **Filtering:** After receiving the raw data, our script filters it to create a master list of all "active" groups that meet our ingestion criteria (e.g., not archived, has sections, etc.).
+* **The `activeGroup.xml` File:** The final, filtered list of all active Group IDs is written to the `activeGroup.xml` file. This file serves as the definitive **source of truth** for our system. Our downstream process then compares this list to the groups currently in our database (`regcomp`); **any group in our system that is *not* on this new list is subsequently archived.**
+
+---
+#### **Phase 2: Processing Deltas (Changes)**
+
+Once we have the complete list of active groups, the script then identifies what has changed since the last successful run.
+
+* **Identifying Changes:** The script compares the `updatedDate` of each active group against the timestamp from its last run (`LAST_RUN`). This creates a much smaller list of only the groups that have been modified.
+* **Fetching Detailed Information:** We then make a second set of API calls to fetch the detailed section information *only* for this small subset of updated groups.
+* **The Delta Files:** The final three files are generated based on these changes:
+    * `groupUpdates.xml` contains the full data for only the groups that were updated.
+    * `issuance.xml` and `issuingBody.xml` contain the corresponding lookup information for those updated groups.
+
+This two-phase approach ensures that we can both maintain a complete and accurate list of all active groups (including handling deletions) while also efficiently processing only the specific changes that have occurred each day.
