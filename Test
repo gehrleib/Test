@@ -1,45 +1,49 @@
-# In APIClient class in CUBE.py
+# In APIClient class
 
-    async def _process_updated_groups(self, groups: list):
+    async def get_token(self, force_refresh: bool = False) -> str:
         """
-        Identifies recently updated groups and orchestrates the fetching
-        of their section details in concurrent chunks.
-
-        Args:
-            groups: The full list of filtered and normalized group objects.
+        Retrieves a valid authentication token, using a lock to prevent
+        race conditions from multiple concurrent requests.
         """
-        logging.info("Identifying groups that have been updated since the last run...")
-        
-        groups_to_process = []
-        for group in groups:
-            raw_updated_date = group.get("updatedDate")
-            if not raw_updated_date:
-                continue
+        # First, check if the token is valid without acquiring the lock.
+        # This is a quick path for the majority of calls.
+        if not force_refresh and self.token and self.token_expiration and \
+           time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
+            return self.token
 
-            iso_date = raw_updated_date.replace("Z", "+00:00")
-            try:
-                updated_dt = datetime.fromisoformat(iso_date)
-            except ValueError:
-                try:
-                    updated_dt = datetime.strptime(iso_date[:19], "%Y-%m-%dT%H:%M:%S")
-                except ValueError:
-                    continue
-            
-            if updated_dt.tzinfo is None:
-                updated_dt = updated_dt.replace(tzinfo=timezone.utc)
+        # If a refresh is needed, acquire the lock to ensure only one task proceeds.
+        async with self._token_lock:
+            # After acquiring the lock, we RE-CHECK the token's validity.
+            # This handles the case where another task has just finished refreshing it
+            # while this task was waiting for the lock.
+            if not force_refresh and self.token and self.token_expiration and \
+               time.time() < self.token_expiration - TOKEN_REFRESH_THRESHOLD:
+                return self.token
 
-            if updated_dt > LAST_RUN:
-                groups_to_process.append(group)
-        
-        if not groups_to_process:
-            logging.info("No new group updates require section processing.")
-            return
+            # If we are here, we are the first and only task to get the lock while
+            # the token is expired or a refresh is forced.
+            if self.session is None:
+                raise RuntimeError("ClientSession not initialized.")
 
-        logging.info(f"Found {len(groups_to_process):,} updated groups. Beginning to fetch their section details...")
-        
-        chunk_size = 25
-        for i in range(0, len(groups_to_process), chunk_size):
-            chunk = groups_to_process[i : i + chunk_size]
-            await asyncio.gather(
-                *(self.fetch_section_details(group) for group in chunk)
-            )
+            logging.info("Fetching new API token...")
+            url = f"{API_ID_URL}/connect/token"
+            headers = {"Content-Type": "application/x-www-form-urlencoded"}
+            data = {
+                "grant_type": "password",
+                "username": os.getenv("USER"),
+                "password": os.getenv("PASSWORD"),
+                "scope": os.getenv("SCOPE"),
+                "client_id": os.getenv("CLIENT_ID"),
+                "client_secret": os.getenv("CLIENT_SECRET"),
+            }
+
+            async with self.session.post(url, data=data, headers=headers, proxy=self.proxy) as response:
+                response.raise_for_status()
+                text_content = await response.text()
+                token_data = orjson.loads(text_content)
+
+                self.token = token_data["access_token"]
+                self.token_expiration = time.time() + token_data["expires_in"]
+                
+                logging.info("Successfully fetched new API token.")
+                return self.token
