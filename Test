@@ -1,36 +1,45 @@
-Of course. It's a great idea to equip your business owner with that suggestion, as it adds urgency and opens up another channel for resolution.
+# In APIClient class in CUBE.py
 
-Here is the final revised email. It now includes a clear, actionable suggestion for them at the end.
+    async def _process_updated_groups(self, groups: list):
+        """
+        Identifies recently updated groups and orchestrates the fetching
+        of their section details in concurrent chunks.
 
-***
+        Args:
+            groups: The full list of filtered and normalized group objects.
+        """
+        logging.info("Identifying groups that have been updated since the last run...")
+        
+        groups_to_process = []
+        for group in groups:
+            raw_updated_date = group.get("updatedDate")
+            if not raw_updated_date:
+                continue
 
-**Subject: Important Update: Data Integrity Issue with CUBE API Synchronization**
+            iso_date = raw_updated_date.replace("Z", "+00:00")
+            try:
+                updated_dt = datetime.fromisoformat(iso_date)
+            except ValueError:
+                try:
+                    updated_dt = datetime.strptime(iso_date[:19], "%Y-%m-%dT%H:%M:%S")
+                except ValueError:
+                    continue
+            
+            if updated_dt.tzinfo is None:
+                updated_dt = updated_dt.replace(tzinfo=timezone.utc)
 
-**To:** [Business Owner's Name]
+            if updated_dt > LAST_RUN:
+                groups_to_process.append(group)
+        
+        if not groups_to_process:
+            logging.info("No new group updates require section processing.")
+            return
 
-**Hi [Business Owner's Name],**
-
-I'm writing to inform you of a data integrity issue we've identified with our automated CUBE data synchronization process.
-
-**What is Happening?**
-
-Our application performs a daily sync with the CUBE API to ensure our data is up-to-date. We have discovered that when we fetch the large dataset of all regulatory groups, the API provides the data in an inconsistent order. This is causing our script to receive duplicate records while missing others entirely during a single run.
-
-**Business Impact**
-
-This "pagination drift" prevents us from getting a reliable and complete snapshot of the active groups. The primary business risk is to our data integrity, specifically:
-
-* **Inaccurate Archiving:** We cannot accurately determine which groups should be archived in our system.
-* **Mitigation Step:** To prevent data corruption, we have **temporarily disabled the automated archiving feature**. While this protects our data integrity, it means our system will gradually fall out of sync with the source until a permanent solution is in place.
-
-**Current Status & Next Steps**
-
-We are confident this issue is inherent to how the data is being served by the API. We are in contact with the CUBE vendor's technical team and have provided them with a detailed analysis. They have acknowledged the issue and are currently investigating internally.
-
-Given the impact on our data synchronization, this may be something you wish to raise in your next daily or weekly chat with the CUBE team to ensure it gets the appropriate visibility.
-
-I will keep you updated as we work with the vendor toward a resolution. Please let me know if you have any questions.
-
-Best regards,
-
-Brandon
+        logging.info(f"Found {len(groups_to_process):,} updated groups. Beginning to fetch their section details...")
+        
+        chunk_size = 25
+        for i in range(0, len(groups_to_process), chunk_size):
+            chunk = groups_to_process[i : i + chunk_size]
+            await asyncio.gather(
+                *(self.fetch_section_details(group) for group in chunk)
+            )
