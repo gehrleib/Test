@@ -1,33 +1,115 @@
-Of course. That's a critical detail that makes the purpose of the `activeGroup.xml` file much clearer. You are right to want to include it.
+import os
+import glob
+import xmltodict
+import json
+import argparse
+from datetime import datetime
 
-Here is the final, revised explanation that incorporates this key piece of the workflow.
+def find_files(directory: str, file_type: str) -> list:
+    """Finds all XML files in a directory that match a given type."""
+    pattern = os.path.join(directory, f"{file_type}_*.xml")
+    files = glob.glob(pattern)
+    if not files:
+        print(f"Warning: No files found matching pattern: {pattern}")
+    else:
+        print(f"Found {len(files)} files to combine for type '{file_type}'.")
+    return files
 
-***
+def combine_and_deduplicate_records(file_paths: list, file_type: str) -> list:
+    """
+    Parses multiple XML files, combines their records, and removes duplicates.
 
-### **Overview of the Daily Data Synchronization Process**
+    Args:
+        file_paths: A list of paths to the XML files.
+        file_type: The singular name of the record type (e.g., 'group').
 
-Our script performs a daily synchronization to ensure our system accurately mirrors the data in the CUBE API. This process is divided into two main phases: fetching a complete snapshot of all active groups and then processing the specific changes since the last run.
+    Returns:
+        A list of unique records (as dictionaries).
+    """
+    all_records = []
+    # The root element is usually the plural form of the file type.
+    root_element_name = file_type + 's' if not file_type.endswith('s') else file_type
+    
+    for file_path in file_paths:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = xmltodict.parse(f.read())
+                # Navigate to the list of records.
+                records = data.get(root_element_name, {}).get(file_type, [])
+                if records:
+                    # If there's only one record, it might not be in a list.
+                    if not isinstance(records, list):
+                        records = [records]
+                    all_records.extend(records)
+        except Exception as e:
+            print(f"Error processing file {file_path}: {e}")
+            continue
 
-Here is a simplified breakdown of the steps:
+    if not all_records:
+        return []
 
-#### **Phase 1: Getting a Complete Snapshot of Active Groups**
+    # --- Deduplication Process ---
+    # To find duplicates, we convert each dictionary record into a "hashable"
+    # string. A set then automatically handles removing the duplicates.
+    unique_records_set = set()
+    unique_records_list = []
 
-The first and most important step is to understand the current state of all data.
+    for record in all_records:
+        # Convert dict to a sorted JSON string to create a unique signature.
+        record_signature = json.dumps(record, sort_keys=True)
+        if record_signature not in unique_records_set:
+            unique_records_set.add(record_signature)
+            unique_records_list.append(record)
+            
+    return unique_records_list
 
-* **Full Data Pull:** Once a day, the script fetches the entire list of all **~49,000 published RegGroups** from the API.
-* **Why We Don't Use a Date Parameter:** We intentionally do **not** use an `updatedDate` filter in this initial call. This is because filtering by date would not allow us to identify records that have been **deleted or archived**, as those would simply be absent from the response. Therefore, a complete data pull is the only way to reliably detect which groups have been removed.
-* **Filtering:** After receiving the raw data, our script filters it to create a master list of all "active" groups that meet our ingestion criteria (e.g., not archived, has sections, etc.).
-* **The `activeGroup.xml` File:** The final, filtered list of all active Group IDs is written to the `activeGroup.xml` file. This file serves as the definitive **source of truth** for our system. Our downstream process then compares this list to the groups currently in our database (`regcomp`); **any group in our system that is *not* on this new list is subsequently archived.**
+def write_combined_xml(records: list, file_type: str, output_directory: str):
+    """Writes the final list of unique records to a new combined XML file."""
+    if not records:
+        print("No unique records found to write.")
+        return
 
----
-#### **Phase 2: Processing Deltas (Changes)**
+    # The root element is the plural form.
+    root_container_name = file_type + 's' if not file_type.endswith('s') else file_type
+    
+    xml_data_structure = {
+        root_container_name: {
+            file_type: records,
+            "@count": str(len(records)),
+        }
+    }
 
-Once we have the complete list of active groups, the script then identifies what has changed since the last successful run.
+    # Generate a unique output filename.
+    output_file_name = f"{file_type}_combined_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xml"
+    output_path = os.path.join(output_directory, output_file_name)
 
-* **Identifying Changes:** The script compares the `updatedDate` of each active group against the timestamp from its last run (`LAST_RUN`). This creates a much smaller list of only the groups that have been modified.
-* **Fetching Detailed Information:** We then make a second set of API calls to fetch the detailed section information *only* for this small subset of updated groups.
-* **The Delta Files:** The final three files are generated based on these changes:
-    * `groupUpdates.xml` contains the full data for only the groups that were updated.
-    * `issuance.xml` and `issuingBody.xml` contain the corresponding lookup information for those updated groups.
+    try:
+        xml_string = xmltodict.unparse(
+            xml_data_structure,
+            pretty=True,
+            indent=" " * 4,
+            full_document=True,
+        )
+        with open(output_path, "w", encoding="utf-8") as outfile:
+            outfile.write(xml_string)
+        print(f"Successfully created combined file: {output_path}")
+    except Exception as e:
+        print(f"Error writing combined XML file: {e}")
 
-This two-phase approach ensures that we can both maintain a complete and accurate list of all active groups (including handling deletions) while also efficiently processing only the specific changes that have occurred each day.
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Combine multiple XML files of the same type and remove duplicate records."
+    )
+    parser.add_argument("directory", help="The directory containing the XML files (e.g., './output').")
+    parser.add_argument("file_type", help="The base name of the files to combine (e.g., 'group', 'issuance').")
+    
+    args = parser.parse_args()
+
+    # Execute the workflow
+    xml_files = find_files(args.directory, args.file_type)
+    if xml_files:
+        unique_records = combine_and_deduplicate_records(xml_files, args.file_type)
+        print(f"Total unique records found: {len(unique_records)}")
+        write_combined_xml(unique_records, args.file_type, args.directory)
+    else:
+        print("No files to process.")
