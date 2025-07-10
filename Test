@@ -5,6 +5,18 @@ import json
 import argparse
 from datetime import datetime
 
+def get_plural_form(singular: str) -> str:
+    """
+    Determines the correct plural form for a given word.
+    This is the key change to fix the 'issuingBody' issue.
+    """
+    if singular.endswith('y'):
+        # Handles words like 'issuingBody' -> 'issuingBodies'
+        return singular[:-1] + 'ies'
+    else:
+        # Handles words like 'group' -> 'groups'
+        return singular + 's'
+
 def find_files(directory: str, file_type: str) -> list:
     """Finds all XML files in a directory that match a given type."""
     pattern = os.path.join(directory, f"{file_type}_*.xml")
@@ -18,26 +30,20 @@ def find_files(directory: str, file_type: str) -> list:
 def combine_and_deduplicate_records(file_paths: list, file_type: str) -> list:
     """
     Parses multiple XML files, combines their records, and removes duplicates.
-
-    Args:
-        file_paths: A list of paths to the XML files.
-        file_type: The singular name of the record type (e.g., 'group').
-
-    Returns:
-        A list of unique records (as dictionaries).
     """
     all_records = []
-    # The root element is usually the plural form of the file type.
-    root_element_name = file_type + 's' if not file_type.endswith('s') else file_type
+    # Use the new helper function to get the correct plural root element name.
+    root_element_name = get_plural_form(file_type)
     
     for file_path in file_paths:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = xmltodict.parse(f.read())
-                # Navigate to the list of records.
+                # Navigate to the list of records using the correct root name.
                 records = data.get(root_element_name, {}).get(file_type, [])
                 if records:
-                    # If there's only one record, it might not be in a list.
+                    # If there's only one record, xmltodict doesn't create a list.
+                    # This ensures it's always treated as a list.
                     if not isinstance(records, list):
                         records = [records]
                     all_records.extend(records)
@@ -48,14 +54,10 @@ def combine_and_deduplicate_records(file_paths: list, file_type: str) -> list:
     if not all_records:
         return []
 
-    # --- Deduplication Process ---
-    # To find duplicates, we convert each dictionary record into a "hashable"
-    # string. A set then automatically handles removing the duplicates.
+    # Deduplicate records by creating a unique signature for each one.
     unique_records_set = set()
     unique_records_list = []
-
     for record in all_records:
-        # Convert dict to a sorted JSON string to create a unique signature.
         record_signature = json.dumps(record, sort_keys=True)
         if record_signature not in unique_records_set:
             unique_records_set.add(record_signature)
@@ -69,8 +71,8 @@ def write_combined_xml(records: list, file_type: str, output_directory: str):
         print("No unique records found to write.")
         return
 
-    # The root element is the plural form.
-    root_container_name = file_type + 's' if not file_type.endswith('s') else file_type
+    # Use the helper function again for the final output file.
+    root_container_name = get_plural_form(file_type)
     
     xml_data_structure = {
         root_container_name: {
@@ -79,7 +81,6 @@ def write_combined_xml(records: list, file_type: str, output_directory: str):
         }
     }
 
-    # Generate a unique output filename.
     output_file_name = f"{file_type}_combined_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xml"
     output_path = os.path.join(output_directory, output_file_name)
 
@@ -101,15 +102,14 @@ if __name__ == "__main__":
         description="Combine multiple XML files of the same type and remove duplicate records."
     )
     parser.add_argument("directory", help="The directory containing the XML files (e.g., './output').")
-    parser.add_argument("file_type", help="The base name of the files to combine (e.g., 'group', 'issuance').")
+    parser.add_argument("file_type", help="The base name of the files to combine (e.g., 'group', 'issuingBody').")
     
     args = parser.parse_args()
 
-    # Execute the workflow
     xml_files = find_files(args.directory, args.file_type)
     if xml_files:
         unique_records = combine_and_deduplicate_records(xml_files, args.file_type)
-        print(f"Total unique records found: {len(unique_records)}")
+        print(f"Total unique records found: {len(unique_records):,}")
         write_combined_xml(unique_records, args.file_type, args.directory)
     else:
         print("No files to process.")
