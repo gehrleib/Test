@@ -1,20 +1,28 @@
 import os
 import glob
 import xmltodict
-import json
 import argparse
 from datetime import datetime
 
+def get_unique_id_key(file_type: str) -> str:
+    """Returns the name of the unique identifier field for a given file type."""
+    if file_type == 'group':
+        return 'regGroupSourceId'
+    elif file_type == 'issuance':
+        return 'issuanceSourceId'
+    elif file_type == 'issuingBody':
+        return 'issuingBodySourceId'
+    elif file_type == 'activeGroup':
+        return 'regGroupSourceId'
+    else:
+        # As a fallback, raise an error for unknown types.
+        raise ValueError(f"Unknown file type: '{file_type}'. Cannot determine unique ID key.")
+
 def get_plural_form(singular: str) -> str:
-    """
-    Determines the correct plural form for a given word.
-    This is the key change to fix the 'issuingBody' issue.
-    """
+    """Determines the correct plural form for a given word."""
     if singular.endswith('y'):
-        # Handles words like 'issuingBody' -> 'issuingBodies'
         return singular[:-1] + 'ies'
     else:
-        # Handles words like 'group' -> 'groups'
         return singular + 's'
 
 def find_files(directory: str, file_type: str) -> list:
@@ -29,41 +37,35 @@ def find_files(directory: str, file_type: str) -> list:
 
 def combine_and_deduplicate_records(file_paths: list, file_type: str) -> list:
     """
-    Parses multiple XML files, combines their records, and removes duplicates.
+    Parses multiple XML files, combines their records, and removes duplicates
+    based on a unique identifier.
     """
-    all_records = []
-    # Use the new helper function to get the correct plural root element name.
+    unique_records_map = {}
+    id_key = get_unique_id_key(file_type)
     root_element_name = get_plural_form(file_type)
     
     for file_path in file_paths:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = xmltodict.parse(f.read())
-                # Navigate to the list of records using the correct root name.
                 records = data.get(root_element_name, {}).get(file_type, [])
                 if records:
-                    # If there's only one record, xmltodict doesn't create a list.
-                    # This ensures it's always treated as a list.
                     if not isinstance(records, list):
                         records = [records]
-                    all_records.extend(records)
+                    
+                    # --- This is the key change for robust deduplication ---
+                    for record in records:
+                        unique_id = record.get(id_key)
+                        if unique_id:
+                            # By using the ID as the key, we automatically handle duplicates.
+                            # The last record seen for any given ID will be the one that's kept.
+                            unique_records_map[unique_id] = record
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
             continue
 
-    if not all_records:
-        return []
-
-    # Deduplicate records by creating a unique signature for each one.
-    unique_records_set = set()
-    unique_records_list = []
-    for record in all_records:
-        record_signature = json.dumps(record, sort_keys=True)
-        if record_signature not in unique_records_set:
-            unique_records_set.add(record_signature)
-            unique_records_list.append(record)
-            
-    return unique_records_list
+    # The final list of unique records is the values of our dictionary.
+    return list(unique_records_map.values())
 
 def write_combined_xml(records: list, file_type: str, output_directory: str):
     """Writes the final list of unique records to a new combined XML file."""
@@ -71,7 +73,6 @@ def write_combined_xml(records: list, file_type: str, output_directory: str):
         print("No unique records found to write.")
         return
 
-    # Use the helper function again for the final output file.
     root_container_name = get_plural_form(file_type)
     
     xml_data_structure = {
