@@ -1,12 +1,1 @@
-Sure, here's a draft email you can adapt:
-Subject: Action Required: Review of Missing and Redundant Registration Groups
-Hi [Team Name/Recipient Name],
-I've attached an analysis of our registration groups that requires your attention.
-The report identifies two key areas:
- * Missing Registration Groups: We've found approximately 158 registration groups that should be active in our system but are currently missing. These need to be added to ensure our records are complete.
- * Redundant Registration Groups: The analysis also highlights 196 registration groups that should be archived or deleted. The reasons for their redundancy include:
-   * Their associated Northern Rose records have been archived or deleted.
-   * They are B.C. or D. RegHats that have been rolled up to their parent registration groups.
-Please review the attached analysis and let me know if you have any questions. We need to prioritize addressing these discrepancies to maintain data accuracy and system efficiency.
-Thanks,
-[Your Name]
+=IF(ISNUMBER(SEARCH(A2, B2)), "Yes", "No")
