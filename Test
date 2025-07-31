@@ -1,34 +1,25 @@
-## Story
-As a data steward, I want the system to correctly display Assessable Units on either the "Active" or "Retired" list, but never both, so that I have a clear and accurate view of our current Assessable Units.
-
----
-
-### Description
-
-#### Problem Statement:
+h4. Problem Statement:
 There is a system bug where an Assessable Unit that is first retired and then later reactivated can sometimes appear on both the "Active" and "Retired" lists. This leads to data inconsistency, confusion for users who rely on these lists for their work, and can cause inaccurate reporting.
 
-#### Solution:
+h4. Solution:
 Implement a fix to ensure that when an Assessable Unit's status is changed, its record is correctly moved to the appropriate list and removed from any other list. The system should maintain a single, definitive status for each Assessable Unit and reflect that status consistently across all views and reports. This will involve:
 
-1. A review of the reactivation process for Assessable Units.
-2. Ensuring that when an Assessable Unit is reactivated, the system's "Retired" list is updated to remove that record.
-3. Ensuring that when an Assessable Unit is retired, the system's "Active" list is updated to remove that record.
-4. Verifying that the underlying data model only allows for one status (e.g., a single "active" or "retired" flag) for any given Assessable Unit at a time.
+# A review of the reactivation process for Assessable Units.
+# Ensuring that when an Assessable Unit is reactivated, the system's "Retired" list is updated to remove that record.
+# Ensuring that when an Assessable Unit is retired, the system's "Active" list is updated to remove that record.
+# Verifying that the underlying data model only allows for one status (e.g., a single "active" or "retired" flag) for any given Assessable Unit at a time.
 
----
+h3. Acceptance Criteria
 
-### Acceptance Criteria
+* *Given* an Assessable Unit is in a "Retired" status.
+* *When* a user reactivates the Assessable Unit.
+* *Then* the Assessable Unit must appear on the "Active" list.
+* *And* the Assessable Unit must be removed from the "Retired" list.
 
-* **Given** an Assessable Unit is in a "Retired" status.
-* **When** a user reactivates the Assessable Unit.
-* **Then** the Assessable Unit must appear on the "Active" list.
-* **And** the Assessable Unit must be removed from the "Retired" list.
+* *Given* an Assessable Unit is in an "Active" status.
+* *When* a user retires the Assessable Unit.
+* *Then* the Assessable Unit must appear on the "Retired" list.
+* *And* the Assessable Unit must be removed from the "Active" list.
 
-* **Given** an Assessable Unit is in an "Active" status.
-* **When** a user retires the Assessable Unit.
-* **Then** the Assessable Unit must appear on the "Retired" list.
-* **And** the Assessable Unit must be removed from the "Active" list.
-
-* **Given** any Assessable Unit record exists.
-* **Then** it must not be possible for that record to appear on both the "Active" and "Retired" lists simultaneously.
+* *Given* any Assessable Unit record exists.
+* *Then* it must not be possible for that record to appear on both the "Active" and "Retired" lists simultaneously.
