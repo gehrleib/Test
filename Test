@@ -1,46 +1,43 @@
-## Story
+h2. Story
 As a data analyst, I want control snapshots to accurately reflect the latest approved M&T and risk data, so that I can rely on the snapshot data for consistent historical reporting.
 
 ---
 
-### Description
+h3. Description
 
-#### Problem Statement:
+h4. Problem Statement:
 When the "monitoring & testing frequency base" was introduced and the "next control test year (final)" was updated to a numeric field, the snapshot process for a control was not updated accordingly. Consequently, when a monitoring & testing record is approved, the snapshot of the control does not capture the following critical information:
-
 * Last Approved Inherent Risk Rating
 * Last Approved Residual Risk Rating
 * M&T Frequency Base
 * Next Control Test Year (Final)
-
 This results in incomplete snapshot data, making it difficult to perform accurate historical analysis and reporting.
 
-#### Solution:
+h4. Solution:
 Modify the snapshot record creation process for a control. When a monitoring & testing record is approved, the system must now update the control's snapshot to include the following new data points from the approved M&T record:
-
 * Last Approved Inherent Risk Rating
 * Last Approved Residual Risk Rating
 * M&T Frequency Base
 * Next Control Test Year (Final)
 
-**Note:** This change will only apply to new snapshots created after the deployment of this fix. Existing historical snapshots that are missing this data will not be retroactively updated, maintaining their historical integrity as-is.
+*Note:* This change will only apply to new snapshots created after the deployment of this fix. Existing historical snapshots that are missing this data will not be retroactively updated, maintaining their historical integrity as-is.
 
 ---
 
-### Acceptance Criteria
+h3. Acceptance Criteria
 
-* **Given** a monitoring & testing record is approved for a control.
-* **When** a new snapshot of that control is created.
-* **Then** the new snapshot must include the values for the following fields from the approved record:
-    * Last Approved Inherent Risk Rating
-    * Last Approved Residual Risk Rating
-    * M&T Frequency Base
-    * Next Control Test Year (Final)
+* *Given* a monitoring & testing record is approved for a control.
+* *When* a new snapshot of that control is created.
+* *Then* the new snapshot must include the values for the following fields from the approved record:
+** Last Approved Inherent Risk Rating
+** Last Approved Residual Risk Rating
+** M&T Frequency Base
+** Next Control Test Year (Final)
 
-* **Given** a snapshot record was created *before* this fix is deployed.
-* **When** the snapshot record is viewed.
-* **Then** the snapshot will continue to not have the new data fields, and no attempt to retroactively populate them will be made.
+* *Given* a snapshot record was created *before* this fix is deployed.
+* *When* the snapshot record is viewed.
+* *Then* the snapshot will continue to not have the new data fields, and no attempt to retroactively populate them will be made.
 
-* **Given** a new snapshot is created.
-* **When** a user views the snapshot.
-* **Then** the snapshot should contain the correct data for all four new fields, and that data must match the state of the control at the time the M&T record was approved.
+* *Given* a new snapshot is created.
+* *When* a user views the snapshot.
+* *Then* the snapshot should contain the correct data for all four new fields, and that data must match the state of the control at the time the M&T record was approved.
