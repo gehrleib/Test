@@ -1,43 +1,46 @@
+h1. Assessable Unit Snapshot Synchronization
+
 h2. Story
-As a data analyst, I want control snapshots to accurately reflect the latest approved M&T and risk data, so that I can rely on the snapshot data for consistent historical reporting.
+As a compliance officer, I want the Assessable Unit snapshot to accurately reflect the current Assessable Unit record, so that I can rely on historical data for audits and reporting.
 
----
+----
 
-h3. Description
+h2. Description
 
-h4. Problem Statement:
-When the "monitoring & testing frequency base" was introduced and the "next control test year (final)" was updated to a numeric field, the snapshot process for a control was not updated accordingly. Consequently, when a monitoring & testing record is approved, the snapshot of the control does not capture the following critical information:
-* Last Approved Inherent Risk Rating
-* Last Approved Residual Risk Rating
-* M&T Frequency Base
-* Next Control Test Year (Final)
-This results in incomplete snapshot data, making it difficult to perform accurate historical analysis and reporting.
+h3. Problem Statement:
+The existing Assessable Unit snapshot has fallen out of sync with recent changes to the Assessable Unit record. This has led to the capture of outdated or incorrect information, making the snapshots unreliable for historical reference and analysis. Specifically:
+* The snapshot still captures *Legacy Issues and Findings* instead of the current *EIM* and *NIE* records.
+* The snapshot's regulatory content does not correctly reflect the influence of *Norton Rose regulatory content* for *CUBE regulatory content*.
+* The tabs on the snapshot do not match the current tabs on the Assessable Unit record (e.g., Assessments, Regulations, etc.).
+* The *LED head and delegate submission section* contains separate commentary for overrides, which is no longer in use.
 
-h4. Solution:
-Modify the snapshot record creation process for a control. When a monitoring & testing record is approved, the system must now update the control's snapshot to include the following new data points from the approved M&T record:
-* Last Approved Inherent Risk Rating
-* Last Approved Residual Risk Rating
-* M&T Frequency Base
-* Next Control Test Year (Final)
+This inconsistency between the live record and the historical snapshot creates a significant data integrity issue.
 
-*Note:* This change will only apply to new snapshots created after the deployment of this fix. Existing historical snapshots that are missing this data will not be retroactively updated, maintaining their historical integrity as-is.
+h3. Solution:
+Update the Assessable Unit snapshot process to ensure it accurately reflects the current state of the Assessable Unit record. This will be a multi-part solution:
+# *Update Data Capture:* When a new snapshot is created, it must capture *EIM* and *NIE* data instead of the deprecated "Legacy Issues and Findings."
+# *Regulatory Content Logic:* Modify the snapshot to correctly display *CUBE* regulatory content as influenced by the *Norton Rose regulatory content*.
+# *Layout Synchronization:* Ensure that the tabs on the snapshot mirror the tabs on the live Assessable Unit record. This includes tabs such as *Assessments*, *Regulations*, *Regulatory Theme Checklist*, *Issues and Exceptions*, *Monitoring and Testing*, and *Roles and Responsibilities*.
+# *Submission Section Update:* Remove the separate commentary for overrides from the *LED head and delegate submission section* of the snapshot.
 
----
+{color:#ff0000}*Note:* This change will only apply to snapshots taken *after* *Monday, July 21st*. Historical snapshots created before this date will not be updated.{color}
 
-h3. Acceptance Criteria
+----
 
-* *Given* a monitoring & testing record is approved for a control.
-* *When* a new snapshot of that control is created.
-* *Then* the new snapshot must include the values for the following fields from the approved record:
-** Last Approved Inherent Risk Rating
-** Last Approved Residual Risk Rating
-** M&T Frequency Base
-** Next Control Test Year (Final)
+h2. Acceptance Criteria
+* *Given* an Assessable Unit snapshot is created after Monday, July 21st.
+* *When* a user views the snapshot's Issues and Exceptions data.
+* *Then* the snapshot must display the records for *EIM* and *NIE*.
+* *And* it must not display any "Legacy Issues and Findings."
 
-* *Given* a snapshot record was created *before* this fix is deployed.
-* *When* the snapshot record is viewed.
-* *Then* the snapshot will continue to not have the new data fields, and no attempt to retroactively populate them will be made.
+* *Given* a snapshot of an Assessable Unit with CUBE content is created after July 21st.
+* *When* a user views the snapshot's regulatory content.
+* *Then* the CUBE regulatory content must reflect the influence of the Norton Rose regulatory content.
 
-* *Given* a new snapshot is created.
-* *When* a user views the snapshot.
-* *Then* the snapshot should contain the correct data for all four new fields, and that data must match the state of the control at the time the M&T record was approved.
+* *Given* a new snapshot of an Assessable Unit is taken.
+* *When* a user navigates the snapshot.
+* *Then* the tabs visible on the snapshot (e.g., Assessments, Regulations, Monitoring and Testing) must be the same as the tabs on the live Assessable Unit record.
+
+* *Given* a new snapshot of an Assessable Unit is taken.
+* *When* a user views the LED head and delegate submission section.
+* *Then* there must not be any separate commentary fields for overrides.
