@@ -1,25 +1,46 @@
-h4. Problem Statement:
-There is a system bug where an Assessable Unit that is first retired and then later reactivated can sometimes appear on both the "Active" and "Retired" lists. This leads to data inconsistency, confusion for users who rely on these lists for their work, and can cause inaccurate reporting.
+## Story
+As a data analyst, I want control snapshots to accurately reflect the latest approved M&T and risk data, so that I can rely on the snapshot data for consistent historical reporting.
 
-h4. Solution:
-Implement a fix to ensure that when an Assessable Unit's status is changed, its record is correctly moved to the appropriate list and removed from any other list. The system should maintain a single, definitive status for each Assessable Unit and reflect that status consistently across all views and reports. This will involve:
+---
 
-# A review of the reactivation process for Assessable Units.
-# Ensuring that when an Assessable Unit is reactivated, the system's "Retired" list is updated to remove that record.
-# Ensuring that when an Assessable Unit is retired, the system's "Active" list is updated to remove that record.
-# Verifying that the underlying data model only allows for one status (e.g., a single "active" or "retired" flag) for any given Assessable Unit at a time.
+### Description
 
-h3. Acceptance Criteria
+#### Problem Statement:
+When the "monitoring & testing frequency base" was introduced and the "next control test year (final)" was updated to a numeric field, the snapshot process for a control was not updated accordingly. Consequently, when a monitoring & testing record is approved, the snapshot of the control does not capture the following critical information:
 
-* *Given* an Assessable Unit is in a "Retired" status.
-* *When* a user reactivates the Assessable Unit.
-* *Then* the Assessable Unit must appear on the "Active" list.
-* *And* the Assessable Unit must be removed from the "Retired" list.
+* Last Approved Inherent Risk Rating
+* Last Approved Residual Risk Rating
+* M&T Frequency Base
+* Next Control Test Year (Final)
 
-* *Given* an Assessable Unit is in an "Active" status.
-* *When* a user retires the Assessable Unit.
-* *Then* the Assessable Unit must appear on the "Retired" list.
-* *And* the Assessable Unit must be removed from the "Active" list.
+This results in incomplete snapshot data, making it difficult to perform accurate historical analysis and reporting.
 
-* *Given* any Assessable Unit record exists.
-* *Then* it must not be possible for that record to appear on both the "Active" and "Retired" lists simultaneously.
+#### Solution:
+Modify the snapshot record creation process for a control. When a monitoring & testing record is approved, the system must now update the control's snapshot to include the following new data points from the approved M&T record:
+
+* Last Approved Inherent Risk Rating
+* Last Approved Residual Risk Rating
+* M&T Frequency Base
+* Next Control Test Year (Final)
+
+**Note:** This change will only apply to new snapshots created after the deployment of this fix. Existing historical snapshots that are missing this data will not be retroactively updated, maintaining their historical integrity as-is.
+
+---
+
+### Acceptance Criteria
+
+* **Given** a monitoring & testing record is approved for a control.
+* **When** a new snapshot of that control is created.
+* **Then** the new snapshot must include the values for the following fields from the approved record:
+    * Last Approved Inherent Risk Rating
+    * Last Approved Residual Risk Rating
+    * M&T Frequency Base
+    * Next Control Test Year (Final)
+
+* **Given** a snapshot record was created *before* this fix is deployed.
+* **When** the snapshot record is viewed.
+* **Then** the snapshot will continue to not have the new data fields, and no attempt to retroactively populate them will be made.
+
+* **Given** a new snapshot is created.
+* **When** a user views the snapshot.
+* **Then** the snapshot should contain the correct data for all four new fields, and that data must match the state of the control at the time the M&T record was approved.
