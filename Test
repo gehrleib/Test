@@ -1,36 +1,34 @@
-*Story*
-As a user, I want to easily identify the status of Regulatory Themes, so that I don't select retired themes for active work and our data remains accurate.
+## Story
+As a data steward, I want the system to correctly display Assessable Units on either the "Active" or "Retired" list, but never both, so that I have a clear and accurate view of our current Assessable Units.
 
+---
 
+### Description
 
-h3. Description
+#### Problem Statement:
+There is a system bug where an Assessable Unit that is first retired and then later reactivated can sometimes appear on both the "Active" and "Retired" lists. This leads to data inconsistency, confusion for users who rely on these lists for their work, and can cause inaccurate reporting.
 
-h4. Problem Statement:
-Users are currently unable to differentiate between active and archived Regulatory Themes, which can lead to themes being mistakenly selected for new or ongoing work. This creates confusion and results in an inconsistent use of our themes.
+#### Solution:
+Implement a fix to ensure that when an Assessable Unit's status is changed, its record is correctly moved to the appropriate list and removed from any other list. The system should maintain a single, definitive status for each Assessable Unit and reflect that status consistently across all views and reports. This will involve:
 
-h4. Solution:
-This story addresses the problem by introducing a "Status" field for Regulatory Themes with the following solution:
+1. A review of the reactivation process for Assessable Units.
+2. Ensuring that when an Assessable Unit is reactivated, the system's "Retired" list is updated to remove that record.
+3. Ensuring that when an Assessable Unit is retired, the system's "Active" list is updated to remove that record.
+4. Verifying that the underlying data model only allows for one status (e.g., a single "active" or "retired" flag) for any given Assessable Unit at a time.
 
-# Add a "Status" Field: Introduce a new "Status" field for Regulatory Themes with the only two available options: *Active* and *Archived*.
-# Validation Rule for Archiving: Implement a rule that prevents users from setting a Regulatory Theme's status to "Archived" if it is associated with an active Assessable Unit.
-# User Interface Validation: On the following pages, prevent users from being able to select a theme that has an "Archived" status:
-  * Line of Business
-  * Non-Issue Exception
-  * CUBE
-# Display Status on Layouts: Update all relevant layouts and views where Regulatory Themes are displayed to include the new "Status" column, allowing users to see the theme's status at a glance.
+---
 
+### Acceptance Criteria
 
+* **Given** an Assessable Unit is in a "Retired" status.
+* **When** a user reactivates the Assessable Unit.
+* **Then** the Assessable Unit must appear on the "Active" list.
+* **And** the Assessable Unit must be removed from the "Retired" list.
 
-h3. Acceptance Criteria
+* **Given** an Assessable Unit is in an "Active" status.
+* **When** a user retires the Assessable Unit.
+* **Then** the Assessable Unit must appear on the "Retired" list.
+* **And** the Assessable Unit must be removed from the "Active" list.
 
-* *Given* a Regulatory Theme is active.
-* *When* a user attempts to change its status to "Archived" while it is linked to an active Assessable Unit.
-* *Then* the system must display an error message and prevent the status change.
-
-* *Given* a user is on the Line of Business, Non-Issue Exception, or CUBE page.
-* *When* the user attempts to select a Regulatory Theme.
-* *Then* any theme with a status of "Archived" must not be selectable in the list.
-
-* *Given* a Regulatory Theme with a status of "Active" or "Archived" exists.
-* *When* a user views a layout where the theme is displayed.
-* *Then* the status of the theme must be visible in a dedicated "Status" column.
+* **Given** any Assessable Unit record exists.
+* **Then** it must not be possible for that record to appear on both the "Active" and "Retired" lists simultaneously.
