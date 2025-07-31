@@ -1,0 +1,36 @@
+*Story*
+As a user, I want to easily identify the status of Regulatory Themes, so that I don't select retired themes for active work and our data remains accurate.
+
+
+
+h3. Description
+
+h4. Problem Statement:
+Users are currently unable to differentiate between active and archived Regulatory Themes, which can lead to themes being mistakenly selected for new or ongoing work. This creates confusion and results in an inconsistent use of our themes.
+
+h4. Solution:
+This story addresses the problem by introducing a "Status" field for Regulatory Themes with the following solution:
+
+# Add a "Status" Field: Introduce a new "Status" field for Regulatory Themes with the only two available options: *Active* and *Archived*.
+# Validation Rule for Archiving: Implement a rule that prevents users from setting a Regulatory Theme's status to "Archived" if it is associated with an active Assessable Unit.
+# User Interface Validation: On the following pages, prevent users from being able to select a theme that has an "Archived" status:
+  * Line of Business
+  * Non-Issue Exception
+  * CUBE
+# Display Status on Layouts: Update all relevant layouts and views where Regulatory Themes are displayed to include the new "Status" column, allowing users to see the theme's status at a glance.
+
+
+
+h3. Acceptance Criteria
+
+* *Given* a Regulatory Theme is active.
+* *When* a user attempts to change its status to "Archived" while it is linked to an active Assessable Unit.
+* *Then* the system must display an error message and prevent the status change.
+
+* *Given* a user is on the Line of Business, Non-Issue Exception, or CUBE page.
+* *When* the user attempts to select a Regulatory Theme.
+* *Then* any theme with a status of "Archived" must not be selectable in the list.
+
+* *Given* a Regulatory Theme with a status of "Active" or "Archived" exists.
+* *When* a user views a layout where the theme is displayed.
+* *Then* the status of the theme must be visible in a dedicated "Status" column.
