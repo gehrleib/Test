@@ -1,6 +1,32 @@
-      <xsl:variable name="retired_rt_id" select="Field[@guid='678713cc-bf0a-468e-92c3-8d19db98f36b']/Reference/@id"/>
+Thank you for your email. This message provides guidance on how to proceed with the CUBE data points you raised.
 
-      COMMENT-START Create the output record for this retirement event. COMMENT-END
-      <ArcherRecord>
-        COMMENT-START ### THIS LINE IS CORRECTED ### It now uses the RT ID instead of the AU contentId. COMMENT-END
-        <LOB_RT_ID><xsl:value-of select="concat($lob_id, '-', $retired_rt_id)"/></LOB_RT_ID>
+1. Discrepancies in Reg Book & Reg Group Names
+For any differences in the Reg Book or Reg Group names, you will need to reach out to CUBE for clarification.
+
+Reg Book Name: Please note that these names are unlikely to be changed by CUBE, as they are standardized for use by other customers.
+
+Reg Group Name: This is managed by our team, so you have the ability to make changes. The variation in a name could be intentional to differentiate it from other similar groups, but if you determine a change is needed, you can make the adjustment directly.
+
+It is worth noting that as this type of review becomes business-as-usual (BAU), we anticipate that CUBE's direct support for such granular inquiries may become more limited.
+
+2. Applicability and Imposing Requirements on RBC
+The changes you see in the "Applies to RBC" and "Imposing Requirement" fields were made following a stakeholder request, as Guernsey regulations are no longer applicable to RBC.
+
+The majority of these updates can be cross-referenced with the attached Excel sheet and the "Regulation Mapping Update" email.
+
+While most have been addressed, there may still be some outliers that require further investigation, but this number should be significantly lower now.
+
+The count for "Regulatory Theme" is identical to the "Section Imposes Requirement on RBC" count because they are directly linked. If a section imposes a requirement on RBC, it is assigned a theme; if it does not, no theme is applied.
+
+3. CUBE Live Data vs. Authority Source Data (Missing/Archived Groups)
+When a group is marked as 'Archived' or is missing from the CUBE Live Data, it means the group no longer meets CUBE's ingestion criteria. A group is only ingested if it meets the following three conditions:
+
+The group must be active.
+
+There is at least one citation tied to the group.
+
+The group is tied to citations that belong to a single book.
+
+In these cases, the assumption should be that the citations originally tied to the group are no longer valid or active. As a result, CUBE has archived the group because it no longer has any citations associated with it.
+
+I hope this information provides the necessary guidance for your next steps.
