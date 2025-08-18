@@ -1,22 +1,28 @@
-*Story Title:* Replace Regulator fields on Exam object with Primary/Additional Regulator fields
+Rename Regulatory Theme Checklist (RTC) to Baseline Inherent Risk Rating (BIRR)
 
 ---
 
 h3. Description
 
 *Problem Statement:*
-We recently replaced our internal regulator list with the "issuing body" from CUBE. The current fields on the Exam object, "Primary Regulator Responsible for Regulation Involved" and "Additional Regulators Responsible for Regulation Involved," still reference the old RCM Regulator list. This inconsistency creates a data gap and prevents us from fully decommissioning the outdated list, which poses a maintenance and data integrity risk.
+The current naming convention, "Regulatory Theme Checklist" (RTC), is outdated and does not align with our new risk methodology, which uses "Baseline Inherent Risk Rating" (BIRR). This inconsistency creates confusion for end-users and hinders the adoption of the new methodology. A comprehensive renaming is required to ensure consistency across the platform.
 
 *Solution:*
-We will implement a data migration to replace the existing regulator fields on the Exam object. The field "Primary Regulator Responsible for Regulation Involved" will be replaced by a new field called "Primary Regulator". The field "Additional Regulators Responsible for Regulation Involved" will be replaced by a new field called "Additional Regulators". All existing data will be migrated to the new respective fields, and the old RCM Regulator list will be decommissioned once the migration is complete.
+We will implement a full-scale renaming of all fields, objects, and tabs related to the Regulatory Theme Checklist to reflect the new Baseline Inherent Risk Rating (BIRR) methodology. This includes front-end user interfaces, back-end data fields, and any associated rules or actions.
 
 ---
 
 h3. Acceptance Criteria
 
-* The "Primary Regulator Responsible for Regulation Involved" field on the Exam object is replaced with a new field named "Primary Regulator".
-* The "Additional Regulators Responsible for Regulation Involved" field on the Exam object is replaced with a new field named "Additional Regulators".
-* All existing data from the old regulator fields is successfully migrated to the new respective fields for all Exam records.
-* The system no longer references the old RCM Regulator list for new or existing Exam records.
-* The old RCM Regulator list is safely decommissioned after successful data migration.
-* The new fields display the correct issuing body information from CUBE on the Exam object.
+* The "Regulatory Theme Checklist" object is renamed to "Baseline Inherent Risk Rating" (BIRR).
+* The following fields on the **BIRR** object are renamed:
+** "Regulatory Theme Checklist ID" is renamed to "BIRR ID"
+** "Regulatory Theme Checklist Status" is renamed to "BIRR Status"
+** "Is Most Recent RTC Record" is renamed to "Is Most Recent BIRR Record"
+** "Is Most Recent Recent RTC Record (Published)" is renamed to "Is Most Recent BIRR Record (Published)"
+* The "Regulatory Theme Checklist" tab on the **Regulatory Theme** object is renamed to "Baseline Inherent Risk Ratings".
+* The "Regulatory Theme Checklist" field on the **Assessable Unit** and **Assessable Unit Snapshot** objects is renamed to "Baseline Inherent Risk Rating".
+* The "Most Recent RTC System ID" field on the **Assessable Unit** is renamed to "Most Recent BIRR System ID".
+* The "Most Recent RTC System ID (Approved)" field on the **Assessable Unit** is renamed to "Most Recent BIRR System ID (Approved)".
+* All associated hidden rule and action names are updated to reflect the new naming convention.
+* The system continues to function correctly, with no loss of data or functionality after the renaming is complete.
