@@ -1,28 +1,14 @@
-Rename Regulatory Theme Checklist (RTC) to Baseline Inherent Risk Rating (BIRR)
-
----
-
-h3. Description
-
 *Problem Statement:*
-The current naming convention, "Regulatory Theme Checklist" (RTC), is outdated and does not align with our new risk methodology, which uses "Baseline Inherent Risk Rating" (BIRR). This inconsistency creates confusion for end-users and hinders the adoption of the new methodology. A comprehensive renaming is required to ensure consistency across the platform.
+The current placement of the *Local Regulatory Environment Questionnaire* (LREQ) section on the *Assessable Unit* and *Assessable Unit Snapshot* pages does not align with the logical workflow. This can cause user confusion and require additional navigation to find related information, impacting efficiency.
 
 *Solution:*
-We will implement a full-scale renaming of all fields, objects, and tabs related to the Regulatory Theme Checklist to reflect the new Baseline Inherent Risk Rating (BIRR) methodology. This includes front-end user interfaces, back-end data fields, and any associated rules or actions.
+To improve user experience and streamline the workflow, the *LREQ* section will be moved to be immediately after the *Baseline Prioritization Questionnaire* (BPQ) section on both the *Assessable Unit* and *Assessable Unit Snapshot* objects.
 
 ---
 
 h3. Acceptance Criteria
 
-* The "Regulatory Theme Checklist" object is renamed to "Baseline Inherent Risk Rating" (BIRR).
-* The following fields on the **BIRR** object are renamed:
-** "Regulatory Theme Checklist ID" is renamed to "BIRR ID"
-** "Regulatory Theme Checklist Status" is renamed to "BIRR Status"
-** "Is Most Recent RTC Record" is renamed to "Is Most Recent BIRR Record"
-** "Is Most Recent Recent RTC Record (Published)" is renamed to "Is Most Recent BIRR Record (Published)"
-* The "Regulatory Theme Checklist" tab on the **Regulatory Theme** object is renamed to "Baseline Inherent Risk Ratings".
-* The "Regulatory Theme Checklist" field on the **Assessable Unit** and **Assessable Unit Snapshot** objects is renamed to "Baseline Inherent Risk Rating".
-* The "Most Recent RTC System ID" field on the **Assessable Unit** is renamed to "Most Recent BIRR System ID".
-* The "Most Recent RTC System ID (Approved)" field on the **Assessable Unit** is renamed to "Most Recent BIRR System ID (Approved)".
-* All associated hidden rule and action names are updated to reflect the new naming convention.
-* The system continues to function correctly, with no loss of data or functionality after the renaming is complete.
+* On the *Assessable Unit* page, the *LREQ* section is displayed directly below the *BPQ* section.
+* On the *Assessable Unit Snapshot* page, the *LREQ* section is displayed directly below the *BPQ* section.
+* The content and functionality within both the *BPQ* and *LREQ* sections remain unchanged after the move.
+* The system's performance is not negatively impacted by this change in display order.
