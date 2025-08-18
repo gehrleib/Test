@@ -1,10 +1,18 @@
-Subject: Clarification on Segment and Regulatory Theme Levels in RegComp
-Hi Team,
-I'm writing to get some clarity on how we're using segment and regulatory theme levels within RegComp, specifically concerning our assessable units and reporting.
-As you know, we have three levels for both segments and regulatory themes. However, our standard practice for assessable units and most of our reporting focuses exclusively on Segment Level 1 and Regulatory Theme Level 3.
-I understand that we can use the lower levels (2 or 3) to inform our selection for Level 1. My main concern is ensuring consistency in this process. We need to be able to choose the lowest level for every segment.
-For example, I'm unsure if the lowest levels for a segment like Human Resources (e.g., compensation, ER governance) are consistently our Level 2 or Level 3. We need to confirm this to maintain a standardized process across all our segments.
-Additionally, I'd like to explore the possibility of a display modification within the cube. Is it feasible to display all three levels (1, 2, and 3) but only allow users to select Level 3? This would help us visualize the hierarchy while ensuring we adhere to our reporting standard of using Level 3.
-Please let me know your thoughts on this and if you have any suggestions for a solution.
-Thanks,
-[Your Name]
+h3. Description
+
+*Problem Statement:*
+Currently, when a control is updated, the Local Regulatory Environment Questionnaire (LREQ) is not automatically refreshed. This results in the LREQ containing outdated information that no longer accurately reflects our current control environment. This gap in automation poses a significant compliance risk by failing to align our regulatory assessments with real-time changes, and it creates a manual burden for the compliance team to identify and rectify these discrepancies.
+
+*Solution:*
+We will implement an automated trigger that generates a new LREQ for refresh whenever a change to a control is detected. This new trigger will ensure that the LREQ is always in sync with our control environment. This aligns the LREQ generation with existing risk assessment triggers, creating a consistent and reliable process for maintaining up-to-date compliance documentation.
+
+---
+
+h3. Acceptance Criteria
+
+* *GIVEN* a user has updated and saved changes to a control in the system
+* *WHEN* the system detects the change
+* *THEN* a new LREQ is automatically generated.
+* The newly generated LREQ must be pre-populated with the latest information related to the updated control.
+* The system must send a notification to the appropriate regulatory team, alerting them that a new LREQ has been generated for their review.
+* The system should log the event, including the control that was changed and the timestamp of the LREQ generation, to ensure traceability and aid in troubleshooting.
