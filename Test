@@ -1,18 +1,22 @@
+*Story Title:* Replace Regulator fields on Exam object with Primary/Additional Regulator fields
+
+---
+
 h3. Description
 
 *Problem Statement:*
-Currently, when a control is updated, the Local Regulatory Environment Questionnaire (LREQ) is not automatically refreshed. This results in the LREQ containing outdated information that no longer accurately reflects our current control environment. This gap in automation poses a significant compliance risk by failing to align our regulatory assessments with real-time changes, and it creates a manual burden for the compliance team to identify and rectify these discrepancies.
+We recently replaced our internal regulator list with the "issuing body" from CUBE. The current fields on the Exam object, "Primary Regulator Responsible for Regulation Involved" and "Additional Regulators Responsible for Regulation Involved," still reference the old RCM Regulator list. This inconsistency creates a data gap and prevents us from fully decommissioning the outdated list, which poses a maintenance and data integrity risk.
 
 *Solution:*
-We will implement an automated trigger that generates a new LREQ for refresh whenever a change to a control is detected. This new trigger will ensure that the LREQ is always in sync with our control environment. This aligns the LREQ generation with existing risk assessment triggers, creating a consistent and reliable process for maintaining up-to-date compliance documentation.
+We will implement a data migration to replace the existing regulator fields on the Exam object. The field "Primary Regulator Responsible for Regulation Involved" will be replaced by a new field called "Primary Regulator". The field "Additional Regulators Responsible for Regulation Involved" will be replaced by a new field called "Additional Regulators". All existing data will be migrated to the new respective fields, and the old RCM Regulator list will be decommissioned once the migration is complete.
 
 ---
 
 h3. Acceptance Criteria
 
-* *GIVEN* a user has updated and saved changes to a control in the system
-* *WHEN* the system detects the change
-* *THEN* a new LREQ is automatically generated.
-* The newly generated LREQ must be pre-populated with the latest information related to the updated control.
-* The system must send a notification to the appropriate regulatory team, alerting them that a new LREQ has been generated for their review.
-* The system should log the event, including the control that was changed and the timestamp of the LREQ generation, to ensure traceability and aid in troubleshooting.
+* The "Primary Regulator Responsible for Regulation Involved" field on the Exam object is replaced with a new field named "Primary Regulator".
+* The "Additional Regulators Responsible for Regulation Involved" field on the Exam object is replaced with a new field named "Additional Regulators".
+* All existing data from the old regulator fields is successfully migrated to the new respective fields for all Exam records.
+* The system no longer references the old RCM Regulator list for new or existing Exam records.
+* The old RCM Regulator list is safely decommissioned after successful data migration.
+* The new fields display the correct issuing body information from CUBE on the Exam object.
