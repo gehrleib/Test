@@ -1,14 +1,9 @@
-*Problem Statement:*
-The current placement of the *Local Regulatory Environment Questionnaire* (LREQ) section on the *Assessable Unit* and *Assessable Unit Snapshot* pages does not align with the logical workflow. This can cause user confusion and require additional navigation to find related information, impacting efficiency.
-
-*Solution:*
-To improve user experience and streamline the workflow, the *LREQ* section will be moved to be immediately after the *Baseline Prioritization Questionnaire* (BPQ) section on both the *Assessable Unit* and *Assessable Unit Snapshot* objects.
-
----
-
-h3. Acceptance Criteria
-
-* On the *Assessable Unit* page, the *LREQ* section is displayed directly below the *BPQ* section.
-* On the *Assessable Unit Snapshot* page, the *LREQ* section is displayed directly below the *BPQ* section.
-* The content and functionality within both the *BPQ* and *LREQ* sections remain unchanged after the move.
-* The system's performance is not negatively impacted by this change in display order.
+Subject: Question about the Convergence Project's timeline and impact
+Hi Grace,
+I'm looking for an update on the Convergence Project.
+From what I understand, this initiative is about streamlining our core data points like segments, lines of business, and legal entities. The plan is to shift to using data directly from ORMS, where segments will become the ORMS segment, lines of business will become ORMS Business Units, and regulatory themes will be classified as Risk.
+Our team, specifically with the Ragged and In Queue Cube projects, is being fed these data points. A change like this will have a downstream impact, and we need to understand the timeline to prepare.
+Could you please provide a brief summary of the project's current status and timeline? If you're not the right person to ask, could you point me to who would be best?
+Thanks for your help.
+Best,
+[Your Name]
