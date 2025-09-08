@@ -1,7 +1,15 @@
-
-Hi Matthew,
-Thanks for your email. Here are the answers to your questions.
-Regarding the country filter on the Authority Sources Cube:
-The country filter is not available on the initial page of the Authority Sources Cube. This is because the country is tied to the Regulatory Book, not the Issuing Body. By default, our system (RegComp/Archer) only allows filtering at the highest level on the main report view. For more advanced filtering, you would need to go to the "Modify" page. We do have a vendor software update scheduled for early next year, and it's possible this functionality will be included in the new version, but we can't make any promises.
-Regarding organizing and grouping pinpoint citations:
-The organization and grouping of the pinpoint citations are exactly as they were in the previous Norton Rose system. This was part of the one-to-one mapping exercise we completed. Your request to change this seems to be a modification request and falls under Business As Usual (BAU). Please be aware that any changes to these groups could affect the current mappings to the accessibility units. If you decide to merge groups, you must ensure that those mappings are replicated on the new group to avoid any issues.
+Understood. Thank you for the clarification. It seems I misunderstood the context and structured the email as a proposal rather than a descriptive explanation. Here is an updated draft that accurately explains the system's behavior.
+Subject: Explanation of Regulatory Citation Structure and Grouping
+Hi [Recipient Name],
+Following up on our discussion, I wanted to provide a detailed explanation of how the regulatory citation structure works and the logic behind the grouping of citations.
+The Cube system has a four-level hierarchy: Issuing Body, Regbook, Reggroup, and Citation. This differs from our previous Norton Rose system, which used a three-level structure: Regulator, Legislation, and Pinpoint Citation.
+Here's how the two systems relate:
+ * The Issuing Body, Regbook, and Citation fields in Cube are static, as they are part of the core data used by multiple customers.
+ * The Reggroup level is where the flexibility lies. It is the equivalent of the old Pinpoint Citation.
+In our data, a Reggroup can contain multiple individual Citations. We see this in the data that was brought over from Norton Rose, where citations were already grouped together. For example, a single Reggroup named "12 CFR 8.8" can have multiple citations tied to it.
+This grouping logic is based on three key attributes: Applicability, Imposing, and Theme. Citations are merged or combined into a single Reggroup only when these three attributes are identical.
+I've attached the example image you provided, which illustrates a Reggroup correctly referencing multiple individual citations.
+This structure allows us to maintain a consistent hierarchy while accommodating the reality of how citations are grouped.
+Please let me know if you have any questions about this.
+Thanks,
+[Your Name]
