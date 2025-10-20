@@ -2,4 +2,4 @@ If you retire an existing "Red Group" and create a new one with the same name, t
 
 Because all existing system validations and mappings are tied to the old ID, they will not automatically transfer to the new group. You would then be required to perform new validation and mapping to all relevant assessable units.
 
-The correct expectation is to modify the existing Red Group when changes to its citation are requested, not to retire and recreate it. This preserves the existing validation and mapping records.
+The correct expectation is to modify the existing Red Group when changes to its citation are requested, not to retire and recreate it. This is followed-up by publishing the new version. This preserves the existing validation and mapping records.
