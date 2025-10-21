@@ -1,40 +1,54 @@
 # Story Title  
-**Improve Visibility into Upcoming Assessments and Align Terminology in Risk Assessment UI**
+**Fix Annual Decision Date Drift to Prevent Overlap with Mandatory Risk-Based Review**
 
 ## Problem Statement  
-When the Risk Assessment status changes to *Approved*, there is no clear visibility into when the next *Annual Assessment* or the required *Mandatory Risk-Based Review* is due.  
-This lack of visibility can result in confusion around scheduling, deadlines, and upcoming compliance requirements.  
+For assessments that are not subject to annual mandatory risk-based reviews (e.g., low-risk assessments with a 3-year review cycle), we require a *Yearly Attestation* (also known as an *Annual Decision*) to be completed on the first and second years following the review/approval date.
 
-Additionally, the current terminology used in the *Off-Cycle Refresh* section is outdated and inconsistent with the updated nomenclature, which leads to further misunderstanding among users.
+The current logic sets the next Annual Decision due date to be **365 days from the previous completion date**, which introduces timing drift. If users complete the Annual Decision late (e.g., after the due date), the next due date shifts further ahead. Over time, this causes the Annual Decision to move closer and closer to the Mandatory Risk-Based Review (MRBR) date. In some cases, the Annual Decision could occur just weeks or days before the MRBR, creating redundant effort and confusion.
+
+This drift also causes inconsistency in audit reporting and undermines the predictability of compliance timelines.
+
+## Example Scenario  
+- Assessment Approved: **June 25, 2025**
+- Mandatory Risk-Based Review: **June 25, 2028**
+- First Annual Decision Due: **June 25, 2026**
+  - Generated on: **May 10, 2026**
+  - Completion window: **May 10 – June 25, 2026**
+
+If the Annual Decision is completed late (e.g., July 15, 2026), the next due date is currently calculated as **July 15, 2027**, rather than sticking to **June 25, 2027**. This causes the timing to shift closer to the MRBR.
 
 ## Proposed Solution  
-1. **Improve Visibility**  
-   - Display both the **Next Assessment Date** and the **Mandatory Risk-Based Review Date** above the section currently labeled *Off-Cycle Refresh*.
-
-2. **Terminology Alignment**  
-   - Rename the section titled *Off-Cycle Refresh* to **Next Assessment Details**.
-   - Rename the action/button currently labeled *Off-Cycle Refresh* to **Perform Off-Cycle Refresh**.
+- The Annual Decision due dates should remain fixed at **12 and 24 months** from the original review/approval date, regardless of when the user completes them.
+- The generation date (46 days prior to the due date) remains unchanged.
+- Completion of an Annual Decision does not shift the next due date.
+- This ensures Annual Decisions remain aligned to their intended schedule and do not overlap with the MRBR.
 
 ## Acceptance Criteria
 
-*1. Display of Dates*  
-- When a Risk Assessment status is *Approved*, the following dates must be displayed prominently above the off-cycle section:
-  - **Next Assessment Date**
-  - **Mandatory Risk-Based Review Date**
+*1. Fixed Annual Decision Schedule*  
+- For assessments requiring yearly attestations, the Annual Decision due dates are fixed to be exactly:
+  - **+12 months**
+  - **+24 months**
+  from the original *Approved Date* of the Risk Assessment.
 
-*2. Section Title Update*  
-- The section formerly labeled *Off-Cycle Refresh* is renamed to **Next Assessment Details**.
+*2. No Drift Based on Completion Date*  
+- Completing the Annual Decision after the due date does **not** change the due date of the following year's Annual Decision.
 
-*3. Button Label Update*  
-- The button/action currently labeled *Off-Cycle Refresh* is renamed to **Perform Off-Cycle Refresh**.
+*3. Generation Timing*  
+- Each Annual Decision task is generated **46 days** prior to its fixed due date (e.g., generated May 10 for June 25 due date).
 
-*4. Data Accuracy*  
-- The displayed dates for both the next assessment and risk-based review are pulled from the appropriate data sources and are accurate.
+*4. Risk-Based Review Unaffected*  
+- The timing of the *Mandatory Risk-Based Review* remains static (e.g., +36 months from Approved Date) and is **not impacted** by Annual Decision timing.
 
-*5. Visibility Conditions*  
-- These changes apply only when the Risk Assessment status is *Approved*.
-- If status is not *Approved*, the *Next Assessment Details* section and its content should not be displayed.
+*5. Applicable Assessments*  
+- This logic applies only to assessments **not requiring yearly MRBRs** (e.g., low-risk assessments with a 3-year review cycle).
 
-*6. Consistency Across Views*  
-- Updates to labels and display must be reflected consistently in all relevant screens (e.g., summary view, detailed assessment view).
+*6. Data Accuracy*  
+- The system must accurately calculate and display:
+  - Approved Date
+  - Next Annual Decision Due Date(s)
+  - MRBR Due Date
+
+*7. UI Impact*  
+- Update the user interface where Annual Decision dates are shown to reflect the fixed schedule (not dynamic based on completion).
 
