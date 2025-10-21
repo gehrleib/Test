@@ -1,60 +1,40 @@
 # Story Title  
-**Enforce Comment Requirement for Override of Next Control Test Year in High-Level Plan Submissions**
+**Improve Visibility into Upcoming Assessments and Align Terminology in Risk Assessment UI**
 
 ## Problem Statement  
-To satisfy audit requirements, every override of the *Next Control Test Year* field in the High-Level Plan for Monitoring Testing must be associated with a comment.  
-Currently, there is no mechanism in place to enforce this requirement, and users can submit overrides without justification, leading to compliance risk and audit issues.
+When the Risk Assessment status changes to *Approved*, there is no clear visibility into when the next *Annual Assessment* or the required *Mandatory Risk-Based Review* is due.  
+This lack of visibility can result in confusion around scheduling, deadlines, and upcoming compliance requirements.  
+
+Additionally, the current terminology used in the *Off-Cycle Refresh* section is outdated and inconsistent with the updated nomenclature, which leads to further misunderstanding among users.
 
 ## Proposed Solution  
-Due to technical limitations with inline editing, we cannot enforce comment entry at the time of override. Instead, we will introduce the following process enhancements:
+1. **Improve Visibility**  
+   - Display both the **Next Assessment Date** and the **Mandatory Risk-Based Review Date** above the section currently labeled *Off-Cycle Refresh*.
 
-1. **For Submitters:**  
-   - Allow submission without a comment, but display a warning banner that explains missing comments will result in automatic or reviewer-based rejection.
-
-2. **For Reviewers:**  
-   - If a submitted override lacks a comment, a banner will indicate that the submission cannot be approved and must be rejected.  
-   - If no reviewer action is taken within the allotted time, the system will auto-reject the submission.  
-   - The auto-rejection will include a default reviewer comment explaining the reason for rejection.
+2. **Terminology Alignment**  
+   - Rename the section titled *Off-Cycle Refresh* to **Next Assessment Details**.
+   - Rename the action/button currently labeled *Off-Cycle Refresh* to **Perform Off-Cycle Refresh**.
 
 ## Acceptance Criteria
 
-*1. Banner for Submitter*  
-- A clear banner is displayed during submission if any override of the *Next Control Test Year* lacks a comment.  
-- The banner explains that the reviewer cannot approve such submissions and will either reject it manually or the system will auto-reject it.
+*1. Display of Dates*  
+- When a Risk Assessment status is *Approved*, the following dates must be displayed prominently above the off-cycle section:
+  - **Next Assessment Date**
+  - **Mandatory Risk-Based Review Date**
 
-*2. Banner for Reviewer*  
-- A clear banner is shown to the reviewer on submissions where an override lacks a comment.  
-- The banner informs them they cannot approve and are only allowed to reject the submission.
+*2. Section Title Update*  
+- The section formerly labeled *Off-Cycle Refresh* is renamed to **Next Assessment Details**.
 
-*3. Auto-Rejection Behavior*  
-- If no reviewer action is taken within the specified timeframe, the system auto-rejects the submission.  
-- A default reviewer comment is added to the rejection explaining the lack of comment for the override.
+*3. Button Label Update*  
+- The button/action currently labeled *Off-Cycle Refresh* is renamed to **Perform Off-Cycle Refresh**.
 
-*4. Validation Scope*  
-- The system correctly detects instances of the *Next Control Test Year (Override)* where no comment is provided.  
-- Only those instances trigger the banners and conditional logic.
+*4. Data Accuracy*  
+- The displayed dates for both the next assessment and risk-based review are pulled from the appropriate data sources and are accurate.
 
----
+*5. Visibility Conditions*  
+- These changes apply only when the Risk Assessment status is *Approved*.
+- If status is not *Approved*, the *Next Assessment Details* section and its content should not be displayed.
 
-## Banner / Disclaimer Messages
+*6. Consistency Across Views*  
+- Updates to labels and display must be reflected consistently in all relevant screens (e.g., summary view, detailed assessment view).
 
-### Submitter Banner Text  
-> ⚠️ *Missing Comment for Override*  
-> Your submission includes an override to the *Next Control Test Year* without an associated comment.  
-> Submissions missing this comment **cannot be approved** by reviewers and will either be **rejected manually** or **automatically rejected** by the system if no reviewer action is taken.  
-> Please add a comment to avoid delays or rejection.
-
----
-
-### Reviewer Banner Text  
-> ⚠️ *Override Missing Required Comment*  
-> This submission contains an override to the *Next Control Test Year* field without an associated comment.  
-> As per compliance requirements, you are **not permitted to approve** this submission.  
-> You may **only reject** it.  
-> If no action is taken, the system will automatically reject it.
-
----
-
-### Auto-Rejection Reviewer Comment  
-> This submission was automatically rejected because an override to the *Next Control Test Year* was submitted without the required comment.  
-> Per audit requirements, such overrides must include justification.
