@@ -1,5 +1,60 @@
-If you retire an existing "Red Group" and create a new one with the same name, the new group receives a new, unique system ID.
+# Story Title  
+**Enforce Comment Requirement for Override of Next Control Test Year in High-Level Plan Submissions**
 
-Because all existing system validations and mappings are tied to the old ID, they will not automatically transfer to the new group. You would then be required to perform new validation and mapping to all relevant assessable units.
+## Problem Statement  
+To satisfy audit requirements, every override of the *Next Control Test Year* field in the High-Level Plan for Monitoring Testing must be associated with a comment.  
+Currently, there is no mechanism in place to enforce this requirement, and users can submit overrides without justification, leading to compliance risk and audit issues.
 
-The correct expectation is to modify the existing Red Group when changes to its citation are requested, not to retire and recreate it. This is followed-up by publishing the new version. This preserves the existing validation and mapping records.
+## Proposed Solution  
+Due to technical limitations with inline editing, we cannot enforce comment entry at the time of override. Instead, we will introduce the following process enhancements:
+
+1. **For Submitters:**  
+   - Allow submission without a comment, but display a warning banner that explains missing comments will result in automatic or reviewer-based rejection.
+
+2. **For Reviewers:**  
+   - If a submitted override lacks a comment, a banner will indicate that the submission cannot be approved and must be rejected.  
+   - If no reviewer action is taken within the allotted time, the system will auto-reject the submission.  
+   - The auto-rejection will include a default reviewer comment explaining the reason for rejection.
+
+## Acceptance Criteria
+
+*1. Banner for Submitter*  
+- A clear banner is displayed during submission if any override of the *Next Control Test Year* lacks a comment.  
+- The banner explains that the reviewer cannot approve such submissions and will either reject it manually or the system will auto-reject it.
+
+*2. Banner for Reviewer*  
+- A clear banner is shown to the reviewer on submissions where an override lacks a comment.  
+- The banner informs them they cannot approve and are only allowed to reject the submission.
+
+*3. Auto-Rejection Behavior*  
+- If no reviewer action is taken within the specified timeframe, the system auto-rejects the submission.  
+- A default reviewer comment is added to the rejection explaining the lack of comment for the override.
+
+*4. Validation Scope*  
+- The system correctly detects instances of the *Next Control Test Year (Override)* where no comment is provided.  
+- Only those instances trigger the banners and conditional logic.
+
+---
+
+## Banner / Disclaimer Messages
+
+### Submitter Banner Text  
+> ⚠️ *Missing Comment for Override*  
+> Your submission includes an override to the *Next Control Test Year* without an associated comment.  
+> Submissions missing this comment **cannot be approved** by reviewers and will either be **rejected manually** or **automatically rejected** by the system if no reviewer action is taken.  
+> Please add a comment to avoid delays or rejection.
+
+---
+
+### Reviewer Banner Text  
+> ⚠️ *Override Missing Required Comment*  
+> This submission contains an override to the *Next Control Test Year* field without an associated comment.  
+> As per compliance requirements, you are **not permitted to approve** this submission.  
+> You may **only reject** it.  
+> If no action is taken, the system will automatically reject it.
+
+---
+
+### Auto-Rejection Reviewer Comment  
+> This submission was automatically rejected because an override to the *Next Control Test Year* was submitted without the required comment.  
+> Per audit requirements, such overrides must include justification.
