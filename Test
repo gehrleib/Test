@@ -1,39 +1,26 @@
-<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-  <xsl:output method="xml" indent="yes" omit-xml-declaration="yes"/>
-  <xsl:mode on-no-match="shallow-skip"/>
+The Issue: Following the November 27th release, the automated process responsible for cleaning up "Retired" controls failed specifically for the High-Level Plan application. While controls were correctly removed from other workflows (e.g., Assessable Unit, Control Assessment), they remained attached to High-Level Plans.
 
-  <xsl:variable name="GUID_CONTROL_RESULT_ID" select="'ba027e6b-983b-4177-81bd-19dde7317753'"/>
-  <xsl:variable name="GUID_PLAN_ID" select="'5fd374e6-81bc-47be-924a-b7c1f1892fed'"/>
-  <xsl:variable name="GUID_STATUS" select="'b7ecb737-b318-46ff-9a57-a254b9d06095'"/>
-  <xsl:variable name="GUID_EXPORTED" select="'0fd1978a-81e6-45cb-a8be-4b07d3cc463a'"/>
+Root Cause: A specific logic gap was identified in the cleanup job for High-Level Plans.
 
-  <xsl:template match="/Records">
-    <ArcherRecords>
-      <xsl:for-each select="Record">
-        <ArcherRecord>
-          
-          <Control_Result_ID>
-            <xsl:value-of select="Field[@guid=$GUID_CONTROL_RESULT_ID]"/>
-          </Control_Result_ID>
+Technical Constraint: A High-Level Plan record strictly requires an association with an Assessable Unit.
 
-          <High_Level_Plans>
-            <xsl:for-each select="Record">
-              
-              <xsl:variable name="isExported" select="Field[@guid=$GUID_EXPORTED]//ListValue = 'Yes'"/>
-              <xsl:variable name="isApproved" select="Field[@guid=$GUID_STATUS]//ListValue = 'Complete'"/>
+The Conflict: When a Control is marked as "Retired," it is disassociated from its Assessable Unit.
 
-              <xsl:if test="$isExported and $isApproved">
-                <Item>
-                  <xsl:value-of select="Field[@guid=$GUID_PLAN_ID]"/>
-                </Item>
-              </xsl:if>
-              
-            </xsl:for-each>
-          </High_Level_Plans>
-          
-        </ArcherRecord>
-      </xsl:for-each>
-    </ArcherRecords>
-  </xsl:template>
+The Failure: Because the cleanup process failed to remove these now-orphaned controls from the High-Level Plans, the Plans were left holding controls that no longer had the required Assessable Unit parent. This creates a data integrity violation and prevents successful export to CALMA.
 
-</xsl:stylesheet>
+Technical Solution
+To resolve this, we updated the retirement cleanup logic to enforce the following rules:
+
+Scope Expansion: The cleanup job was modified to explicitly query the High-Level Plan application (previously omitted/failing).
+
+Filtering Logic: The process now identifies target records based on the intersection of three conditions:
+
+Control Status: IS "Retired"
+
+Plan Status: IS "Incomplete" (Draft), "Substantially Complete", OR "Complete" (Approved)
+
+Integration Flag: Exported to CALMA IS "No" (List Value ID: 73938)
+
+Remediation Action: For records matching the criteria above, the system now forces a disassociation of the Control from the High-Level Plan. This ensures that when the Plan is eventually exported, it does not contain invalid/orphaned controls.
+
+Historical Preservation: Added a safety check to ensure that any Plan where Exported to CALMA IS "Yes" is strictly ignored, preserving the integrity of historical data already present in downstream systems.
