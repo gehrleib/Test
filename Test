@@ -1,54 +1,39 @@
-# Story Title  
-**Fix Annual Decision Date Drift to Prevent Overlap with Mandatory Risk-Based Review**
+<xsl:stylesheet version="3.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:output method="xml" indent="yes" omit-xml-declaration="yes"/>
+  <xsl:mode on-no-match="shallow-skip"/>
 
-## Problem Statement  
-For assessments that are not subject to annual mandatory risk-based reviews (e.g., low-risk assessments with a 3-year review cycle), we require a *Yearly Attestation* (also known as an *Annual Decision*) to be completed on the first and second years following the review/approval date.
+  <xsl:variable name="GUID_CONTROL_RESULT_ID" select="'ba027e6b-983b-4177-81bd-19dde7317753'"/>
+  <xsl:variable name="GUID_PLAN_ID" select="'5fd374e6-81bc-47be-924a-b7c1f1892fed'"/>
+  <xsl:variable name="GUID_STATUS" select="'b7ecb737-b318-46ff-9a57-a254b9d06095'"/>
+  <xsl:variable name="GUID_EXPORTED" select="'0fd1978a-81e6-45cb-a8be-4b07d3cc463a'"/>
 
-The current logic sets the next Annual Decision due date to be **365 days from the previous completion date**, which introduces timing drift. If users complete the Annual Decision late (e.g., after the due date), the next due date shifts further ahead. Over time, this causes the Annual Decision to move closer and closer to the Mandatory Risk-Based Review (MRBR) date. In some cases, the Annual Decision could occur just weeks or days before the MRBR, creating redundant effort and confusion.
+  <xsl:template match="/Records">
+    <ArcherRecords>
+      <xsl:for-each select="Record">
+        <ArcherRecord>
+          
+          <Control_Result_ID>
+            <xsl:value-of select="Field[@guid=$GUID_CONTROL_RESULT_ID]"/>
+          </Control_Result_ID>
 
-This drift also causes inconsistency in audit reporting and undermines the predictability of compliance timelines.
+          <High_Level_Plans>
+            <xsl:for-each select="Record">
+              
+              <xsl:variable name="isExported" select="Field[@guid=$GUID_EXPORTED]//ListValue = 'Yes'"/>
+              <xsl:variable name="isApproved" select="Field[@guid=$GUID_STATUS]//ListValue = 'Complete'"/>
 
-## Example Scenario  
-- Assessment Approved: **June 25, 2025**
-- Mandatory Risk-Based Review: **June 25, 2028**
-- First Annual Decision Due: **June 25, 2026**
-  - Generated on: **May 10, 2026**
-  - Completion window: **May 10 – June 25, 2026**
+              <xsl:if test="$isExported and $isApproved">
+                <Item>
+                  <xsl:value-of select="Field[@guid=$GUID_PLAN_ID]"/>
+                </Item>
+              </xsl:if>
+              
+            </xsl:for-each>
+          </High_Level_Plans>
+          
+        </ArcherRecord>
+      </xsl:for-each>
+    </ArcherRecords>
+  </xsl:template>
 
-If the Annual Decision is completed late (e.g., July 15, 2026), the next due date is currently calculated as **July 15, 2027**, rather than sticking to **June 25, 2027**. This causes the timing to shift closer to the MRBR.
-
-## Proposed Solution  
-- The Annual Decision due dates should remain fixed at **12 and 24 months** from the original review/approval date, regardless of when the user completes them.
-- The generation date (46 days prior to the due date) remains unchanged.
-- Completion of an Annual Decision does not shift the next due date.
-- This ensures Annual Decisions remain aligned to their intended schedule and do not overlap with the MRBR.
-
-## Acceptance Criteria
-
-*1. Fixed Annual Decision Schedule*  
-- For assessments requiring yearly attestations, the Annual Decision due dates are fixed to be exactly:
-  - **+12 months**
-  - **+24 months**
-  from the original *Approved Date* of the Risk Assessment.
-
-*2. No Drift Based on Completion Date*  
-- Completing the Annual Decision after the due date does **not** change the due date of the following year's Annual Decision.
-
-*3. Generation Timing*  
-- Each Annual Decision task is generated **46 days** prior to its fixed due date (e.g., generated May 10 for June 25 due date).
-
-*4. Risk-Based Review Unaffected*  
-- The timing of the *Mandatory Risk-Based Review* remains static (e.g., +36 months from Approved Date) and is **not impacted** by Annual Decision timing.
-
-*5. Applicable Assessments*  
-- This logic applies only to assessments **not requiring yearly MRBRs** (e.g., low-risk assessments with a 3-year review cycle).
-
-*6. Data Accuracy*  
-- The system must accurately calculate and display:
-  - Approved Date
-  - Next Annual Decision Due Date(s)
-  - MRBR Due Date
-
-*7. UI Impact*  
-- Update the user interface where Annual Decision dates are shown to reflect the fixed schedule (not dynamic based on completion).
-
+</xsl:stylesheet>
