@@ -1,26 +1,25 @@
-The Issue: Following the November 27th release, the automated process responsible for cleaning up "Retired" controls failed specifically for the High-Level Plan application. While controls were correctly removed from other workflows (e.g., Assessable Unit, Control Assessment), they remained attached to High-Level Plans.
+Validate that the ERIC 04 job handles mixed scenarios where a single retired 2LOD control is linked to multiple high-level plans. It must delink plans not yet exported to Calma while preserving links to approved, exported plans.
 
-Root Cause: A specific logic gap was identified in the cleanup job for High-Level Plans.
+Pre-conditions: Identify a single Active 2LOD control linked to at least two different High Level Plans:
 
-Technical Constraint: A High-Level Plan record strictly requires an association with an Assessable Unit.
+Plan A (Keep): Status is Approved AND Exported to Calma is Yes.
 
-The Conflict: When a Control is marked as "Retired," it is disassociated from its Assessable Unit.
+Plan B (Remove): Status is Draft, Review, or Approved AND Exported to Calma is No.
 
-The Failure: Because the cleanup process failed to remove these now-orphaned controls from the High-Level Plans, the Plans were left holding controls that no longer had the required Assessable Unit parent. This creates a data integrity violation and prevents successful export to CALMA.
+Test Steps:
 
-Technical Solution
-To resolve this, we updated the retirement cleanup logic to enforce the following rules:
+Retire Control: Change the control status to Retired.
 
-Scope Expansion: The cleanup job was modified to explicitly query the High-Level Plan application (previously omitted/failing).
+Note: Use QA override to modify control without ORMS workflow.
 
-Filtering Logic: The process now identifies target records based on the intersection of three conditions:
+Execute Job: Run ERIC 04 - A2A - Delink CRCP from CP, CA, and MT.
 
-Control Status: IS "Retired"
+Verify Links: Inspect the plan associations for the now-retired control.
 
-Plan Status: IS "Incomplete" (Draft), "Substantially Complete", OR "Complete" (Approved)
+Expected Result:
 
-Integration Flag: Exported to CALMA IS "No" (List Value ID: 73938)
+Plan A remains linked to the control.
 
-Remediation Action: For records matching the criteria above, the system now forces a disassociation of the Control from the High-Level Plan. This ensures that when the Plan is eventually exported, it does not contain invalid/orphaned controls.
+Plan B is delinked from the control.
 
-Historical Preservation: Added a safety check to ensure that any Plan where Exported to CALMA IS "Yes" is strictly ignored, preserving the integrity of historical data already present in downstream systems.
+The system correctly filters based on the "Exported to Calma" flag.
