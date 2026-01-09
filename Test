@@ -1,50 +1,27 @@
-To accommodate both source types, this story requires a consolidated view or two distinct related lists on the **Line of Business Distinct** record.
+## Jira Story: Retain Data Relationships for Retired Assessable Units
 
----
-
-## Jira Story: View Open EIM Issues and NIE Exceptions on LoB Distinct
-
-**User Story:**
-As a Data Administrator, I need to see all open **Enterprise Issue Management (EIM)** records and **Non-Issue Exceptions (NIE)** associated with a **Line of Business Distinct** record. This visibility is required to assess if the Line of Business and its Country combinations can be safely retired.
-
----
-
-### Technical Requirements
-
-1. **Related List Integration:**
-* Add two new related lists to the **Line of Business Distinct** form:
-* **Open EIM Issues**
-* **Open NIE Exceptions**
+**Summary:** Update Assessable Unit (AU) retirement logic to retain Theme and Line of Business (LoB) associations and enhance UI visibility of AU status.
 
 
 
+### User Story
 
-2. **Relationship Logic:**
-* Configure the lists to traverse the hierarchy: `LoB Distinct`  `Child LoB/Country Combinations`  `Associated Issues/Exceptions`.
-
-
-3. **Default Filtering:**
-* **State Filter:** Filter both lists to exclude terminal states (e.g., exclude "Closed," "Resolved," "Canceled," or "Expired").
-* **Source Filter:** Ensure EIM records and NIE records are routed to their respective lists based on their source table or category.
+I want retired Assessable Units to maintain their associations with Lines of Business and Themes, so that I can accurately report on and identify historical risk data.
 
 
 
----
+### Acceptance Criteria
 
-### Acceptance Criteria (AC)
+| Area | Requirement |
+| **Data Retention** | When an Assessable Unit's status is changed to "Retired," the system must **not** nullify or delete the foreign key relationships to `Line of Business` or `Theme`. |
+| **LoB View UI** | The Line of Business detail/listing view must display the `Risk Assessment Status` (e.g., Active, Retired, Pending) next to each linked Assessable Unit. |
+| **Theme View UI** | The Theme detail/listing view must display the `Risk Assessment Status` next to each linked Assessable Unit. |
+| **Filtering** | Views for LoB and Themes should include a toggle or filter to "Show/Hide Retired Units" (Default: Show All or Active-only based on current global UX patterns). |
 
-| ID | Criteria | Validation |
-| --- | --- | --- |
-| **AC 1** | **EIM Visibility** | A related list displays all active EIM issues linked to any child LoB/Country record under the Distinct parent. |
-| **AC 2** | **NIE Visibility** | A related list displays all active Non-Issue Exceptions (NIE) linked to any child LoB/Country record under the Distinct parent. |
-| **AC 3** | **State Enforcement** | Neither list displays closed or inactive records by default. |
-| **AC 4** | **Data-Driven Retirement** | Data Administrators can verify "Zero Open Records" across both lists before proceeding with LoB retirement. |
 
----
 
-### Implementation Notes
+### Technical Notes
 
-* **UI Organization:** If the form becomes too cluttered, consider placing these under a "Retirement Readiness" form section or tab.
-* **Count Indicators:** Ensure the related list tabs show a record count (e.g., *Open EIM Issues (3)*) so admins can see the volume without clicking into the tab.
-
-**Would you prefer these as two separate lists for clear distinction, or a single "Open Blockers" list that combines both EIM and NIE records?**
+* **Backend:** Modify the `onStatusChange` or `retireAU` service method. Remove the logic that triggers the unlinking of `ThemeID` and `LoBID`.
+* **Database:** Ensure no cascading deletes or null-setters are active on these specific relationships during status transitions.
+* **Frontend:** Update the AU component used within the LoB and Theme modules to include a status badge or text label.
