@@ -1,24 +1,28 @@
-Acknowledged. I will ignore the "jewelry" typo and record this as a Jira story. Since the solution is a configuration toggle, the story focuses on the fix and ensuring no further notification gaps exist.
+This story addresses a synchronization issue where the "Retired Controls" list remains static after the assessment is generated, potentially missing controls that retire while the assessment is still in a *Draft* state.
 
 ---
 
-## Jira Story: Enable Notifications for Scheduled Data Feed Updates
+## Jira Story: Dynamic Update of Retired Controls List in Draft Assessments
 
-**User Story:**
-As a System Administrator, I need to enable the "Send Notifications" option for the High-Level Plan schedule/data feed to ensure that systemic rejections and updates trigger automated alerts to stakeholders, consistent with user-driven actions.
+*User Story:*
+As a Control Assessor, I need the list of retired controls within a *Control Assessment* to update dynamically while the record is in *Draft* status. This ensures that any controls retiring after the initial generation are captured before the assessment is finalized.
 
 ---
 
 ### Technical Requirements
 
-1. **Configuration Update:**
-* Locate the **Data Feed / Schedule** configuration associated with the High-Level Plan module.
-* Enable the setting: **"Send notifications when records are published or updated via schedule/data feed."**
+1. *Trigger Logic:*
+* Implement a mechanism (e.g., a Business Rule or Scheduled Job) that monitors the status of the Control Assessment.
+* The refresh logic should only execute if `Status = Draft`.
 
 
-2. **Verification:**
-* Trigger a test systemic rejection via the data feed.
-* Verify the outbound notification is generated in the system logs and sent to the appropriate actionees.
+2. *Data Refresh:*
+* On a defined trigger (e.g., Form Load or a nightly batch), re-query the linked Controls table to identify any new records that have moved to a "Retired" state since the assessment was created.
+* Append these newly retired controls to the existing list/table on the assessment record.
+
+
+3. *Constraint:*
+* Once the Control Assessment moves past *Draft* (e.g., to "In Review" or "Completed"), the list must become static to preserve the audit trail at the time of submission.
 
 
 
@@ -28,16 +32,16 @@ As a System Administrator, I need to enable the "Send Notifications" option for 
 
 | ID | Criteria | Validation |
 | --- | --- | --- |
-| **AC 1** | **Configuration Activation** | The "Send Notifications" toggle is set to `Active` on the relevant schedule/feed record. |
-| **AC 2** | **Systemic Trigger** | Automated rejections caused by the data feed successfully trigger the standard rejection notification workflow. |
-| **AC 3** | **Consistency** | Notification content for systemic rejections matches the format and recipient logic of user-driven rejections. |
-| **AC 4** | **Log Verification** | System logs confirm that the scheduled job is now identified as a valid trigger for the notification engine. |
+| *AC 1* | *Draft Dynamic Update* | Controls that retire *after* assessment generation are automatically added to the "Retired Controls" list while the assessment is in *Draft*. |
+| *AC 2* | *Status Gate* | The list stops updating immediately once the assessment status changes from *Draft* to any subsequent state. |
+| *AC 3* | *Data Retention* | Refreshing the list does not remove controls previously identified at the time of generation; it only appends/syncs the current state. |
+| *AC 4* | *Performance* | The refresh logic does not cause significant latency (> seconds) when opening a Draft assessment form. |
 
 ---
 
 ### Implementation Notes
 
-* **Root Cause:** The incident occurred because the system distinguished between "User Action" and "System Action," with the latter suppressed by the schedule settings.
-* **Audit:** Review other critical data feeds (e.g., EIM or NIE feeds) to ensure the same notification setting is enabled where stakeholder awareness is required.
+* *Execution Method:* A *Display Business Rule* is recommended if the list must be accurate at the exact moment the Assessor opens the record. Alternatively, a *Scheduled Script Execution* can update all "Draft" assessments nightly to reduce real-time processing overhead.
+* *Audit Trail:* Ensure that the "System Updated" fields reflect that these additions were systemic rather than manual user edits.
 
-**Would you like me to add a task to audit other active schedules to ensure this setting is consistently applied?**
+*Would you like me to recommend the specific technical trigger (Display Business Rule vs. Scheduled Job) based on your system's record volume?*
