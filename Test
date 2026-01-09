@@ -1,23 +1,31 @@
-Acknowledged. Since the decommissioning is handled via a status change to "Inactive," the focus shifts to communication and report maintenance.
+To accommodate both source types, this story requires a consolidated view or two distinct related lists on the **Line of Business Distinct** record.
 
 ---
 
-## Jira Story: Deactivate Legacy 1LOD and 2LOD Fields
+## Jira Story: View Open EIM Issues and NIE Exceptions on LoB Distinct
 
 **User Story:**
-As a System Administrator, I need to set the status of legacy `1LOD` and `2LOD` fields to **Inactive** on the **Control Result** module. This ensures the system reflects the single-field reporting standard adopted in 2024 and prompts users to transition legacy reports to the new `Line of Defense` field.
+As a Data Administrator, I need to see all open **Enterprise Issue Management (EIM)** records and **Non-Issue Exceptions (NIE)** associated with a **Line of Business Distinct** record. This visibility is required to assess if the Line of Business and its Country combinations can be safely retired.
 
 ---
 
 ### Technical Requirements
 
-1. **Field Status Update:**
-* Update the status of `1LOD` and `2LOD` fields to **Inactive** within the field configuration/dictionary.
+1. **Related List Integration:**
+* Add two new related lists to the **Line of Business Distinct** form:
+* **Open EIM Issues**
+* **Open NIE Exceptions**
 
 
-2. **User Notification:**
-* Distribute a communication to users/report owners regarding the deactivation.
-* Provide instructions for updating existing reports to utilize the consolidated `Line of Defense` field.
+
+
+2. **Relationship Logic:**
+* Configure the lists to traverse the hierarchy: `LoB Distinct`  `Child LoB/Country Combinations`  `Associated Issues/Exceptions`.
+
+
+3. **Default Filtering:**
+* **State Filter:** Filter both lists to exclude terminal states (e.g., exclude "Closed," "Resolved," "Canceled," or "Expired").
+* **Source Filter:** Ensure EIM records and NIE records are routed to their respective lists based on their source table or category.
 
 
 
@@ -27,15 +35,16 @@ As a System Administrator, I need to set the status of legacy `1LOD` and `2LOD` 
 
 | ID | Criteria | Validation |
 | --- | --- | --- |
-| **AC 1** | **Field Inactivation** | Legacy fields `1LOD` and `2LOD` are marked as **Inactive** in the system configuration. |
-| **AC 2** | **System Enforcement** | Inactive fields are verified as no longer available for selection in new reports or form layouts. |
-| **AC 3** | **User Awareness** | Communication sent to stakeholders identifying that legacy reports using these fields must be updated to the new `Line of Defense` field. |
+| **AC 1** | **EIM Visibility** | A related list displays all active EIM issues linked to any child LoB/Country record under the Distinct parent. |
+| **AC 2** | **NIE Visibility** | A related list displays all active Non-Issue Exceptions (NIE) linked to any child LoB/Country record under the Distinct parent. |
+| **AC 3** | **State Enforcement** | Neither list displays closed or inactive records by default. |
+| **AC 4** | **Data-Driven Retirement** | Data Administrators can verify "Zero Open Records" across both lists before proceeding with LoB retirement. |
 
 ---
 
-### Impact Analysis: Reporting
+### Implementation Notes
 
-* **Existing Reports:** Reports currently filtered by or grouped by the legacy fields will likely break or return empty results once the fields are inactive.
-* **Remediation:** Users must manually swap the old fields for the new `Line of Defense` field in their saved reports.
+* **UI Organization:** If the form becomes too cluttered, consider placing these under a "Retirement Readiness" form section or tab.
+* **Count Indicators:** Ensure the related list tabs show a record count (e.g., *Open EIM Issues (3)*) so admins can see the volume without clicking into the tab.
 
-**Would you like me to draft a concise communication template you can send to the users explaining how to update their reports?**
+**Would you prefer these as two separate lists for clear distinction, or a single "Open Blockers" list that combines both EIM and NIE records?**
