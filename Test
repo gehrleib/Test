@@ -1,27 +1,43 @@
-## Jira Story: Retain Data Relationships for Retired Assessable Units
+Acknowledged. I will ignore the "jewelry" typo and record this as a Jira story. Since the solution is a configuration toggle, the story focuses on the fix and ensuring no further notification gaps exist.
 
-**Summary:** Update Assessable Unit (AU) retirement logic to retain Theme and Line of Business (LoB) associations and enhance UI visibility of AU status.
+---
 
+## Jira Story: Enable Notifications for Scheduled Data Feed Updates
 
+**User Story:**
+As a System Administrator, I need to enable the "Send Notifications" option for the High-Level Plan schedule/data feed to ensure that systemic rejections and updates trigger automated alerts to stakeholders, consistent with user-driven actions.
 
-### User Story
+---
 
-I want retired Assessable Units to maintain their associations with Lines of Business and Themes, so that I can accurately report on and identify historical risk data.
+### Technical Requirements
 
-
-
-### Acceptance Criteria
-
-| Area | Requirement |
-| **Data Retention** | When an Assessable Unit's status is changed to "Retired," the system must **not** nullify or delete the foreign key relationships to `Line of Business` or `Theme`. |
-| **LoB View UI** | The Line of Business detail/listing view must display the `Risk Assessment Status` (e.g., Active, Retired, Pending) next to each linked Assessable Unit. |
-| **Theme View UI** | The Theme detail/listing view must display the `Risk Assessment Status` next to each linked Assessable Unit. |
-| **Filtering** | Views for LoB and Themes should include a toggle or filter to "Show/Hide Retired Units" (Default: Show All or Active-only based on current global UX patterns). |
+1. **Configuration Update:**
+* Locate the **Data Feed / Schedule** configuration associated with the High-Level Plan module.
+* Enable the setting: **"Send notifications when records are published or updated via schedule/data feed."**
 
 
+2. **Verification:**
+* Trigger a test systemic rejection via the data feed.
+* Verify the outbound notification is generated in the system logs and sent to the appropriate actionees.
 
-### Technical Notes
 
-* **Backend:** Modify the `onStatusChange` or `retireAU` service method. Remove the logic that triggers the unlinking of `ThemeID` and `LoBID`.
-* **Database:** Ensure no cascading deletes or null-setters are active on these specific relationships during status transitions.
-* **Frontend:** Update the AU component used within the LoB and Theme modules to include a status badge or text label.
+
+---
+
+### Acceptance Criteria (AC)
+
+| ID | Criteria | Validation |
+| --- | --- | --- |
+| **AC 1** | **Configuration Activation** | The "Send Notifications" toggle is set to `Active` on the relevant schedule/feed record. |
+| **AC 2** | **Systemic Trigger** | Automated rejections caused by the data feed successfully trigger the standard rejection notification workflow. |
+| **AC 3** | **Consistency** | Notification content for systemic rejections matches the format and recipient logic of user-driven rejections. |
+| **AC 4** | **Log Verification** | System logs confirm that the scheduled job is now identified as a valid trigger for the notification engine. |
+
+---
+
+### Implementation Notes
+
+* **Root Cause:** The incident occurred because the system distinguished between "User Action" and "System Action," with the latter suppressed by the schedule settings.
+* **Audit:** Review other critical data feeds (e.g., EIM or NIE feeds) to ensure the same notification setting is enabled where stakeholder awareness is required.
+
+**Would you like me to add a task to audit other active schedules to ensure this setting is consistently applied?**
