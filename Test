@@ -1,25 +1,41 @@
-Validate that the ERIC 04 job handles mixed scenarios where a single retired 2LOD control is linked to multiple high-level plans. It must delink plans not yet exported to Calma while preserving links to approved, exported plans.
+Acknowledged. Since the decommissioning is handled via a status change to "Inactive," the focus shifts to communication and report maintenance.
 
-Pre-conditions: Identify a single Active 2LOD control linked to at least two different High Level Plans:
+---
 
-Plan A (Keep): Status is Approved AND Exported to Calma is Yes.
+## Jira Story: Deactivate Legacy 1LOD and 2LOD Fields
 
-Plan B (Remove): Status is Draft, Review, or Approved AND Exported to Calma is No.
+**User Story:**
+As a System Administrator, I need to set the status of legacy `1LOD` and `2LOD` fields to **Inactive** on the **Control Result** module. This ensures the system reflects the single-field reporting standard adopted in 2024 and prompts users to transition legacy reports to the new `Line of Defense` field.
 
-Test Steps:
+---
 
-Retire Control: Change the control status to Retired.
+### Technical Requirements
 
-Note: Use QA override to modify control without ORMS workflow.
+1. **Field Status Update:**
+* Update the status of `1LOD` and `2LOD` fields to **Inactive** within the field configuration/dictionary.
 
-Execute Job: Run ERIC 04 - A2A - Delink CRCP from CP, CA, and MT.
 
-Verify Links: Inspect the plan associations for the now-retired control.
+2. **User Notification:**
+* Distribute a communication to users/report owners regarding the deactivation.
+* Provide instructions for updating existing reports to utilize the consolidated `Line of Defense` field.
 
-Expected Result:
 
-Plan A remains linked to the control.
 
-Plan B is delinked from the control.
+---
 
-The system correctly filters based on the "Exported to Calma" flag.
+### Acceptance Criteria (AC)
+
+| ID | Criteria | Validation |
+| --- | --- | --- |
+| **AC 1** | **Field Inactivation** | Legacy fields `1LOD` and `2LOD` are marked as **Inactive** in the system configuration. |
+| **AC 2** | **System Enforcement** | Inactive fields are verified as no longer available for selection in new reports or form layouts. |
+| **AC 3** | **User Awareness** | Communication sent to stakeholders identifying that legacy reports using these fields must be updated to the new `Line of Defense` field. |
+
+---
+
+### Impact Analysis: Reporting
+
+* **Existing Reports:** Reports currently filtered by or grouped by the legacy fields will likely break or return empty results once the fields are inactive.
+* **Remediation:** Users must manually swap the old fields for the new `Line of Defense` field in their saved reports.
+
+**Would you like me to draft a concise communication template you can send to the users explaining how to update their reports?**
